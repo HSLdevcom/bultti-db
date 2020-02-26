@@ -9,5 +9,6 @@ do
   filename=${f##*/}
   name="${filename%.csv}"
   echo "$name"
-  csvsql --db postgresql://postgres:password@localhost:5432/postgres --tables $name --db-schema jore --create-if-not-exists --insert $f
+
+  ./pgfutter --host localhost --port 5432 --username postgres --pw password --schema jore csv $f
 done
