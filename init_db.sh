@@ -21,4 +21,4 @@ for f in $FILES; do
   head -n 100000 "${f}" | csvsql --db postgresql://postgres:password@localhost:5432/postgres --tables "${name}" --db-schema jore --no-constraints --maxfieldsize 10000000000
 done
 
-psql -h localhost -p 5432 -U postgres -f ./schema/alter_automatic_tables.sql
+psql -h localhost -p 5432 -U postgres -f ./sql/alter_automatic_tables.sql
