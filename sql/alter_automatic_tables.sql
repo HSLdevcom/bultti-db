@@ -28,6 +28,7 @@ alter table jore.ak_kaavion_lahto alter column viitem type varchar using viitem:
 alter table jore.ak_kaavion_lahto alter column termaika type varchar using termaika::varchar;
 alter table jore.ak_kaavion_lahto alter column elpymisaika type varchar using elpymisaika::varchar;
 alter table jore.ak_kaavion_lahto alter column liitunnus type numeric using (liitunnus::text)::numeric;
+alter table jore.ak_kaavion_lahto alter column lahaika type varchar using lahaika::varchar;
 alter table jore.ak_kaavion_lahto alter column saapaika type varchar using saapaika::varchar;
 
 alter table jore.jr_ajoneuvo alter column tarkpvm type timestamptz using tarkpvm::timestamptz;
@@ -75,6 +76,7 @@ alter table jore.jr_reitinlinkki alter column pyssade type numeric using (pyssad
 alter table jore.jr_reitinsuunta alter column suuvoimast type timestamptz using suuvoimast::timestamptz;
 alter table jore.jr_reitinsuunta alter column suuvoimviimpvm type timestamptz using suuvoimviimpvm::timestamptz;
 alter table jore.jr_reitinsuunta alter column suuviimpvm type timestamptz using suuviimpvm::timestamptz;
+alter table jore.jr_reitinsuunta alter column suupituus type smallint using suusuunta::smallint;
 
 --- Add indices
 
