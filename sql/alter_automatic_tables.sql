@@ -1,5 +1,9 @@
+--- Schema
+
 create schema jore;
 alter schema jore owner to postgres;
+
+--- Add primary keys and fix column types
 
 ALTER TABLE jore.ak_aikataulukausi ADD PRIMARY KEY (aktunnus);
 alter table jore.ak_aikataulukausi alter column akalkpvm type timestamptz using akalkpvm::timestamptz;
@@ -72,3 +76,23 @@ alter table jore.jr_reitinsuunta alter column suuvoimast type timestamptz using 
 alter table jore.jr_reitinsuunta alter column suuvoimviimpvm type timestamptz using suuvoimviimpvm::timestamptz;
 alter table jore.jr_reitinsuunta alter column suuviimpvm type timestamptz using suuviimpvm::timestamptz;
 
+--- Add indices
+
+CREATE INDEX operator_id ON jore.jr_inf_kohde (liitunnus);
+CREATE INDEX line_id ON jore.jr_inf_kohde (lintunnus);
+CREATE INDEX start_date_end_date ON jore.jr_inf_kohde USING brin (kohalkpvm, kohpaattpvm);
+CREATE INDEX kohtunnus_operator_line_id ON jore.jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
+
+CREATE INDEX kohtunnus ON jore.jr_kilpailukohd (kohtunnus);
+CREATE INDEX seuranta ON jore.jr_kilpailukohd (seuranta);
+CREATE INDEX kohtunnus_seuranta_not_null ON jore.jr_kilpailukohd (kohtunnus) WHERE seuranta IS NOT NULL;
+
+CREATE INDEX reitunnus ON jore.ak_kaavion_lahto (reitunnus);
+CREATE INDEX kaaid ON jore.ak_kaavion_lahto (kaaid);
+CREATE INDEX suunta ON jore.ak_kaavion_lahto (suunta);
+CREATE INDEX kaltyyppi ON jore.ak_kaavion_lahto (kaltyyppi);
+CREATE INDEX liitunnus ON jore.ak_kaavion_lahto (liitunnus);
+
+CREATE INDEX reitinsuunta_suunta ON jore.jr_reitinsuunta (suusuunta);
+CREATE INDEX reitinsuunta_reitunnus ON jore.jr_reitinsuunta (reitunnus);
+CREATE INDEX reitinsuunta_suupituus ON jore.jr_reitinsuunta (suupituus);
