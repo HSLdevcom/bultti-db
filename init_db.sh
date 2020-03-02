@@ -16,9 +16,9 @@ for f in $FILES; do
   echo "${name}"
 
   # Create tables automatically with csvkit
-  # Only read the first 100k lines, otherwise csvkit takes forever (100k is already slow).
+  # Only read the first 10k lines, otherwise csvkit takes forever (10k is already slow).
   # The column types are inferred from the data, so we can't take too small of a sample.
-  head -n 100000 "${f}" | csvsql --db postgresql://postgres:password@localhost:5432/postgres --tables "${name}" --db-schema jore --no-constraints --maxfieldsize 10000000000
+  head -n 10000 "${f}" | csvsql --db postgresql://postgres:password@localhost:5432/postgres --tables "${name}" --db-schema jore --no-constraints --maxfieldsize 10000000000
 done
 
 psql -h localhost -p 5432 -U postgres -f ./sql/alter_automatic_tables.sql
