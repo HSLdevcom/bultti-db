@@ -2,6 +2,15 @@
 
 Scripts and queries for instantiating and hydrating the Bultti database with a schema and JORE data.
 
+## Prerequirements
+
+On the machine where you are creating the database, you need to have the following installed:
+
+- csvkit
+- postgresql (>= 11)
+- node (>= 10)
+- scp
+
 ## Get the data
 
 Go on a server with JORE access and copy over into a subdirectory (for example ~/exports):
@@ -25,7 +34,12 @@ Then, clean the data files with `sanitize.sh`.
 
 ## Init the database
 
-Start a postgres instance. Then run `init_db.sh` to set up the schema.
+Start a postgres instance. Then you have two options, use EITHER, not both:
+
+1. Generate a new schema based on the data with `generate_schema.sh` OR
+2. Apply the existing schema at sql/schema_ddl.sql with `init_db`
+
+Both will create a schema in the database. If the files have changes since the schema_ddl was created, just generate a new one and update schema_ddl.sql with the new one. You may need to fix column types after creating the automated schema. You WILL need to add keys and indices. Check sql/alter_automatic_tables.sql for the current changes and keys.
 
 ## Hydrate the database
 

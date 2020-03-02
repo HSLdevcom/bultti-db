@@ -1,8 +1,7 @@
 create schema jore;
-
 alter schema jore owner to postgres;
 
-create table ak_aikataulukausi
+create table jore.ak_aikataulukausi
 (
     aktunnus varchar not null
         constraint ak_aikataulukausi_pkey
@@ -18,9 +17,9 @@ create table ak_aikataulukausi
     muutospvm timestamp with time zone
 );
 
-alter table ak_aikataulukausi owner to postgres;
+alter table jore.ak_aikataulukausi owner to postgres;
 
-create table ak_kaavio
+create table jore.ak_kaavio
 (
     aktunnus varchar,
     kaatunnus varchar,
@@ -43,9 +42,9 @@ create table ak_kaavio
     haspvtyyppi varchar
 );
 
-alter table ak_kaavio owner to postgres;
+alter table jore.ak_kaavio owner to postgres;
 
-create table ak_kaavion_lahto
+create table jore.ak_kaavion_lahto
 (
     kaaid numeric,
     reitunnus varchar,
@@ -71,24 +70,24 @@ create table ak_kaavion_lahto
     saapaika varchar
 );
 
-alter table ak_kaavion_lahto owner to postgres;
+alter table jore.ak_kaavion_lahto owner to postgres;
 
 create index reitunnus
-    on ak_kaavion_lahto (reitunnus);
+    on jore.ak_kaavion_lahto (reitunnus);
 
 create index kaaid
-    on ak_kaavion_lahto (kaaid);
+    on jore.ak_kaavion_lahto (kaaid);
 
 create index suunta
-    on ak_kaavion_lahto (suunta);
+    on jore.ak_kaavion_lahto (suunta);
 
 create index kaltyyppi
-    on ak_kaavion_lahto (kaltyyppi);
+    on jore.ak_kaavion_lahto (kaltyyppi);
 
 create index liitunnus
-    on ak_kaavion_lahto (liitunnus);
+    on jore.ak_kaavion_lahto (liitunnus);
 
-create table jr_ajoneuvo
+create table jore.jr_ajoneuvo
 (
     id varchar,
     status varchar,
@@ -165,9 +164,9 @@ create table jr_ajoneuvo
     yliikaisyys numeric
 );
 
-alter table jr_ajoneuvo owner to postgres;
+alter table jore.jr_ajoneuvo owner to postgres;
 
-create table jr_eritpvkalent
+create table jore.jr_eritpvkalent
 (
     eritpoikpvm timestamp with time zone not null,
     eritpaiva varchar not null,
@@ -180,9 +179,9 @@ create table jr_eritpvkalent
         primary key (eritpoikpvm, eritpaiva)
 );
 
-alter table jr_eritpvkalent owner to postgres;
+alter table jore.jr_eritpvkalent owner to postgres;
 
-create table jr_inf_aikataulu_vp
+create table jore.jr_inf_aikataulu_vp
 (
     solmutunnus numeric,
     reitunnus varchar,
@@ -209,9 +208,9 @@ create table jr_inf_aikataulu_vp
     ajotyyppi varchar
 );
 
-alter table jr_inf_aikataulu_vp owner to postgres;
+alter table jore.jr_inf_aikataulu_vp owner to postgres;
 
-create table jr_inf_eritpv
+create table jore.jr_inf_eritpv
 (
     koodi varchar not null
         constraint jr_inf_eritpv_pkey
@@ -219,9 +218,9 @@ create table jr_inf_eritpv
     selite varchar
 );
 
-alter table jr_inf_eritpv owner to postgres;
+alter table jore.jr_inf_eritpv owner to postgres;
 
-create table jr_inf_kohde
+create table jore.jr_inf_kohde
 (
     kohtunnus varchar not null,
     kohalkpvm timestamp with time zone,
@@ -242,21 +241,21 @@ create table jr_inf_kohde
         primary key (kohtunnus, lintunnus, liitunnus, liialkpvm, liipaattpvm)
 );
 
-alter table jr_inf_kohde owner to postgres;
+alter table jore.jr_inf_kohde owner to postgres;
 
 create index operator_id
-    on jr_inf_kohde (liitunnus);
+    on jore.jr_inf_kohde (liitunnus);
 
 create index line_id
-    on jr_inf_kohde (lintunnus);
+    on jore.jr_inf_kohde (lintunnus);
 
 create index kohtunnus_operator_line_id
-    on jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
+    on jore.jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
 
 create index start_date_end_date
-    on jr_inf_kohde (kohalkpvm, kohpaattpvm);
+    on jore.jr_inf_kohde (kohalkpvm, kohpaattpvm);
 
-create table jr_inf_liik
+create table jore.jr_inf_liik
 (
     liitunnus numeric not null
         constraint jr_inf_liik_pkey
@@ -264,9 +263,9 @@ create table jr_inf_liik
     liinimi varchar
 );
 
-alter table jr_inf_liik owner to postgres;
+alter table jore.jr_inf_liik owner to postgres;
 
-create table jr_kilpailukohd
+create table jore.jr_kilpailukohd
 (
     kohtunnus varchar,
     kohtilorg varchar,
@@ -316,19 +315,19 @@ create table jr_kilpailukohd
     louhinkoodi numeric
 );
 
-alter table jr_kilpailukohd owner to postgres;
+alter table jore.jr_kilpailukohd owner to postgres;
 
 create index kohtunnus
-    on jr_kilpailukohd (kohtunnus);
+    on jore.jr_kilpailukohd (kohtunnus);
 
 create index seuranta
-    on jr_kilpailukohd (seuranta);
+    on jore.jr_kilpailukohd (seuranta);
 
 create index kohtunnus_seuranta_not_null
-    on jr_kilpailukohd (kohtunnus)
+    on jore.jr_kilpailukohd (kohtunnus)
     where (seuranta IS NOT NULL);
 
-create table jr_konserni
+create table jore.jr_konserni
 (
     kontunnus numeric not null
         constraint jr_konserni_pkey
@@ -341,9 +340,9 @@ create table jr_konserni
     status numeric
 );
 
-alter table jr_konserni owner to postgres;
+alter table jore.jr_konserni owner to postgres;
 
-create table jr_koodisto
+create table jore.jr_koodisto
 (
     koolista varchar,
     koojarjestys numeric,
@@ -356,9 +355,9 @@ create table jr_koodisto
     koodityyppi varchar
 );
 
-alter table jr_koodisto owner to postgres;
+alter table jore.jr_koodisto owner to postgres;
 
-create table jr_liikennoitsija
+create table jore.jr_liikennoitsija
 (
     liitunnus numeric,
     liinimi varchar,
@@ -382,9 +381,9 @@ create table jr_liikennoitsija
     lijliikennoitsija boolean
 );
 
-alter table jr_liikennoitsija owner to postgres;
+alter table jore.jr_liikennoitsija owner to postgres;
 
-create table jr_reitinlinkki
+create table jore.jr_reitinlinkki
 (
     reitunnus varchar,
     suusuunta numeric,
@@ -410,9 +409,9 @@ create table jr_reitinlinkki
     nettisarake numeric
 );
 
-alter table jr_reitinlinkki owner to postgres;
+alter table jore.jr_reitinlinkki owner to postgres;
 
-create table jr_reitinsuunta
+create table jore.jr_reitinsuunta
 (
     reitunnus varchar,
     suusuunta numeric,
@@ -439,14 +438,14 @@ create table jr_reitinsuunta
     poikkeusreitti boolean
 );
 
-alter table jr_reitinsuunta owner to postgres;
+alter table jore.jr_reitinsuunta owner to postgres;
 
 create index reitinsuunta_suunta
-    on jr_reitinsuunta (suusuunta);
+    on jore.jr_reitinsuunta (suusuunta);
 
 create index reitinsuunta_reitunnus
-    on jr_reitinsuunta (reitunnus);
+    on jore.jr_reitinsuunta (reitunnus);
 
 create index reitinsuunta_suupituus
-    on jr_reitinsuunta (suupituus);
+    on jore.jr_reitinsuunta (suupituus);
 
