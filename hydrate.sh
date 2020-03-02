@@ -3,7 +3,7 @@
 set -e
 
 # Collect all csv files in the data dir
-FILES=$(cd -P -- "$(dirname -- "$0")" && pwd -P)/data/*
+FILES="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/data/*"
 
 export PGPASSWORD=password
 

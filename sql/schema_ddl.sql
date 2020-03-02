@@ -35,7 +35,7 @@ create table ak_kaavio
     tyyppi numeric,
     aikataulupala numeric,
     kohtunnus varchar,
-    kuormaika boolean,
+    kuormaika numeric,
     perustaja varchar,
     perustpvm timestamp with time zone,
     muuttaja varchar,
@@ -50,7 +50,7 @@ create table ak_kaavion_lahto
     kaaid numeric,
     reitunnus varchar,
     suunta numeric,
-    lahaika numeric,
+    lahaika varchar,
     ajoaika numeric,
     kaltyyppi varchar,
     ajotyyppi numeric,
@@ -72,6 +72,21 @@ create table ak_kaavion_lahto
 );
 
 alter table ak_kaavion_lahto owner to postgres;
+
+create index reitunnus
+    on ak_kaavion_lahto (reitunnus);
+
+create index kaaid
+    on ak_kaavion_lahto (kaaid);
+
+create index suunta
+    on ak_kaavion_lahto (suunta);
+
+create index kaltyyppi
+    on ak_kaavion_lahto (kaltyyppi);
+
+create index liitunnus
+    on ak_kaavion_lahto (liitunnus);
 
 create table jr_ajoneuvo
 (
@@ -131,7 +146,7 @@ create table jr_ajoneuvo
     turvateli boolean,
     niiaustoiminto boolean,
     pistoke boolean,
-    valoetunro boolean,
+    valoetunro numeric,
     varuste1 varchar,
     varuste2 varchar,
     varuste3 varchar,
@@ -183,7 +198,7 @@ create table jr_inf_aikataulu_vp
     tyyppi numeric,
     voimok boolean,
     viitem varchar,
-    kaltyyppi boolean,
+    kaltyyppi numeric,
     tvrkvht boolean,
     tohitustunnit numeric,
     tohitusminuutit numeric,
@@ -217,7 +232,7 @@ create table jr_inf_kohde
     selite varchar,
     lintunnus varchar not null,
     liitunnus numeric not null,
-    liirooli boolean,
+    liirooli numeric,
     liialkpvm timestamp with time zone not null,
     liipaattpvm timestamp with time zone not null,
     koulutus numeric,
@@ -228,6 +243,18 @@ create table jr_inf_kohde
 );
 
 alter table jr_inf_kohde owner to postgres;
+
+create index operator_id
+    on jr_inf_kohde (liitunnus);
+
+create index line_id
+    on jr_inf_kohde (lintunnus);
+
+create index kohtunnus_operator_line_id
+    on jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
+
+create index start_date_end_date
+    on jr_inf_kohde (kohalkpvm, kohpaattpvm);
 
 create table jr_inf_liik
 (
@@ -254,7 +281,7 @@ create table jr_kilpailukohd
     kohindeksipvm varchar,
     prosentti numeric,
     prosentti2 numeric,
-    valtyyppi boolean,
+    valtyyppi numeric,
     kmhinta numeric,
     tuntihinta numeric,
     pvhinta numeric,
@@ -276,7 +303,7 @@ create table jr_kilpailukohd
     optiomahd numeric,
     optiokayt numeric,
     lisatietoa varchar,
-    tyyppi boolean,
+    tyyppi numeric,
     sopimustyyppi varchar,
     kyssanktio1 numeric,
     kyssanktio2 numeric,
@@ -286,10 +313,20 @@ create table jr_kilpailukohd
     vertailutaso_alku numeric,
     vertailutaso_loppu numeric,
     vertailukerroin numeric,
-    louhinkoodi boolean
+    louhinkoodi numeric
 );
 
 alter table jr_kilpailukohd owner to postgres;
+
+create index kohtunnus
+    on jr_kilpailukohd (kohtunnus);
+
+create index seuranta
+    on jr_kilpailukohd (seuranta);
+
+create index kohtunnus_seuranta_not_null
+    on jr_kilpailukohd (kohtunnus)
+    where (seuranta IS NOT NULL);
 
 create table jr_konserni
 (
@@ -354,7 +391,7 @@ create table jr_reitinlinkki
     suuvoimast timestamp with time zone,
     reljarjnro numeric,
     relid numeric,
-    relmatkaik boolean,
+    relmatkaik numeric,
     relohaikpys numeric,
     relvpistaikpys varchar,
     relpysakki varchar,
@@ -403,4 +440,13 @@ create table jr_reitinsuunta
 );
 
 alter table jr_reitinsuunta owner to postgres;
+
+create index reitinsuunta_suunta
+    on jr_reitinsuunta (suusuunta);
+
+create index reitinsuunta_reitunnus
+    on jr_reitinsuunta (reitunnus);
+
+create index reitinsuunta_suupituus
+    on jr_reitinsuunta (suupituus);
 
