@@ -7,7 +7,7 @@ for table in $(<tables.lst); do
   sqlcmd -S 10.218.6.14,56239 -U jorep -P "tuotanto" -s"@" -W -Q "SET NOCOUNT ON; SELECT * FROM ${table}" > "${table}.tmp"
 
   # Remove all commas,
-  # convert the delimiter (|) to a comma,
+  # convert the delimiter (@) to a comma,
   # make all NULL strings empty values,
   # remove second row (--- separator),
   # remove last row (empty),

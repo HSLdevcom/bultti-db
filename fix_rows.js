@@ -61,7 +61,18 @@ if (!args[0]) {
         }
 
         // Remove values that are only white space
-        currentLine = currentLine.replace(/,\s+,/g, ",,");
+        const emptyValuesMatches = currentLine.match(/(,\s+)+,/g);
+
+        if (emptyValuesMatches && Array.isArray(emptyValuesMatches)) {
+          for (const match of emptyValuesMatches) {
+            const commaString = match.replace(/\s+/g, "");
+            currentLine = currentLine.replace(match, commaString);
+          }
+        }
+
+        // Trim whitespace from values
+        currentLine = currentLine.replace(/\s+,/g, ",");
+
         // Remove errant quotes
         currentLine = currentLine.replace(/"|'/g, "");
 
