@@ -32,6 +32,13 @@ alter table jore.ak_kaavion_lahto alter column liitunnus type numeric using (lii
 alter table jore.ak_kaavion_lahto alter column lahaika type varchar using lahaika::varchar;
 alter table jore.ak_kaavion_lahto alter column saapaika type varchar using saapaika::varchar;
 
+alter table jore.ak_kaavion_suoritteet alter column perustpvm type timestamptz using perustpvm::timestamptz;
+alter table jore.ak_kaavion_suoritteet alter column muutospvm type timestamptz using muutospvm::timestamptz;
+alter table jore.ak_kaavion_suoritteet alter column lahaika type varchar using lahaika::varchar;
+
+alter table jore.ak_kaavion_reitti alter column suunta1 type timestamptz using suunta1::timestamptz;
+alter table jore.ak_kaavion_reitti alter column suunta2 type timestamptz using suunta2::timestamptz;
+
 alter table jore.jr_ajoneuvo alter column tarkpvm type timestamptz using tarkpvm::timestamptz;
 alter table jore.jr_ajoneuvo alter column rekpvm type timestamptz using rekpvm::timestamptz;
 alter table jore.jr_ajoneuvo alter column kayttpvm type timestamptz using kayttpvm::timestamptz;
@@ -76,6 +83,8 @@ alter table jore.jr_liikennoitsija alter column liiviimpvm type timestamptz usin
 ALTER TABLE jore.jr_konserni ADD PRIMARY KEY (kontunnus);
 alter table jore.jr_konserni alter column tallpvm type timestamptz using tallpvm::timestamptz;
 
+alter table jore.jr_linkki alter column lnkviimpvm type timestamptz using lnkviimpvm::timestamptz;
+
 alter table jore.jr_reitinlinkki alter column suuvoimast type timestamptz using (suuvoimast::text)::timestamptz;
 alter table jore.jr_reitinlinkki alter column relviimpvm type timestamptz using (relviimpvm::text)::timestamptz;
 alter table jore.jr_reitinlinkki alter column pyssade type numeric using (pyssade::text)::numeric;
@@ -106,3 +115,11 @@ CREATE INDEX liitunnus ON jore.ak_kaavion_lahto (liitunnus);
 CREATE INDEX reitinsuunta_suunta ON jore.jr_reitinsuunta (suusuunta);
 CREATE INDEX reitinsuunta_reitunnus ON jore.jr_reitinsuunta (reitunnus);
 CREATE INDEX reitinsuunta_suupituus ON jore.jr_reitinsuunta (suupituus);
+
+CREATE INDEX suorite_kaaid ON jore.ak_kaavion_suoritteet (kaaid);
+CREATE INDEX suorite_reitti ON jore.ak_kaavion_suoritteet (reitunnus, suunta);
+CREATE INDEX suorite_kaaid_reitti ON jore.ak_kaavion_suoritteet (kaaid, reitunnus, suunta);
+CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
+CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
+
+CREATE INDEX kaavio_reitti_kaaid ON jore.ak_kaavion_reitti (kaaid);
