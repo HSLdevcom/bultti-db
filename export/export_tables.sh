@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 # Script to dump all listed tables from SQL Server into CSV files with sqlcmd.
 # Make sure a tables.lst file exists in the same location with a list of each table to download.
-# @file: bcp-dump.sh
-server="10.218.6.14,56239" # Change this.
-user="jorep"               # Change this.
-pass="tuotanto"            # Change this.
-creds="-S '$server' -U '$user' -P '$pass'"
+# @file: export_tables.sh
 
 for table in $(<tables.lst); do
-  sqlcmd "${creds}" -s"@" -W -Q "SET NOCOUNT ON; SELECT * FROM ${table}" > "${table}.tmp"
+  sqlcmd -S 10.218.6.14,56239 -U jorep -P "tuotanto" -s"@" -W -Q "SET NOCOUNT ON; SELECT * FROM ${table}" > "${table}.tmp"
 
   # Remove all commas,
   # convert the delimiter (|) to a comma,
