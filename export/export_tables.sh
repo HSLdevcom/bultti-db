@@ -10,7 +10,6 @@ for table in $(<tables.lst); do
   # convert the delimiter (@) to a comma,
   # make all NULL strings empty values,
   # remove second row (--- separator),
-  # remove last row (empty),
   # then remove all empty rows.
-  sed -e "s/,//g" "${table}.tmp" | sed -e "s/@/,/g" | sed -e "s/NULL//g" | sed -e "2d" | sed -e "$d" | sed -e "/^$/d" > "${table}.csv"
+  sed -e "s/,//g" "${table}.tmp" | sed -e "s/@/,/g" | sed -e "s/NULL//g" | sed -e "2d" | sed -e "/^$/d" > "${table}.csv"
 done
