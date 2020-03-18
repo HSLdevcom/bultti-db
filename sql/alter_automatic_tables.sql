@@ -47,6 +47,7 @@ alter table jore.jr_ajoneuvo alter column viimvoi type date using viimvoi::date;
 alter table jore.jr_ajoneuvo alter column tallpvm type timestamptz using tallpvm::timestamptz;
 alter table jore.jr_ajoneuvo alter column valoetunro type numeric using valoetunro::numeric;
 
+ALTER TABLE jore.jr_kinf_kalusto ADD PRIMARY KEY (reknro, kylkinro, liitunnus);
 alter table jore.jr_kinf_kalusto alter column kylkinro type varchar using kylkinro::varchar;
 
 ALTER TABLE jore.jr_eritpvkalent ADD PRIMARY KEY (eritpoikpvm, eritpaiva);
@@ -125,3 +126,13 @@ CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
 CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
 
 CREATE INDEX kaavio_reitti_kaaid ON jore.ak_kaavion_reitti (kaaid);
+
+CREATE INDEX ajoneuvo_reknro ON jore.jr_ajoneuvo (reknro);
+CREATE INDEX ajoneuvo_rekpvm ON jore.jr_ajoneuvo (rekpvm);
+CREATE INDEX ajoneuvo_kylkinro ON jore.jr_ajoneuvo (kylkinro);
+
+CREATE INDEX kalusto_reknro ON jore.jr_kinf_kalusto (reknro);
+CREATE INDEX kalusto_liitunnus ON jore.jr_kinf_kalusto (liitunnus);
+CREATE INDEX kalusto_kylkinro ON jore.jr_kinf_kalusto (kylkinro);
+CREATE INDEX kalusto_tyyppi ON jore.jr_kinf_kalusto (tyyppi);
+CREATE INDEX kalusto_paastoluokka ON jore.jr_kinf_kalusto (paastoluokka);
