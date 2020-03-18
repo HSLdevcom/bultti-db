@@ -47,6 +47,8 @@ alter table jore.jr_ajoneuvo alter column viimvoi type date using viimvoi::date;
 alter table jore.jr_ajoneuvo alter column tallpvm type timestamptz using tallpvm::timestamptz;
 alter table jore.jr_ajoneuvo alter column valoetunro type numeric using valoetunro::numeric;
 
+alter table jore.jr_kinf_kalusto alter column kylkinro type varchar using kylkinro::varchar;
+
 ALTER TABLE jore.jr_eritpvkalent ADD PRIMARY KEY (eritpoikpvm, eritpaiva);
 alter table jore.jr_eritpvkalent alter column eritpoikpvm type date using eritpoikpvm::date;
 alter table jore.jr_eritpvkalent alter column eritviimpvm type date using eritviimpvm::date;
