@@ -1,5 +1,6 @@
 data/*.csv
-data-backup
-data-done
+data-backup/*
+data-done/*
+data_prev/*
 data-errors/*.txt
 postgres-data
