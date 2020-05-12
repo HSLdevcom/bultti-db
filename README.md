@@ -11,6 +11,28 @@ On the machine where you are creating the database, you need to have the followi
 - node (>= 10)
 - scp
 
+## Find the data
+
+Look for the data you need in the JORE database with the following commands:
+
+### List tables
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+```
+
+### List columns
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT column_name, data_type, character_maximum_length, table_name,ordinal_position, is_nullable FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE 'jr_kinf_reitti' ORDER BY ordinal_position"
+```
+
+### Get the first 30 rows
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT * FROM ( SELECT TOP 30 *, ROW_NUMBER() OVER (ORDER BY (SELECT 1)) AS rnum FROM [TABLE NAME]) a WHERE rnum > 10"
+```
+
 ## Get the data
 
 Go on a server with JORE access and copy over into a subdirectory (for example ~/exports):
