@@ -208,6 +208,78 @@ create table jore.jr_inf_aikataulu_vp
     ajotyyppi varchar
 );
 
+create table jore.ak_kaavion_suoritteet
+(
+    kaaid numeric,
+    reitunnus varchar,
+    suunta numeric,
+    lahaika varchar,
+    vrkvht boolean,
+    autokierto numeric,
+    kaltyyppi varchar,
+    metrit numeric,
+    metritsiir numeric,
+    sekunnit numeric,
+    sekunnitsiir numeric,
+    autopv numeric,
+    perustaja varchar,
+    perustpvm date,
+    muuttaja varchar,
+    muutospvm date
+);
+
+alter table jore.ak_kaavion_suoritteet owner to postgres;
+
+create table jore.ak_kaavion_reitti
+(
+    kaaid numeric,
+    reitunnus varchar,
+    atversio numeric,
+    suunta1 date,
+    suunta2 date
+);
+
+alter table jore.ak_kaavion_reitti owner to postgres;
+
+create table jore.jr_kinf_kalusto
+(
+    tyyppi varchar,
+    reknro varchar not null,
+    kylkinro varchar not null,
+    ika numeric,
+    kaltyyppi varchar,
+    teli boolean,
+    ulkovari varchar,
+    liitunnus numeric not null,
+    paastoluokka numeric,
+    paastoluokkaselite varchar,
+    constraint jr_kinf_kalusto_pkey
+        primary key (reknro, kylkinro, liitunnus)
+);
+
+alter table jore.jr_kinf_kalusto owner to postgres;
+
+create table jore.jr_linkki
+(
+    lnkverkko boolean,
+    lnkalkusolmu numeric,
+    lnkloppusolmu numeric,
+    lnkmitpituus numeric,
+    lnkpituus numeric,
+    lnkstid numeric,
+    katkunta numeric,
+    katnimi varchar,
+    kaoosnro numeric,
+    lnksuunta numeric,
+    lnkosnro numeric,
+    lnkostrk varchar,
+    lnkkuka varchar,
+    lnkviimpvm timestamp with time zone,
+    lnkhis boolean
+);
+
+alter table jore.jr_linkki owner to postgres;
+
 alter table jore.jr_inf_aikataulu_vp owner to postgres;
 
 create table jore.jr_inf_eritpv
