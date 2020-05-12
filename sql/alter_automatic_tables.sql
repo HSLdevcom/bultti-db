@@ -87,6 +87,9 @@ ALTER TABLE jore.jr_konserni ADD PRIMARY KEY (kontunnus);
 alter table jore.jr_konserni alter column tallpvm type timestamptz using tallpvm::timestamptz;
 
 alter table jore.jr_linkki alter column lnkviimpvm type timestamptz using lnkviimpvm::timestamptz;
+alter table jore.jr_linkki alter column lnkverkko type numeric using (lnkverkko::text)::numeric;
+alter table jore.jr_linkki alter column lnkalkusolmu type varchar using lnkalkusolmu::varchar;
+alter table jore.jr_linkki alter column lnkloppusolmu type varchar using lnkloppusolmu::varchar;
 
 alter table jore.jr_reitinlinkki alter column suuvoimast type date using (suuvoimast::text)::date;
 alter table jore.jr_reitinlinkki alter column relviimpvm type date using (relviimpvm::text)::date;
