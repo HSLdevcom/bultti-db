@@ -449,3 +449,93 @@ create index reitinsuunta_reitunnus
 create index reitinsuunta_suupituus
     on jore.jr_reitinsuunta (suupituus);
 
+create table jore.jr_kinf_linja3
+(
+    reitunnus varchar,
+    suuvoimast date,
+    suuviimvoi date,
+    suunta numeric,
+    reitinnimi varchar,
+    reitinnimir varchar,
+    jllaji numeric,
+    lahpaik varchar,
+    lahpaikr varchar,
+    lahsolmu varchar,
+    pituus numeric,
+    paapaik varchar,
+    paapaikr varchar,
+    paasolmu varchar,
+    nimilyh varchar,
+    nimilyhr varchar
+);
+
+alter table jore.jr_kinf_linja3 owner to postgres;
+
+create index kinf_linja3_reitti
+    on jore.jr_kinf_linja3 (reitunnus);
+
+create index kinf_linja3_suunta
+    on jore.jr_kinf_linja3 (suunta);
+
+create index kinf_linja3_reitti_suunta
+    on jore.jr_kinf_linja3 (reitunnus, suunta);
+
+create index kinf_linja3_solmu1
+    on jore.jr_kinf_linja3 (lahsolmu);
+
+create index kinf_linja3_solmu2
+    on jore.jr_kinf_linja3 (paasolmu);
+
+create table jore.jr_kinf_reitti
+(
+    solmu1 varchar,
+    solmu2 varchar,
+    reitti varchar,
+    suunta numeric,
+    suuvoimast date,
+    suuviimvoi date,
+    pysnimi varchar,
+    kumajoaika numeric,
+    jarjnro numeric,
+    pituus numeric,
+    kumpituus numeric,
+    matkaikpys boolean,
+    kutsupys numeric,
+    pyssade numeric,
+    jarjnro3 numeric,
+    pituustyyppi varchar,
+    maaranpaa1 varchar,
+    maaranpaa1r varchar,
+    maaranpaa2 varchar,
+    maaranpaa2r varchar,
+    ajantaspys numeric
+);
+
+alter table jore.jr_kinf_reitti owner to postgres;
+
+create index kinf_reitti_reitti
+    on jore.jr_kinf_reitti (reitti);
+
+create index kinf_reitti_suunta
+    on jore.jr_kinf_reitti (suunta);
+
+create index kinf_reitti_reitti_suunta
+    on jore.jr_kinf_reitti (reitti, suunta);
+
+create index kinf_reitti_solmu1
+    on jore.jr_kinf_reitti (solmu1);
+
+create index kinf_reitti_solmu2
+    on jore.jr_kinf_reitti (solmu2);
+
+create table jore.jr_linja_vaatimus
+(
+    lintunnus varchar,
+    kookoodi numeric,
+    kooselite varchar
+);
+
+alter table jore.jr_linja_vaatimus owner to postgres;
+
+create index linja_vaatimus_lintunnus
+    on jore.jr_linja_vaatimus (lintunnus);
