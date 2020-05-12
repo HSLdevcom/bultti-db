@@ -261,9 +261,9 @@ alter table jore.jr_kinf_kalusto owner to postgres;
 
 create table jore.jr_linkki
 (
-    lnkverkko boolean,
-    lnkalkusolmu numeric,
-    lnkloppusolmu numeric,
+    lnkverkko numeric,
+    lnkalkusolmu varchar,
+    lnkloppusolmu varchar,
     lnkmitpituus numeric,
     lnkpituus numeric,
     lnkstid numeric,
