@@ -98,6 +98,16 @@ alter table jore.jr_reitinsuunta alter column suuvoimviimpvm type date using suu
 alter table jore.jr_reitinsuunta alter column suuviimpvm type date using suuviimpvm::date;
 alter table jore.jr_reitinsuunta alter column suupituus type numeric using suupituus::numeric;
 
+alter table jore.jr_kinf_reitti alter column suuvoimast type date using (suuvoimast::text)::date;
+alter table jore.jr_kinf_reitti alter column suuviimvoi type date using (suuviimvoi::text)::date;
+alter table jore.jr_kinf_reitti alter column solmu1 type varchar using (solmu1::varchar)::varchar;
+alter table jore.jr_kinf_reitti alter column solmu2 type varchar using (solmu2::varchar)::varchar;
+
+alter table jore.jr_kinf_linja3 alter column suuvoimast type date using (suuvoimast::text)::date;
+alter table jore.jr_kinf_linja3 alter column suuviimvoi type date using (suuviimvoi::text)::date;
+alter table jore.jr_kinf_linja3 alter column lahsolmu type varchar using (lahsolmu::varchar)::varchar;
+alter table jore.jr_kinf_linja3 alter column paasolmu type varchar using (paasolmu::varchar)::varchar;
+
 --- Add indices
 
 CREATE INDEX operator_id ON jore.jr_inf_kohde (liitunnus);
@@ -136,3 +146,18 @@ CREATE INDEX kalusto_liitunnus ON jore.jr_kinf_kalusto (liitunnus);
 CREATE INDEX kalusto_kylkinro ON jore.jr_kinf_kalusto (kylkinro);
 CREATE INDEX kalusto_tyyppi ON jore.jr_kinf_kalusto (tyyppi);
 CREATE INDEX kalusto_paastoluokka ON jore.jr_kinf_kalusto (paastoluokka);
+
+CREATE INDEX linja_vaatimus_lintunnus ON jore.jr_linja_vaatimus (lintunnus);
+
+CREATE INDEX kinf_reitti_reitti ON jore.jr_kinf_reitti (reitti);
+CREATE INDEX kinf_reitti_suunta ON jore.jr_kinf_reitti (suunta);
+CREATE INDEX kinf_reitti_reitti_suunta ON jore.jr_kinf_reitti (reitti, suunta);
+CREATE INDEX kinf_reitti_solmu1 ON jore.jr_kinf_reitti (solmu1);
+CREATE INDEX kinf_reitti_solmu2 ON jore.jr_kinf_reitti (solmu2);
+
+CREATE INDEX kinf_linja3_reitti ON jore.jr_kinf_linja3 (reitunnus);
+CREATE INDEX kinf_linja3_suunta ON jore.jr_kinf_linja3 (suunta);
+CREATE INDEX kinf_linja3_reitti_suunta ON jore.jr_kinf_linja3 (reitunnus, suunta);
+CREATE INDEX kinf_linja3_solmu1 ON jore.jr_kinf_linja3 (lahsolmu);
+CREATE INDEX kinf_linja3_solmu2 ON jore.jr_kinf_linja3 (paasolmu);
+
