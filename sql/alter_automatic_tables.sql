@@ -113,6 +113,18 @@ alter table jore.jr_kinf_linja3 alter column paasolmu type varchar using (paasol
 
 --- Add indices
 
+create index ak_kaavio_kaaid_index on jore.ak_kaavio (kaaid);
+create index ak_kaavio_kaatunnus_index on jore.ak_kaavio (kaatunnus);
+create index ak_kaavio_kaatunnus_kaaversio_index on jore.ak_kaavio (kaatunnus, kaaversio);
+create index ak_kaavio_kaaversio_index on jore.ak_kaavio (kaaversio);
+create index ak_kaavio_kohtunnus_index on jore.ak_kaavio (kohtunnus);
+create index ak_kaavio_pvtyyppi_index on jore.ak_kaavio (pvtyyppi);
+
+create index jr_inf_aikataulu_vp_jarjnro_index on jore.jr_inf_aikataulu_vp (jarjnro);
+create index jr_inf_aikataulu_vp_paiva_index on jore.jr_inf_aikataulu_vp (paiva);
+create index jr_inf_aikataulu_vp_solmutunnus_index on jore.jr_inf_aikataulu_vp (solmutunnus);
+create index jr_inf_aikataulu_vp_reitunnus_index on jore.jr_inf_aikataulu_vp (reitunnus);
+
 CREATE INDEX operator_id ON jore.jr_inf_kohde (liitunnus);
 CREATE INDEX line_id ON jore.jr_inf_kohde (lintunnus);
 CREATE INDEX start_date_end_date ON jore.jr_inf_kohde USING brin (kohalkpvm, kohpaattpvm);
@@ -139,6 +151,7 @@ CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
 CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
 
 CREATE INDEX kaavio_reitti_kaaid ON jore.ak_kaavion_reitti (kaaid);
+CREATE INDEX kaavio_reitti_reitunnus ON jore.ak_kaavion_reitti (reitunnus);
 
 CREATE INDEX ajoneuvo_reknro ON jore.jr_ajoneuvo (reknro);
 CREATE INDEX ajoneuvo_rekpvm ON jore.jr_ajoneuvo (rekpvm);
@@ -164,3 +177,12 @@ CREATE INDEX kinf_linja3_reitti_suunta ON jore.jr_kinf_linja3 (reitunnus, suunta
 CREATE INDEX kinf_linja3_solmu1 ON jore.jr_kinf_linja3 (lahsolmu);
 CREATE INDEX kinf_linja3_solmu2 ON jore.jr_kinf_linja3 (paasolmu);
 
+create index jr_linkki_lnkalkusolmu_index on jore.jr_linkki (lnkalkusolmu);
+create index jr_linkki_lnkalkusolmu_lnkloppusolmu_index on jore.jr_linkki (lnkalkusolmu, lnkloppusolmu);
+create index jr_linkki_lnkloppusolmu_index on jore.jr_linkki (lnkloppusolmu);
+
+create index jr_reitinlinkki_lnkalkusolmu_index on jore.jr_reitinlinkki (lnkalkusolmu);
+create index jr_reitinlinkki_lnkloppusolmu_index on jore.jr_reitinlinkki (lnkloppusolmu);
+create index jr_reitinlinkki_reitunnus_index on jore.jr_reitinlinkki (reitunnus);
+create index jr_reitinlinkki_relpysakki_index on jore.jr_reitinlinkki (relpysakki);
+create index jr_reitinlinkki_suusuunta_index on jore.jr_reitinlinkki (suusuunta);

@@ -184,6 +184,10 @@ create table jore.jr_ajoneuvo
 
 alter table jore.jr_ajoneuvo owner to postgres;
 
+CREATE INDEX ajoneuvo_reknro ON jore.jr_ajoneuvo (reknro);
+CREATE INDEX ajoneuvo_rekpvm ON jore.jr_ajoneuvo (rekpvm);
+CREATE INDEX ajoneuvo_kylkinro ON jore.jr_ajoneuvo (kylkinro);
+
 create table jore.jr_eritpvkalent
 (
     eritpoikpvm timestamp with time zone not null,
@@ -248,20 +252,11 @@ create table jore.ak_kaavion_suoritteet
 
 alter table jore.ak_kaavion_suoritteet owner to postgres;
 
-create index ak_kaavion_suoritteet_metrit_index
-    on jore.ak_kaavion_suoritteet (metrit);
-
-create index ak_kaavion_suoritteet_reitunnus_index
-    on jore.ak_kaavion_suoritteet (reitunnus);
-
-create index ak_kaavion_suoritteet_reitunnus_suunta_metrit_index
-    on jore.ak_kaavion_suoritteet (reitunnus, suunta, metrit);
-
-create index ak_kaavion_suoritteet_suunta_index
-    on jore.ak_kaavion_suoritteet (suunta);
-
-create index ak_kaavion_suoritteet_kaaid_index
-    on jore.ak_kaavion_suoritteet (kaaid);
+CREATE INDEX suorite_kaaid ON jore.ak_kaavion_suoritteet (kaaid);
+CREATE INDEX suorite_reitti ON jore.ak_kaavion_suoritteet (reitunnus, suunta);
+CREATE INDEX suorite_kaaid_reitti ON jore.ak_kaavion_suoritteet (kaaid, reitunnus, suunta);
+CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
+CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
 
 create table jore.ak_kaavion_reitti
 (
@@ -273,6 +268,9 @@ create table jore.ak_kaavion_reitti
 );
 
 alter table jore.ak_kaavion_reitti owner to postgres;
+
+CREATE INDEX kaavio_reitti_kaaid ON jore.ak_kaavion_reitti (kaaid);
+CREATE INDEX kaavio_reitti_reitunnus ON jore.ak_kaavion_reitti (reitunnus);
 
 create table jore.jr_kinf_kalusto
 (
@@ -291,6 +289,12 @@ create table jore.jr_kinf_kalusto
 );
 
 alter table jore.jr_kinf_kalusto owner to postgres;
+
+CREATE INDEX kalusto_reknro ON jore.jr_kinf_kalusto (reknro);
+CREATE INDEX kalusto_liitunnus ON jore.jr_kinf_kalusto (liitunnus);
+CREATE INDEX kalusto_kylkinro ON jore.jr_kinf_kalusto (kylkinro);
+CREATE INDEX kalusto_tyyppi ON jore.jr_kinf_kalusto (tyyppi);
+CREATE INDEX kalusto_paastoluokka ON jore.jr_kinf_kalusto (paastoluokka);
 
 create table jore.jr_linkki
 (
@@ -313,7 +317,43 @@ create table jore.jr_linkki
 
 alter table jore.jr_linkki owner to postgres;
 
+create index jr_linkki_lnkalkusolmu_index on jore.jr_linkki (lnkalkusolmu);
+create index jr_linkki_lnkalkusolmu_lnkloppusolmu_index on jore.jr_linkki (lnkalkusolmu, lnkloppusolmu);
+create index jr_linkki_lnkloppusolmu_index on jore.jr_linkki (lnkloppusolmu);
+
+create table jore.jr_inf_aikataulu_vp
+(
+    solmutunnus numeric,
+    reitunnus varchar,
+    suunta numeric,
+    paiva varchar,
+    jarjnro numeric,
+    vrkvht boolean,
+    ohitustunnit numeric,
+    ohitusminuutit numeric,
+    matlatt boolean,
+    lavoimast date,
+    laviimvoi date,
+    tyyppi numeric,
+    voimok boolean,
+    viitem varchar,
+    kaltyyppi numeric,
+    tvrkvht boolean,
+    tohitustunnit numeric,
+    tohitusminuutit numeric,
+    maksviivaika numeric,
+    id numeric not null
+        constraint jr_inf_aikataulu_vp_pkey
+            primary key,
+    ajotyyppi varchar
+);
+
 alter table jore.jr_inf_aikataulu_vp owner to postgres;
+
+create index jr_inf_aikataulu_vp_jarjnro_index on jore.jr_inf_aikataulu_vp (jarjnro);
+create index jr_inf_aikataulu_vp_paiva_index on jore.jr_inf_aikataulu_vp (paiva);
+create index jr_inf_aikataulu_vp_solmutunnus_index on jore.jr_inf_aikataulu_vp (solmutunnus);
+create index jr_inf_aikataulu_vp_reitunnus_index on jore.jr_inf_aikataulu_vp (reitunnus);
 
 create table jore.jr_inf_eritpv
 (
@@ -347,6 +387,11 @@ create table jore.jr_inf_kohde
 );
 
 alter table jore.jr_inf_kohde owner to postgres;
+
+CREATE INDEX operator_id ON jore.jr_inf_kohde (liitunnus);
+CREATE INDEX line_id ON jore.jr_inf_kohde (lintunnus);
+CREATE INDEX start_date_end_date ON jore.jr_inf_kohde USING brin (kohalkpvm, kohpaattpvm);
+CREATE INDEX kohtunnus_operator_line_id ON jore.jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
 
 create index operator_id
     on jore.jr_inf_kohde (liitunnus);
@@ -422,15 +467,9 @@ create table jore.jr_kilpailukohd
 
 alter table jore.jr_kilpailukohd owner to postgres;
 
-create index kohtunnus
-    on jore.jr_kilpailukohd (kohtunnus);
-
-create index seuranta
-    on jore.jr_kilpailukohd (seuranta);
-
-create index kohtunnus_seuranta_not_null
-    on jore.jr_kilpailukohd (kohtunnus)
-    where (seuranta IS NOT NULL);
+CREATE INDEX kohtunnus ON jore.jr_kilpailukohd (kohtunnus);
+CREATE INDEX seuranta ON jore.jr_kilpailukohd (seuranta);
+CREATE INDEX kohtunnus_seuranta_not_null ON jore.jr_kilpailukohd (kohtunnus) WHERE seuranta IS NOT NULL;
 
 create table jore.jr_konserni
 (
@@ -515,6 +554,12 @@ create table jore.jr_reitinlinkki
 );
 
 alter table jore.jr_reitinlinkki owner to postgres;
+
+create index jr_reitinlinkki_lnkalkusolmu_index on jore.jr_reitinlinkki (lnkalkusolmu);
+create index jr_reitinlinkki_lnkloppusolmu_index on jore.jr_reitinlinkki (lnkloppusolmu);
+create index jr_reitinlinkki_reitunnus_index on jore.jr_reitinlinkki (reitunnus);
+create index jr_reitinlinkki_relpysakki_index on jore.jr_reitinlinkki (relpysakki);
+create index jr_reitinlinkki_suusuunta_index on jore.jr_reitinlinkki (suusuunta);
 
 create table jore.jr_reitinsuunta
 (
