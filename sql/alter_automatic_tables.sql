@@ -79,6 +79,12 @@ alter table jore.jr_kilpailukohd alter column sloppupvm type date using sloppupv
 alter table jore.jr_kilpailukohd alter column valtyyppi type numeric using valtyyppi::numeric;
 alter table jore.jr_kilpailukohd alter column tyyppi type numeric using tyyppi::numeric;
 alter table jore.jr_kilpailukohd alter column louhinkoodi type numeric using louhinkoodi::numeric;
+alter table jore.jr_kilpailukohd alter column kohalkpvm type date using (kohalkpvm::text)::date;
+alter table jore.jr_kilpailukohd alter column kohpaattpvm type date using (kohpaattpvm::text)::date;
+alter table jore.jr_kilpailukohd alter column liikaloituspvm type date using (liikaloituspvm::text)::date;
+alter table jore.jr_kilpailukohd alter column muutospvm type date using (muutospvm::text)::date;
+alter table jore.jr_kilpailukohd alter column kohtarjouspvm type date using (kohtarjouspvm::text)::date;
+alter table jore.jr_kilpailukohd alter column kohindeksipvm type date using (kohindeksipvm::text)::date;
 
 ALTER TABLE jore.jr_liikennoitsija ADD PRIMARY KEY (liitunnus);
 alter table jore.jr_liikennoitsija alter column liiviimpvm type date using (liiviimpvm::text)::date;
