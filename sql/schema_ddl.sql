@@ -44,6 +44,24 @@ create table jore.ak_kaavio
 
 alter table jore.ak_kaavio owner to postgres;
 
+create index ak_kaavio_kaaid_index
+    on jore.ak_kaavio (kaaid);
+
+create index ak_kaavio_kaatunnus_index
+    on jore.ak_kaavio (kaatunnus);
+
+create index ak_kaavio_kaatunnus_kaaversio_index
+    on jore.ak_kaavio (kaatunnus, kaaversio);
+
+create index ak_kaavio_kaaversio_index
+    on jore.ak_kaavio (kaaversio);
+
+create index ak_kaavio_kohtunnus_index
+    on jore.ak_kaavio (kohtunnus);
+
+create index ak_kaavio_pvtyyppi_index
+    on jore.ak_kaavio (pvtyyppi);
+
 create table jore.ak_kaavion_lahto
 (
     kaaid numeric,
@@ -229,6 +247,21 @@ create table jore.ak_kaavion_suoritteet
 );
 
 alter table jore.ak_kaavion_suoritteet owner to postgres;
+
+create index ak_kaavion_suoritteet_metrit_index
+    on jore.ak_kaavion_suoritteet (metrit);
+
+create index ak_kaavion_suoritteet_reitunnus_index
+    on jore.ak_kaavion_suoritteet (reitunnus);
+
+create index ak_kaavion_suoritteet_reitunnus_suunta_metrit_index
+    on jore.ak_kaavion_suoritteet (reitunnus, suunta, metrit);
+
+create index ak_kaavion_suoritteet_suunta_index
+    on jore.ak_kaavion_suoritteet (suunta);
+
+create index ak_kaavion_suoritteet_kaaid_index
+    on jore.ak_kaavion_suoritteet (kaaid);
 
 create table jore.ak_kaavion_reitti
 (
