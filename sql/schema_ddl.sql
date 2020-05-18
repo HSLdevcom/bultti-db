@@ -62,6 +62,10 @@ create index ak_kaavio_kohtunnus_index
 create index ak_kaavio_pvtyyppi_index
     on jore.ak_kaavio (pvtyyppi);
 
+create index ak_kaavio_kaavoimast_index on jore.ak_kaavio (kaavoimast);
+create index ak_kaavio_kaaviimvoi_index on jore.ak_kaavio (kaaviimvoi);
+create index ak_kaavio_validity_period_index on jore.ak_kaavio (kaavoimast, kaaviimvoi);
+
 create table jore.ak_kaavion_lahto
 (
     kaaid numeric,
@@ -89,21 +93,12 @@ create table jore.ak_kaavion_lahto
 );
 
 alter table jore.ak_kaavion_lahto owner to postgres;
-
-create index reitunnus
-    on jore.ak_kaavion_lahto (reitunnus);
-
-create index kaaid
-    on jore.ak_kaavion_lahto (kaaid);
-
-create index suunta
-    on jore.ak_kaavion_lahto (suunta);
-
-create index kaltyyppi
-    on jore.ak_kaavion_lahto (kaltyyppi);
-
-create index liitunnus
-    on jore.ak_kaavion_lahto (liitunnus);
+create index reitunnus on jore.ak_kaavion_lahto (reitunnus);
+create index kaaid on jore.ak_kaavion_lahto (kaaid);
+create index suunta on jore.ak_kaavion_lahto (suunta);
+create index lahto_lahtoaika on jore.ak_kaavion_lahto (lahaika);
+create index kaltyyppi on jore.ak_kaavion_lahto (kaltyyppi);
+create index liitunnus on jore.ak_kaavion_lahto (liitunnus);
 
 create table jore.jr_ajoneuvo
 (
@@ -257,6 +252,7 @@ CREATE INDEX suorite_reitti ON jore.ak_kaavion_suoritteet (reitunnus, suunta);
 CREATE INDEX suorite_kaaid_reitti ON jore.ak_kaavion_suoritteet (kaaid, reitunnus, suunta);
 CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
 CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
+CREATE INDEX suorite_kaaid_reitti_aika ON jore.ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
 
 create table jore.ak_kaavion_reitti
 (
@@ -469,6 +465,7 @@ alter table jore.jr_kilpailukohd owner to postgres;
 
 CREATE INDEX kohtunnus ON jore.jr_kilpailukohd (kohtunnus);
 CREATE INDEX seuranta ON jore.jr_kilpailukohd (seuranta);
+CREATE INDEX kohde_liitunnus ON jore.jr_kilpailukohd (liitunnus);
 CREATE INDEX kohtunnus_seuranta_not_null ON jore.jr_kilpailukohd (kohtunnus) WHERE seuranta IS NOT NULL;
 
 create table jore.jr_konserni

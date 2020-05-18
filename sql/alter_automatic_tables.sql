@@ -26,8 +26,8 @@ alter table jore.ak_kaavion_lahto alter column kommentti type text using komment
 alter table jore.ak_kaavion_lahto alter column voimok type varchar using voimok::varchar;
 alter table jore.ak_kaavion_lahto alter column vrkvht type varchar using vrkvht::varchar;
 alter table jore.ak_kaavion_lahto alter column viitem type varchar using viitem::varchar;
-alter table jore.ak_kaavion_lahto alter column termaika type varchar using termaika::varchar;
-alter table jore.ak_kaavion_lahto alter column elpymisaika type varchar using elpymisaika::varchar;
+alter table jore.ak_kaavion_lahto alter column termaika type numeric using termaika::numeric;
+alter table jore.ak_kaavion_lahto alter column elpymisaika type numeric using elpymisaika::numeric;
 alter table jore.ak_kaavion_lahto alter column liitunnus type numeric using (liitunnus::text)::numeric;
 alter table jore.ak_kaavion_lahto alter column lahaika type varchar using lahaika::varchar;
 alter table jore.ak_kaavion_lahto alter column saapaika type varchar using saapaika::varchar;
@@ -125,6 +125,9 @@ create index ak_kaavio_kaatunnus_kaaversio_index on jore.ak_kaavio (kaatunnus, k
 create index ak_kaavio_kaaversio_index on jore.ak_kaavio (kaaversio);
 create index ak_kaavio_kohtunnus_index on jore.ak_kaavio (kohtunnus);
 create index ak_kaavio_pvtyyppi_index on jore.ak_kaavio (pvtyyppi);
+create index ak_kaavio_kaavoimast_index on jore.ak_kaavio (kaavoimast);
+create index ak_kaavio_kaaviimvoi_index on jore.ak_kaavio (kaaviimvoi);
+create index ak_kaavio_validity_period_index on jore.ak_kaavio (kaavoimast, kaaviimvoi);
 
 create index jr_inf_aikataulu_vp_jarjnro_index on jore.jr_inf_aikataulu_vp (jarjnro);
 create index jr_inf_aikataulu_vp_paiva_index on jore.jr_inf_aikataulu_vp (paiva);
@@ -138,6 +141,7 @@ CREATE INDEX kohtunnus_operator_line_id ON jore.jr_inf_kohde (kohtunnus, liitunn
 
 CREATE INDEX kohtunnus ON jore.jr_kilpailukohd (kohtunnus);
 CREATE INDEX seuranta ON jore.jr_kilpailukohd (seuranta);
+CREATE INDEX kohde_liitunnus ON jore.jr_kilpailukohd (liitunnus);
 CREATE INDEX kohtunnus_seuranta_not_null ON jore.jr_kilpailukohd (kohtunnus) WHERE seuranta IS NOT NULL;
 
 CREATE INDEX reitunnus ON jore.ak_kaavion_lahto (reitunnus);
@@ -145,6 +149,7 @@ CREATE INDEX kaaid ON jore.ak_kaavion_lahto (kaaid);
 CREATE INDEX suunta ON jore.ak_kaavion_lahto (suunta);
 CREATE INDEX kaltyyppi ON jore.ak_kaavion_lahto (kaltyyppi);
 CREATE INDEX liitunnus ON jore.ak_kaavion_lahto (liitunnus);
+create index lahto_lahtoaika on jore.ak_kaavion_lahto (lahaika);
 
 CREATE INDEX reitinsuunta_suunta ON jore.jr_reitinsuunta (suusuunta);
 CREATE INDEX reitinsuunta_reitunnus ON jore.jr_reitinsuunta (reitunnus);
@@ -153,6 +158,7 @@ CREATE INDEX reitinsuunta_suupituus ON jore.jr_reitinsuunta (suupituus);
 CREATE INDEX suorite_kaaid ON jore.ak_kaavion_suoritteet (kaaid);
 CREATE INDEX suorite_reitti ON jore.ak_kaavion_suoritteet (reitunnus, suunta);
 CREATE INDEX suorite_kaaid_reitti ON jore.ak_kaavion_suoritteet (kaaid, reitunnus, suunta);
+CREATE INDEX suorite_kaaid_reitti_aika ON jore.ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
 CREATE INDEX suorite_lahaika ON jore.ak_kaavion_suoritteet (lahaika);
 CREATE INDEX suorite_metrit ON jore.ak_kaavion_suoritteet (metrit);
 
