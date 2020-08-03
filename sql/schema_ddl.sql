@@ -1,4 +1,4 @@
-create schema jore;
+create schema if not exists jore;
 alter schema jore owner to postgres;
 
 create table jore.ak_aikataulukausi
