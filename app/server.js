@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
 import express from 'express';
 import basicAuth from 'express-basic-auth';
-import { ADMIN_PASSWORD, SERVER_PORT } from '../constants';
+import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
 
@@ -26,6 +26,12 @@ export const server = () => {
 
   app.get('/', async (req, res) => {
     res.render('admin');
+  });
+  
+  app.post("/run", (req, res) => {
+    console.log("Running import");
+    
+    res.redirect(PATH_PREFIX);
   });
 
   app.listen(SERVER_PORT, () => {

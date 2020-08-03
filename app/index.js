@@ -1,7 +1,6 @@
-/* eslint-disable consistent-return */
 import { getKnex } from './knex';
 import { server } from './server';
-import { reportError, reportInfo } from './monitor';
+import { reportInfo, reportError } from './monitor';
 
 const { knex } = getKnex();
 
@@ -10,7 +9,7 @@ const { knex } = getKnex();
   await knex.migrate.latest();
 
   server();
-
+  
   await reportInfo('Server started.');
 })();
 
