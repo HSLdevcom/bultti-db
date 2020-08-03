@@ -61,7 +61,7 @@ Start a postgres instance. Then you have two options, use EITHER, not both:
 1. Generate a new schema based on the data with `generate_schema.sh` (if you only need to add a new table, use the csvsql command from this file and run it manually on the new file) OR
 2. Apply the existing schema at sql/schema_ddl.sql with `init_db`. This only works if the database is empty.
 
-Both will create a schema in the database. If the files have changes since the schema_ddl was created, just generate a new one and update schema_ddl.sql with the new one. You may need to fix column types after creating the automated schema. You WILL need to add keys and indices. Check sql/alter_automatic_tables.sql for the current changes and keys.
+Both will create a schema in the database. If the files have changes since the schema_ddl was created, just generate a new one and update schema_ddl.sql with the new one. You may need to fix column types after creating the automated schema. You WILL need to add keys and indices.
 
 At this point, move the csv files you DON'T want to import into the `data-done` directory (create it in this repo if it doesn't exist). It may be a good idea to move large files so the data import doesn't take forever if these are already in the database.
 
