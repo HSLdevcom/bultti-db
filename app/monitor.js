@@ -1,6 +1,10 @@
-import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from '../constants';
+import {
+  SLACK_WEBHOOK_URL,
+  ENVIRONMENT,
+  SLACK_MONITOR_MENTION,
+  MONITORING_ENABLED,
+} from '../constants';
 import got from 'got';
-import _ from 'lodash';
 
 export const messageTypes = {
   ERROR: 'error',
@@ -22,7 +26,7 @@ export async function onMonitorEvent(
   message = 'Something happened.',
   type = messageTypes.ERROR
 ) {
-  if (!message) {
+  if (!message || !MONITORING_ENABLED) {
     return false;
   }
 
