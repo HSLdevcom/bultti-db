@@ -5,7 +5,7 @@ import { reportInfo, reportError } from './monitor';
 const { knex } = getKnex();
 
 (async () => {
-  console.log('Initializing DB...');
+  console.log('Bultti DB starting...');
   await knex.migrate.latest();
 
   server();

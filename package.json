@@ -13,6 +13,7 @@
     "knex-postgis": "^0.12.0",
     "lodash": "^4.17.19",
     "ms-sqlcmd": "^2.0.1",
+    "node-dev": "^5.1.0",
     "pg": "^8.3.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
@@ -24,7 +25,7 @@
     "prettier": "^1.19.1"
   },
   "scripts": {
-    "start": "node --unhandled-rejections=strict --inspect -r esm -r dotenv/config app/index.js",
+    "start": "node-dev --unhandled-rejections=strict --inspect -r esm -r dotenv/config app/index.js",
     "start:production": "forever start -c \"node --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
     "prettier": "prettier */**.{js,json} --write",
     "knex": "knex",
