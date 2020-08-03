@@ -1,8 +1,38 @@
 {
   "dependencies": {
-    "@types/node": "^13.7.6"
+    "@types/node": "^13.7.6",
+    "dotenv": "^8.2.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "express-basic-auth": "^1.2.0",
+    "express-react-views": "^0.11.0",
+    "forever": "^3.0.0",
+    "fs-extra": "^9.0.1",
+    "got": "^11.5.1",
+    "knex": "^0.21.2",
+    "knex-postgis": "^0.12.0",
+    "lodash": "^4.17.19",
+    "pg": "^8.3.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "prettier": "^1.19.1"
-  }
+  },
+  "scripts": {
+    "start": "node --unhandled-rejections=strict --inspect -r esm -r dotenv/config app/index.js",
+    "start:production": "forever start -c \"node --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
+    "prettier": "prettier */**.{js,json} --write",
+    "knex": "knex",
+    "knex:local": "env-cmd knex"
+  },
+  "name": "bultti-db",
+  "version": "1.0.0",
+  "description": "DB hydration app for Bultti",
+  "main": "app/index.js",
+  "repository": "git@github.com:HSLdevcom/bultti-db.git",
+  "author": "Daniel Dunderfelt <daniel@developsuperpowers.com>",
+  "license": "MIT",
+  "private": true
 }

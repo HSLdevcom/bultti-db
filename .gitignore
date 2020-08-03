@@ -4,3 +4,4 @@ data-done/*
 data_prev/*
 data-errors/*.txt
 postgres-data
+.env
