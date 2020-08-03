@@ -39,6 +39,8 @@ export const JORE_PG_CONNECTION = {
   ssl: secretsEnv.PG_SSL === 'true',
 };
 
+export const MSSQL_CONNECTION_STRING = secretsEnv.MSSQL_CONNECTION_STRING
+
 export const DEBUG = secretsEnv.DEBUG || 'false';
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || 'password';
