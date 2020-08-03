@@ -1,3 +1,12 @@
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
 data/*.csv
 data-backup/*
 data-done/*
@@ -5,4 +14,6 @@ data_prev/*
 data-errors/*.txt
 postgres-data
 .env
+secrets
 test
+node_modules
