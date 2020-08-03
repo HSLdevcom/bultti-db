@@ -4,6 +4,7 @@ import basicAuth from 'express-basic-auth';
 import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
+import { importFromJore } from './importFromJore';
 
 export const server = () => {
   const app = express();
@@ -27,10 +28,10 @@ export const server = () => {
   app.get('/', async (req, res) => {
     res.render('admin');
   });
-  
-  app.post("/run", (req, res) => {
-    console.log("Running import");
-    
+
+  app.post('/run', (req, res) => {
+    console.log('Running import');
+    importFromJore();
     res.redirect(PATH_PREFIX);
   });
 
