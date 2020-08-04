@@ -17,3 +17,4 @@ postgres-data
 secrets
 test
 node_modules
+test_dsn

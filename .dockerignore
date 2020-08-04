@@ -4,7 +4,7 @@
 node_modules
 postgres-data
 disabled_migrations
-data
+data-done
 .env
 secrets
 data-done
