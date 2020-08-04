@@ -1,2 +1,2 @@
 SET NOCOUNT ON;
-SELECT * FROM $(TableName);
+SELECT * FROM $(TableName) FOR JSON AUTO;
