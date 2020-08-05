@@ -1,12 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { trim } from 'lodash';
+import { trim, mapValues, toString } from 'lodash';
 import * as mssql from 'mssql';
 import { MSSQL_CONNECTION, BATCH_SIZE } from '../constants';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { upsert } from './upsert';
 import { getKnex } from './knex';
 import PQueue from 'p-queue';
+import { formatISO } from 'date-fns';
 
 const { knex } = getKnex();
 
@@ -19,26 +20,37 @@ async function getTables() {
     .filter((tableName) => !!tableName);
 }
 
-function includeRow(row) {
-  return true;
-}
-
 function sanitizeRow(row) {
-  return row;
+  return mapValues(row, (key, val) => {
+    if (typeof val === 'string') {
+      let trimmedVal = trim(val);
+
+      if (!trimmedVal) {
+        return null;
+      }
+
+      return trimmedVal;
+    }
+
+    if (val instanceof Date) {
+      return formatISO(val);
+    }
+
+    return val;
+  });
 }
 
 async function createInsertForTable(tableName) {
   let constraint = await getPrimaryConstraint(knex, tableName, 'jore');
+  let columnSchema = await knex
+    .withSchema('jore')
+    .table(tableName)
+    .columnInfo();
+
+  console.log(columnSchema);
 
   return (data) => {
-    let processedRows = [];
-
-    for (let row of data) {
-      if (includeRow(row)) {
-        processedRows.push(sanitizeRow(row));
-      }
-    }
-
+    let processedRows = data.map((row) => sanitizeRow(row));
     return upsert(tableName, processedRows, constraint);
   };
 }
@@ -53,7 +65,12 @@ function syncTable(tableName) {
     let rows = [];
 
     async function processRows() {
-      await rowsProcessor(rows);
+      try {
+        await rowsProcessor(rows);
+      } catch (err) {
+        console.log(err);
+      }
+
       rows = [];
     }
 
@@ -79,23 +96,22 @@ function syncTable(tableName) {
 export async function syncSourceToDestination() {
   await mssql.connect({
     ...MSSQL_CONNECTION,
-    pool: {
-      max: 50,
-      min: 0,
-      idleTimeoutMillis: 30000,
-    },
+    stream: true,
   });
 
   let tables = await getTables();
 
   let syncQueue = new PQueue({
-    concurrency: 3,
+    concurrency: 5,
     autoStart: true,
   });
 
   for (let tableName of tables) {
     console.log(`Importing ${tableName} from source.`);
-    await syncQueue.add(() => syncTable(tableName));
+
+    syncQueue
+      .add(() => syncTable(tableName))
+      .then(() => console.log(`${tableName} imported.`));
   }
 
   try {
@@ -105,5 +121,4 @@ export async function syncSourceToDestination() {
   }
 
   console.log('Sync complete.');
-  await mssql.close();
 }
