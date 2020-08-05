@@ -12,4 +12,5 @@ for table in $(<tables.lst); do
   # remove second row (--- separator),
   # then remove all empty rows.
   sed -e "s/,//g" "${table}.tmp" | sed -e "s/@/,/g" | sed -e "s/NULL//g" | sed -e "2d" | sed -e "/^$/d" > "${table}.csv"
+  rm "${table}.tmp"
 done

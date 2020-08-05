@@ -4,7 +4,7 @@ import basicAuth from 'express-basic-auth';
 import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
-import { importFromSource } from './importFromSource';
+import { syncSourceToDestination } from './sync';
 
 export const server = () => {
   const app = express();
@@ -31,7 +31,7 @@ export const server = () => {
 
   app.post('/run', (req, res) => {
     console.log('Running import');
-    importFromSource();
+    syncSourceToDestination();
     res.redirect(PATH_PREFIX);
   });
 

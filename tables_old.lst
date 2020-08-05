@@ -1,6 +1,9 @@
 ak_aikataulukausi
 ak_kaavio
 ak_kaavion_lahto
+ak_kaavion_suoritteet
+ak_kaavion_reitti
+ak_kalusto
 jr_ajoneuvo
 jr_kinf_kalusto
 jr_eritpvkalent
@@ -8,6 +11,7 @@ jr_inf_aikataulu_vp
 jr_inf_eritpv
 jr_inf_kohde
 jr_inf_liik
+jr_inf_joukkollaji
 jr_kilpailukohd
 jr_konserni
 jr_koodisto
@@ -15,8 +19,6 @@ jr_liikennoitsija
 jr_linkki
 jr_reitinlinkki
 jr_reitinsuunta
-ak_kaavion_suoritteet
-ak_kaavion_reitti
 jr_kinf_linja3
 jr_kinf_reitti
 jr_linja_vaatimus

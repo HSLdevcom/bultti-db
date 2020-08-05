@@ -43,7 +43,8 @@ export const MSSQL_CONNECTION = {
   user: secretsEnv.MSSQLUSER,
   password: secretsEnv.MSSQLPASSWORD,
   server: secretsEnv.MSSQLHOST,
-}
+  database: secretsEnv.MSSQLDATABASE,
+};
 
 export const DEBUG = secretsEnv.DEBUG || 'false';
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
@@ -53,4 +54,4 @@ export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || '';
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || '';
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || 'unknown';
 export const MONITORING_ENABLED = secretsEnv.MONITORING_ENABLED === 'true';
-export const BATCH_SIZE = 100
+export const BATCH_SIZE = 100;
