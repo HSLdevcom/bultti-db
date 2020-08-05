@@ -79,7 +79,7 @@ export async function upsert(tableName, data, constraint = '') {
   const upsertQuery = `
 INSERT INTO ?? (${itemKeys.map(() => '??').join(',')})
 VALUES ${valuesPlaceholders.join(',')}
-ON CONFLICT DO NOTHING
+ON CONFLICT DO NOTHING;
 `;
 
   const upsertBindings = [tableId, ...itemKeys, ...insertValues];
