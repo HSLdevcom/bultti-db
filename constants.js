@@ -54,4 +54,4 @@ export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || '';
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || '';
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || 'unknown';
 export const MONITORING_ENABLED = secretsEnv.MONITORING_ENABLED === 'true';
-export const BATCH_SIZE = 100;
+export const BATCH_SIZE = 1000;
