@@ -14,12 +14,12 @@ export const server = () => {
     res.status(200).send('ok');
   });
 
-  app.use(
+  /*app.use(
     basicAuth({
       challenge: true,
       users: { admin: ADMIN_PASSWORD },
     })
-  );
+  );*/
 
   app.engine('jsx', createEngine());
   app.set('view engine', 'jsx');

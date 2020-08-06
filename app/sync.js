@@ -8,6 +8,7 @@ import { upsert } from './upsert';
 import { getKnex } from './knex';
 import PQueue from 'p-queue';
 import { parseISO, isAfter, isValid } from 'date-fns';
+import { transformRow } from './dataTransform';
 
 const { knex } = getKnex();
 
@@ -30,96 +31,49 @@ async function getTables() {
     .filter((tableName) => !!tableName && !tableName.startsWith('#'));
 }
 
-function createInputRow(row, columnSchema) {
-  return mapValues(row, (val, key) => {
-    let columnType = get(columnSchema, `${key}.type`);
-
-    if (columnType === 'boolean' && typeof val !== 'boolean') {
-      let baseVal = val;
-
-      if (typeof val === 'string') {
-        baseVal = trim(val);
-      } else if (typeof val === 'number') {
-        baseVal = baseVal > 0;
-      }
-
-      return !!baseVal;
-    }
-
-    if (columnType.includes('char')) {
-      let trimmedVal = trim(val);
-
-      if (!trimmedVal) {
-        return null;
-      }
-
-      return trimmedVal;
-    }
-
-    if (columnType === 'numeric' && typeof val === 'string') {
-      let parsed = val.includes('.') ? parseFloat(val) : parseInt(val, 10);
-
-      if (isNaN(parsed)) {
-        return null;
-      }
-
-      return parsed;
-    }
-
-    return val;
-  });
-}
-
-// Inlude only rows that are active after 2019
+// Include only rows that are active after 2019
 let cutoffDate = parseISO('2019-01-01');
-let ignoreDateCols = [
-  'muutospvm',
-  'perustpvm',
-  'tallpvm',
-  'liialkpvm',
-  'liipaattpvm',
-  'kohtarjouspvm',
-  'kohindeksipvm',
-  'kohviimpvm',
-  'sloppupvm',
-  'liiviimpvm',
+
+// Cols that should be used to check the cutoff date against for each row.
+// JORE tables have multiple names for the in effect date cols, but all
+// date cols should not be considered. Thus we need to specifically
+// define which cols to check.
+let dateCols = [
+  'akalkpvm',
+  'akpaattpvm',
+  'kaavoimast',
+  'kaaviimvoi',
+  'lavoimast',
+  'laviimvoi',
+  'kohalkpvm',
+  'kohpaattpvm',
+  'suuvoimast',
+  'suuviimvoi',
+  'lnkviimpvm',
+  'relviimpvm',
+  'suuvoimviimpvm',
 ];
 
+// Tables that should not have rows checked against the cutoff date.
 let ignoreCutoffForTables = [
   'jr_ajoneuvo',
   'ak_kalusto',
   'jr_eritpvkalent',
   'jr_kinf_kalusto',
+  'jr_liikennoitsija',
+  'jr_konserni',
 ];
 
 // Filter function to only include rows that are active after the cutoff date.
-function dateCutoffFilter(row, columnSchema) {
-  let dateColumns = Object.entries(columnSchema).reduce((dateCols, [colName, schema]) => {
-    if (
-      !ignoreDateCols.includes(colName) &&
-      ['timestamp', 'date'].some((match) => schema.type.startsWith(match))
-    ) {
-      dateCols.push(colName);
-    }
-
-    return dateCols;
-  }, []);
-
-  if (dateColumns.length === 0) {
-    return true;
-  }
-
+// Rows where no date columns are found are included by default.
+function dateCutoffFilter(row) {
   let dateValues = [];
 
-  for (let col of dateColumns) {
+  for (let col of dateCols) {
     let dateVal = row[col];
 
-    if (dateVal) {
-      let dateObj = dateVal instanceof Date ? dateVal : parseISO(dateVal);
-
-      if (isValid(dateObj)) {
-        dateValues.push(dateObj);
-      }
+    if (dateVal && dateVal instanceof Date && isValid(dateVal)) {
+      dateValues.push(dateVal);
     }
   }
 
@@ -141,14 +95,14 @@ async function createInsertForTable(tableName) {
 
   return (data) => {
     let processedRows = data
+      .map((row) => transformRow(row, tableName, columnSchema))
       .filter((row) => {
         if (ignoreCutoffForTables.includes(tableName)) {
           return true;
         }
 
-        return dateCutoffFilter(row, columnSchema);
-      })
-      .map((row) => createInputRow(row, columnSchema));
+        return dateCutoffFilter(row);
+      });
 
     return upsert(tableName, processedRows, constraint);
   };
@@ -156,8 +110,6 @@ async function createInsertForTable(tableName) {
 
 function syncTable(tableName) {
   return new Promise(async (resolve, reject) => {
-    let tableTime = process.hrtime();
-
     let request = new mssql.Request();
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
@@ -169,6 +121,7 @@ function syncTable(tableName) {
       try {
         await rowsProcessor(rows);
       } catch (err) {
+        console.log('Chunk error');
         console.log(err);
       }
 
@@ -187,7 +140,7 @@ function syncTable(tableName) {
 
     request.on('done', async () => {
       await processRows();
-      resolve(tableTime);
+      resolve();
     });
 
     request.on('error', reject);
@@ -210,14 +163,16 @@ export async function syncSourceToDestination() {
       console.log(`Importing ${tableName} from source.`);
 
       syncQueue
-        .add(() => syncTable(tableName))
+        .add(() => {
+          let tableTime = process.hrtime();
+          return syncTable(tableName).then(() => tableTime);
+        })
         .then((tableTime) => echoTime(`${tableName} imported`, tableTime));
     }
 
-    syncQueue.start();
-
     await syncQueue.onIdle();
   } catch (err) {
+    console.log('Top-level error');
     console.log(err);
   }
 
