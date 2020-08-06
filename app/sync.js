@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { trim, mapValues, get, floor } from 'lodash';
+import { trim, floor } from 'lodash';
 import * as mssql from 'mssql';
 import { MSSQL_CONNECTION, BATCH_SIZE, NS_PER_SEC } from '../constants';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
@@ -108,9 +108,9 @@ async function createInsertForTable(tableName) {
   };
 }
 
-function syncTable(tableName) {
+function syncTable(tableName, pool) {
   return new Promise(async (resolve, reject) => {
-    let request = new mssql.Request();
+    let request = new mssql.Request(pool);
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
 
@@ -118,13 +118,7 @@ function syncTable(tableName) {
     let rows = [];
 
     async function processRows() {
-      try {
-        await rowsProcessor(rows);
-      } catch (err) {
-        console.log('Chunk error');
-        console.log(err);
-      }
-
+      await rowsProcessor(rows);
       rows = [];
     }
 
@@ -150,35 +144,43 @@ function syncTable(tableName) {
 export async function syncSourceToDestination() {
   let syncTime = process.hrtime();
 
-  await mssql.connect({
+  let pool = await mssql.connect({
     ...MSSQL_CONNECTION,
+    options: {
+      enableArithAbort: true,
+    },
     pool: {
       min: 0,
-      max: 50,
+      max: 100,
     },
   });
 
   let tables = await getTables();
 
-  let syncPromises = [];
+  let syncQueue = new PQueue({
+    concurrency: 5,
+    autoStart: true,
+  });
+
+  syncQueue.on('active', () => {
+    console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
+  });
 
   try {
     for (let tableName of tables) {
-      console.log(`Importing ${tableName}`);
-      let tableTime = process.hrtime();
-      
-      let syncPromise = syncTable(tableName).then(() =>
-        echoTime(`${tableName} imported`, tableTime)
-      );
-      
-      syncPromises.push(syncPromise)
+      syncQueue
+        .add(() => {
+          console.log(`[Status]   Importing ${tableName}`);
+          let tableTime = process.hrtime();
+          return syncTable(tableName, pool).then(() => tableTime);
+        })
+        .then((tableTime) => echoTime(`[Status]   ${tableName} imported`, tableTime));
     }
 
-    await Promise.all(syncPromises)
+    await syncQueue.onIdle();
   } catch (err) {
-    console.log('Top-level error');
     console.log(err);
   }
 
-  echoTime('Sync complete', syncTime);
+  echoTime('[Status]   Sync complete', syncTime);
 }
