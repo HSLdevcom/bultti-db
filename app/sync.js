@@ -87,11 +87,18 @@ function dateCutoffFilter(row) {
 }
 
 async function createInsertForTable(tableName) {
-  let constraint = await getPrimaryConstraint(knex, tableName, 'jore');
-  let columnSchema = await knex
-    .withSchema('jore')
-    .table(tableName)
-    .columnInfo();
+  let constraint;
+  let columnSchema;
+
+  try {
+    constraint = await getPrimaryConstraint(knex, tableName, 'jore');
+    columnSchema = await knex
+      .withSchema('jore')
+      .table(tableName)
+      .columnInfo();
+  } catch (err) {
+    console.log(err);
+  }
 
   return (data) => {
     let processedRows = data
@@ -118,7 +125,12 @@ function syncTable(tableName, pool) {
     let rows = [];
 
     async function processRows() {
-      await rowsProcessor(rows);
+      try {
+        await rowsProcessor(rows);
+      } catch (err) {
+        console.log(`[Error]    Insert error on table ${tableName}`, err);
+      }
+
       rows = [];
     }
 
@@ -166,21 +178,20 @@ export async function syncSourceToDestination() {
     console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
   });
 
-  try {
-    for (let tableName of tables) {
-      syncQueue
-        .add(() => {
-          console.log(`[Status]   Importing ${tableName}`);
-          let tableTime = process.hrtime();
-          return syncTable(tableName, pool).then(() => tableTime);
-        })
-        .then((tableTime) => echoTime(`[Status]   ${tableName} imported`, tableTime));
-    }
-
-    await syncQueue.onIdle();
-  } catch (err) {
-    console.log(err);
+  for (let tableName of tables) {
+    syncQueue
+      .add(() => {
+        console.log(`[Status]   Importing ${tableName}`);
+        let tableTime = process.hrtime();
+        return syncTable(tableName, pool).then(() => tableTime);
+      })
+      .then((tableTime) => echoTime(`[Status]   ${tableName} imported`, tableTime))
+      .catch((err) => {
+        console.log(`[Error]    Sync error on table ${tableName}`, err);
+      });
   }
+
+  await syncQueue.onIdle();
 
   echoTime('[Status]   Sync complete', syncTime);
 }
