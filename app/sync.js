@@ -115,11 +115,15 @@ async function createInsertForTable(tableName) {
   };
 }
 
-function syncTable(tableName, pool) {
+function syncTable(tableName) {
   return new Promise(async (resolve, reject) => {
-    let request = new mssql.Request(pool);
+    let request = new mssql.Request();
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
+
+    let emptyTimeout = setTimeout(() => {
+      resolve();
+    }, 1000);
 
     let rowsProcessor = await createInsertForTable(tableName);
     let rows = [];
@@ -135,6 +139,7 @@ function syncTable(tableName, pool) {
     }
 
     request.on('row', async (row) => {
+      clearTimeout(emptyTimeout);
       rows.push(row);
 
       if (rows.length >= BATCH_SIZE) {
@@ -156,14 +161,10 @@ function syncTable(tableName, pool) {
 export async function syncSourceToDestination() {
   let syncTime = process.hrtime();
 
-  let pool = await mssql.connect({
+  await mssql.connect({
     ...MSSQL_CONNECTION,
     options: {
-      enableArithAbort: true,
-    },
-    pool: {
-      min: 0,
-      max: 100,
+      enableArithAbort: false,
     },
   });
 
@@ -174,24 +175,22 @@ export async function syncSourceToDestination() {
     autoStart: true,
   });
 
-  syncQueue.on('active', () => {
-    console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
-  });
-
   for (let tableName of tables) {
     syncQueue
       .add(() => {
         console.log(`[Status]   Importing ${tableName}`);
         let tableTime = process.hrtime();
-        return syncTable(tableName, pool).then(() => tableTime);
+        return syncTable(tableName).then(() => tableTime);
       })
-      .then((tableTime) => echoTime(`[Status]   ${tableName} imported`, tableTime))
+      .then((tableTime) => {
+        echoTime(`[Status]   ${tableName} imported`, tableTime);
+        console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
+      })
       .catch((err) => {
         console.log(`[Error]    Sync error on table ${tableName}`, err);
       });
   }
 
   await syncQueue.onIdle();
-
   echoTime('[Status]   Sync complete', syncTime);
 }
