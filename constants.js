@@ -54,5 +54,5 @@ export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || '';
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || '';
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || 'unknown';
 export const MONITORING_ENABLED = secretsEnv.MONITORING_ENABLED === 'true';
-export const BATCH_SIZE = 500;
+export const BATCH_SIZE = 700;
 export const NS_PER_SEC = 1e9; // For tracking performance
