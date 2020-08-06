@@ -1,6 +1,9 @@
 import { getKnex } from './knex';
 import { server } from './server';
 import { reportInfo, reportError } from './monitor';
+import segfaultHandler from 'segfault-handler';
+
+segfaultHandler.registerHandler("segfault.log")
 
 const { knex } = getKnex();
 
