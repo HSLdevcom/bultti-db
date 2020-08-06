@@ -121,9 +121,13 @@ function syncTable(tableName) {
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
 
+    let isEmpty = true
+    
     let emptyTimeout = setTimeout(() => {
-      resolve();
-    }, 1000);
+      if(isEmpty) {
+        resolve();
+      }
+    }, 5000);
 
     let rowsProcessor = await createInsertForTable(tableName);
     let rows = [];
@@ -139,6 +143,7 @@ function syncTable(tableName) {
     }
 
     request.on('row', async (row) => {
+      isEmpty = false
       clearTimeout(emptyTimeout);
       rows.push(row);
 
