@@ -150,27 +150,31 @@ function syncTable(tableName) {
 export async function syncSourceToDestination() {
   let syncTime = process.hrtime();
 
-  await mssql.connect(MSSQL_CONNECTION);
+  await mssql.connect({
+    ...MSSQL_CONNECTION,
+    pool: {
+      min: 0,
+      max: 50,
+    },
+  });
+
   let tables = await getTables();
 
-  let syncQueue = new PQueue({
-    concurrency: 5,
-    autoStart: true,
-  });
+  let syncPromises = [];
 
   try {
     for (let tableName of tables) {
-      console.log(`Importing ${tableName} from source.`);
-
-      syncQueue
-        .add(() => {
-          let tableTime = process.hrtime();
-          return syncTable(tableName).then(() => tableTime);
-        })
-        .then((tableTime) => echoTime(`${tableName} imported`, tableTime));
+      console.log(`Importing ${tableName}`);
+      let tableTime = process.hrtime();
+      
+      let syncPromise = syncTable(tableName).then(() =>
+        echoTime(`${tableName} imported`, tableTime)
+      );
+      
+      syncPromises.push(syncPromise)
     }
 
-    await syncQueue.onIdle();
+    await Promise.all(syncPromises)
   } catch (err) {
     console.log('Top-level error');
     console.log(err);

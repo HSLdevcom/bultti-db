@@ -30,7 +30,7 @@
     "prettier": "^1.19.1"
   },
   "scripts": {
-    "start": "node --max-old-space-size=32768 --unhandled-rejections=strict --inspect -r esm -r dotenv/config app/index.js",
+    "start": "node --max-old-space-size=32768 --unhandled-rejections=strict --inspect=9299 -r esm -r dotenv/config app/index.js",
     "start:production": "forever start -c \"node --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
     "prettier": "prettier */**.{js,json} --write",
     "knex": "knex",
