@@ -1,8 +1,22 @@
 import { mapValues, get, trim } from 'lodash';
 import { parse } from 'date-fns';
 
+export function transformInfKohde(row) {
+  let { kohalkpvm, kohpaattpvm } = row;
+
+  if (kohalkpvm) {
+    row.kohalkpvm = parse(kohalkpvm, 'yyyyMMdd', new Date());
+  }
+
+  if (kohpaattpvm) {
+    row.kohpaattpvm = parse(kohpaattpvm, 'yyyyMMdd', new Date());
+  }
+
+  return row;
+}
+
 export function transformAikatauluVp(row) {
-  let { lavoimast, laviimvoi } = row;
+  let { lavoimast, laviimvoi, ajotyyppi } = row;
 
   if (lavoimast) {
     row.lavoimast = parse(lavoimast, 'yyyyMMdd', new Date());
@@ -12,12 +26,17 @@ export function transformAikatauluVp(row) {
     row.laviimvoi = parse(laviimvoi, 'yyyyMMdd', new Date());
   }
 
+  // Set correct type
+  if (!ajotyyppi) {
+    row.ajotyyppi = 'N';
+  }
+
   return row;
 }
 
 function defaultRowTransform(row, columnSchema) {
   return mapValues(row, (val, key) => {
-    let columnType = get(columnSchema, `${key}.type`);
+    let columnType = get(columnSchema, `${key}.type`, '');
 
     if (columnType === 'boolean' && typeof val !== 'boolean') {
       let baseVal = val;
@@ -58,12 +77,17 @@ function defaultRowTransform(row, columnSchema) {
 // Some tables need special handling. If the table has a transform defined,
 // run the transform on the row. Then run default transform on all rows.
 export function transformRow(row, table, columnSchema) {
+  let transformed
+  
   switch (table) {
     case 'jr_inf_aikataulu_vp':
-      var transformed = transformAikatauluVp(row);
+      transformed = transformAikatauluVp(row);
+      break;
+    case 'jr_inf_kohde':
+      transformed = transformInfKohde(row)
       break;
     default:
-      var transformed = row;
+      transformed = row;
       break;
   }
 

@@ -7,13 +7,18 @@ import { getTables } from './utils/fetchTables';
 import { dateCutoffFilter } from './utils/dateCutoffFilter';
 import { logTime } from './utils/logTime';
 import PQueue from 'p-queue';
+import { getPrimaryConstraint } from './getPrimaryConstraint';
+import { primaryKeyNotNullFilter } from './utils/primaryKeyNotNullFilter';
 
 const { knex } = getKnex();
 
 async function createInsertForTable(tableName) {
   let columnSchema;
+  let constraint;
 
   try {
+    constraint = await getPrimaryConstraint(knex, tableName, 'jore');
+
     columnSchema = await knex
       .withSchema('jore')
       .table(tableName)
@@ -25,7 +30,8 @@ async function createInsertForTable(tableName) {
   return (data) => {
     let processedRows = data
       .map((row) => transformRow(row, tableName, columnSchema))
-      .filter((row) => dateCutoffFilter(row, tableName));
+      // transformRow may make some fields proper dates, so filter by date after it.
+      .filter((row) => primaryKeyNotNullFilter(row, constraint) && dateCutoffFilter(row, tableName));
 
     return upsert(tableName, processedRows);
   };
