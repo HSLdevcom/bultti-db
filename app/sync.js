@@ -1,22 +1,19 @@
 import * as mssql from 'mssql';
 import { MSSQL_CONNECTION, BATCH_SIZE } from '../constants';
-import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { upsert } from './upsert';
 import { getKnex } from './knex';
-import PQueue from 'p-queue';
 import { transformRow } from './dataTransform';
 import { getTables } from './utils/fetchTables';
-import { shouldUseFilter, dateCutoffFilter } from './utils/dateCutoffFilter';
+import { dateCutoffFilter } from './utils/dateCutoffFilter';
 import { logTime } from './utils/logTime';
+import PQueue from 'p-queue';
 
 const { knex } = getKnex();
 
 async function createInsertForTable(tableName) {
-  let constraint;
   let columnSchema;
 
   try {
-    constraint = await getPrimaryConstraint(knex, tableName, 'jore');
     columnSchema = await knex
       .withSchema('jore')
       .table(tableName)
@@ -28,25 +25,20 @@ async function createInsertForTable(tableName) {
   return (data) => {
     let processedRows = data
       .map((row) => transformRow(row, tableName, columnSchema))
-      .filter((row) => {
-        if (!shouldUseFilter(tableName)) {
-          return true;
-        }
+      .filter((row) => dateCutoffFilter(row, tableName));
 
-        return dateCutoffFilter(row);
-      });
-
-    return upsert(tableName, processedRows, constraint);
+    return upsert(tableName, processedRows);
   };
 }
 
-function syncTable(tableName) {
+function syncTable(tableName, pool) {
   return new Promise(async (resolve, reject) => {
-    let request = new mssql.Request();
+    let request = pool.request();
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
 
     let rowsProcessor = await createInsertForTable(tableName);
+
     let rows = [];
 
     async function processRows() {
@@ -57,6 +49,7 @@ function syncTable(tableName) {
       }
 
       rows = [];
+      request.resume();
     }
 
     request.on('row', async (row) => {
@@ -65,7 +58,6 @@ function syncTable(tableName) {
       if (rows.length >= BATCH_SIZE) {
         request.pause();
         await processRows();
-        request.resume();
       }
     });
 
@@ -81,28 +73,48 @@ function syncTable(tableName) {
 export async function syncSourceToDestination() {
   let syncTime = process.hrtime();
 
-  await mssql.connect({
+  let mssqlConfig = {
     ...MSSQL_CONNECTION,
     options: {
       enableArithAbort: false,
     },
-  });
+    pool: {
+      min: 0,
+      max: 2,
+    },
+  };
 
   let tables = await getTables();
 
   let syncQueue = new PQueue({
-    concurrency: 5,
+    concurrency: 10,
     autoStart: true,
   });
 
+  /*
+   * There is a problem with the Mssql library that results in the connection
+   * just stalling after a few tables in the loop below. No amount of adjusting
+   * the pool size or anything else solved it, except creating a new pool for
+   * each table. This is less than optimal, but it doesn't add THAT much overhead
+   * for our use and it's the only thing that has worked. If you find yourself up
+   * to the task of fixing this, know that I've spent a lot of time here already.
+   */
+
   for (let tableName of tables) {
     syncQueue
-      .add(() => {
+      .add(async () => {
         console.log(`[Status]   Importing ${tableName}`);
         let tableTime = process.hrtime();
-        return syncTable(tableName).then(() => tableTime);
-      })
-      .then((tableTime) => {
+
+        let pool = new mssql.ConnectionPool(mssqlConfig);
+
+        pool.on('error', (err) => {
+          console.log('[Error]    Pool error', err);
+        });
+
+        await pool.connect();
+        await syncTable(tableName, pool);
+
         logTime(`[Status]   ${tableName} imported`, tableTime);
         console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
       })
@@ -112,5 +124,6 @@ export async function syncSourceToDestination() {
   }
 
   await syncQueue.onIdle();
+
   logTime('[Status]   Sync complete', syncTime);
 }

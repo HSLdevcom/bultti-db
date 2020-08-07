@@ -1,5 +1,5 @@
 import { getKnex } from './knex';
-import { BATCH_SIZE } from '../constants';
+import { chunk } from 'lodash';
 
 const { knex } = getKnex();
 const schema = 'jore';
@@ -7,7 +7,7 @@ const schema = 'jore';
 // "Upsert" function for PostgreSQL. Inserts or updates lines in bulk. Insert if
 // the primary key for the line is available, update otherwise.
 
-export async function upsert(tableName, data, constraint = '') {
+export async function upsert(tableName, data) {
   let items = [];
 
   if (Array.isArray(data)) {
@@ -24,65 +24,65 @@ export async function upsert(tableName, data, constraint = '') {
   // and batch queries where Knex doesn't use the withSchema function.
   const tableId = `${schema}.${tableName}`;
 
-  function batchInsert(rows) {
-    return knex.batchInsert(tableId, rows, BATCH_SIZE);
-  }
-
-  // Just insert if we don't have any constraints
-  if (!constraint) {
-    return batchInsert(items);
-  }
-
-  const itemCount = items.length;
-
   // Get the set of keys for all items from the first item.
   // All items should have the same keys.
   const itemKeys = Object.keys(items[0]);
-
   const keysLength = itemKeys.length;
+
   let placeholderRow = new Array(keysLength);
 
   for (let i = 0; i < keysLength; i++) {
     placeholderRow[i] = '?';
   }
 
-  // eslint-disable-next-line prefer-template
-  placeholderRow = '(' + placeholderRow.join(',') + ')';
+  placeholderRow = `(${placeholderRow.join(',')})`;
 
-  // Create a string of placeholder values (?,?,?) for each item we want to insert
-  const valuesPlaceholders = [];
+  // 30k bindings is slightly under what the node-pg library can handle per query.
+  let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
+  let queryItems = chunk(items, itemsPerQuery);
 
-  // Collect all values to insert from all objects in a one-dimensional array.
-  // Ensure that each key has a value.
-  const insertValues = [];
+  let queryPromises = [];
 
-  let itemIdx = 0;
-  let placeholderIdx = 0;
-  let valueIdx = 0;
+  // Split up the insert query by how many items it can handle at a time.
+  for (let itemsChunk of queryItems) {
+    let chunkLength = itemsChunk.length;
+    // Create a string of placeholder values (?,?,?) for each item we want to insert
+    const valuesPlaceholders = [];
 
-  while (itemIdx < itemCount) {
-    const insertItem = items[itemIdx];
+    // Collect all values to insert from all objects in a one-dimensional array.
+    const insertValues = [];
 
-    if (insertItem) {
-      valuesPlaceholders[placeholderIdx] = placeholderRow;
-      placeholderIdx++;
+    let itemIdx = 0;
+    let placeholderIdx = 0;
+    let valueIdx = 0;
 
-      for (let k = 0; k < keysLength; k++) {
-        insertValues[valueIdx] = insertItem[itemKeys[k]];
-        valueIdx++;
+    while (itemIdx < chunkLength) {
+      const insertItem = items[itemIdx];
+
+      if (insertItem) {
+        valuesPlaceholders[placeholderIdx] = placeholderRow;
+        placeholderIdx++;
+
+        for (let k = 0; k < keysLength; k++) {
+          insertValues[valueIdx] = insertItem[itemKeys[k]];
+          valueIdx++;
+        }
       }
+
+      itemIdx++;
     }
 
-    itemIdx++;
-  }
-
-  const upsertQuery = `
+    const upsertQuery = `
 INSERT INTO ?? (${itemKeys.map(() => '??').join(',')})
 VALUES ${valuesPlaceholders.join(',')}
 ON CONFLICT DO NOTHING;
 `;
 
-  const upsertBindings = [tableId, ...itemKeys, ...insertValues];
+    const upsertBindings = [tableId, ...itemKeys, ...insertValues];
 
-  return knex.raw(upsertQuery, upsertBindings);
+    let queryPromise = knex.raw(upsertQuery, upsertBindings);
+    queryPromises.push(queryPromise);
+  }
+
+  return Promise.all(queryPromises);
 }
