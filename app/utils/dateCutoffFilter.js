@@ -5,8 +5,7 @@ let cutoffDate = parseISO('2019-01-01');
 
 // Cols that should be used to check the cutoff date against for each row.
 // JORE tables have multiple names for the in effect date cols, but all
-// date cols should not be considered. Thus we need to specifically
-// define which cols to check.
+// date-type cols should not be considered.
 let dateCols = [
   'akalkpvm',
   'akpaattpvm',
@@ -35,7 +34,11 @@ let ignoreCutoffForTables = [
 
 // Filter function to only include rows that are active after the cutoff date.
 // Rows where no date columns are found are included by default.
-export function dateCutoffFilter(row) {
+export function dateCutoffFilter(row, tableName) {
+  if (ignoreCutoffForTables.includes(tableName)) {
+    return true;
+  }
+
   let dateValues = [];
 
   for (let col of dateCols) {
@@ -51,12 +54,4 @@ export function dateCutoffFilter(row) {
   }
 
   return dateValues.some((dateVal) => isAfter(dateVal, cutoffDate));
-}
-
-export function shouldUseFilter(tableName) {
-  if (ignoreCutoffForTables.includes(tableName)) {
-    return false;
-  }
-  
-  return true
 }
