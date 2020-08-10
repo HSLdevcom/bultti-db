@@ -2,6 +2,7 @@
 import { parseISO, isValid, isAfter } from 'date-fns';
 
 let cutoffDate = parseISO('2019-01-01');
+let maxEndDate = parseISO('2049');
 
 // Cols that should be used to check the cutoff date against for each row.
 // JORE tables have multiple names for the in effect date cols, but all
@@ -39,19 +40,27 @@ export function dateCutoffFilter(row, tableName) {
     return true;
   }
 
-  let dateValues = [];
+  let hasDateCols = false;
 
   for (let col of dateCols) {
     let dateVal = row[col];
 
     if (dateVal && dateVal instanceof Date && isValid(dateVal)) {
-      dateValues.push(dateVal);
+      // Some end dates are far in the future and not relevant for this check.
+      if (col.includes('viim') && dateVal(isAfter(dateVal, maxEndDate))) {
+        continue;
+      }
+
+      hasDateCols = true;
+
+      // Only one of the date cols need to be within the range we are looking for.
+      if (isAfter(dateVal, cutoffDate)) {
+        return true;
+      }
     }
   }
 
-  if (dateValues.length === 0) {
-    return true;
-  }
-
-  return dateValues.some((dateVal) => isAfter(dateVal, cutoffDate));
+  // If we got here and hasDateCols is true, that means date values were checked
+  // but they were all under the cutoff for this row.
+  return !hasDateCols;
 }
