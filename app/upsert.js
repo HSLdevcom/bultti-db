@@ -1,5 +1,6 @@
 import { getKnex } from './knex';
-import { chunk } from 'lodash';
+import { chunk, uniqBy, toString } from 'lodash';
+import { createPrimaryKey } from './utils/createPrimaryKey';
 
 const { knex } = getKnex();
 const schema = 'jore';
@@ -7,7 +8,7 @@ const schema = 'jore';
 // "Upsert" function for PostgreSQL. Inserts or updates lines in bulk. Insert if
 // the primary key for the line is available, update otherwise.
 
-export async function upsert(tableName, data) {
+export async function upsert(tableName, data, primaryKeys = []) {
   let items = [];
 
   if (Array.isArray(data)) {
@@ -28,40 +29,49 @@ export async function upsert(tableName, data) {
   // All items should have the same keys.
   const itemKeys = Object.keys(items[0]);
   const keysLength = itemKeys.length;
+  let placeholderRow = `(${itemKeys.map(() => '?').join(',')})`;
 
-  let placeholderRow = new Array(keysLength);
+  // Create the string of update values for the conflict case
+  const updateKeys = itemKeys
+    .filter((key) => !primaryKeys.includes(key)) // Don't update primary indices
+    .map((key) => knex.raw('?? = EXCLUDED.??', [key, key]).toString())
+    .join(',');
 
-  for (let i = 0; i < keysLength; i++) {
-    placeholderRow[i] = '?';
-  }
+  // Get the keys that the ON CONFLICT should check for.
+  const onConflictKeys =
+    primaryKeys.length !== 0 ? `(${primaryKeys.map(() => '??').join(',')})` : '';
 
-  placeholderRow = `(${placeholderRow.join(',')})`;
+  let upsertQueryFragment =
+    primaryKeys.length !== 0
+      ? `ON CONFLICT ${onConflictKeys} DO UPDATE SET ${updateKeys}`
+      : '';
 
   // 30k bindings is slightly under what the node-pg library can handle per query.
   let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
-  let queryItems = chunk(items, itemsPerQuery);
+  // Split the items up into chunks
+  let queryChunks = chunk(items, itemsPerQuery);
 
   let queryPromises = [];
 
-  // Split up the insert query by how many items it can handle at a time.
-  for (let itemsChunk of queryItems) {
-    let chunkLength = itemsChunk.length;
+  // Create upsert queries for each chunk of items.
+  for (let itemsChunk of queryChunks) {
+    let uniqItems = uniqBy(itemsChunk, (item) => createPrimaryKey(item, primaryKeys));
+
+    let chunkLength = uniqItems.length;
     // Create a string of placeholder values (?,?,?) for each item we want to insert
-    const valuesPlaceholders = [];
+    let valuesPlaceholders = [];
 
     // Collect all values to insert from all objects in a one-dimensional array.
-    const insertValues = [];
+    let insertValues = [];
 
     let itemIdx = 0;
-    let placeholderIdx = 0;
     let valueIdx = 0;
 
     while (itemIdx < chunkLength) {
-      const insertItem = items[itemIdx];
+      let insertItem = uniqItems[itemIdx];
 
       if (insertItem) {
-        valuesPlaceholders[placeholderIdx] = placeholderRow;
-        placeholderIdx++;
+        valuesPlaceholders.push(placeholderRow);
 
         for (let k = 0; k < keysLength; k++) {
           insertValues[valueIdx] = insertItem[itemKeys[k]];
@@ -75,14 +85,11 @@ export async function upsert(tableName, data) {
     const upsertQuery = `
 INSERT INTO ?? (${itemKeys.map(() => '??').join(',')})
 VALUES ${valuesPlaceholders.join(',')}
-ON CONFLICT DO NOTHING;
+${upsertQueryFragment};
 `;
 
-    const upsertBindings = [tableId, ...itemKeys, ...insertValues];
+    const upsertBindings = [tableId, ...itemKeys, ...insertValues, ...primaryKeys];
 
-    let queryPromise = knex.raw(upsertQuery, upsertBindings);
-    queryPromises.push(queryPromise);
+    await knex.raw(upsertQuery, upsertBindings);
   }
-
-  return Promise.all(queryPromises);
 }

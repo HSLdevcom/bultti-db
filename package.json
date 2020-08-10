@@ -27,6 +27,7 @@
     "through2": "^4.0.2"
   },
   "devDependencies": {
+    "@types/date-fns": "^2.6.0",
     "@types/fs-extra": "^9.0.1",
     "@types/lodash": "^4.14.158",
     "env-cmd": "^10.1.0",
