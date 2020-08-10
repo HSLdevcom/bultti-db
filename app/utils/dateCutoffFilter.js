@@ -47,7 +47,7 @@ export function dateCutoffFilter(row, tableName) {
 
     if (dateVal && dateVal instanceof Date && isValid(dateVal)) {
       // Some end dates are far in the future and not relevant for this check.
-      if (col.includes('viim') && dateVal(isAfter(dateVal, maxEndDate))) {
+      if (col.includes('viim') && isAfter(dateVal, maxEndDate)) {
         continue;
       }
 

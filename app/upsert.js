@@ -51,8 +51,6 @@ export async function upsert(tableName, data, primaryKeys = []) {
   // Split the items up into chunks
   let queryChunks = chunk(items, itemsPerQuery);
 
-  let queryPromises = [];
-
   // Create upsert queries for each chunk of items.
   for (let itemsChunk of queryChunks) {
     let uniqItems = uniqBy(itemsChunk, (item) => createPrimaryKey(item, primaryKeys));
@@ -89,7 +87,6 @@ ${upsertQueryFragment};
 `;
 
     const upsertBindings = [tableId, ...itemKeys, ...insertValues, ...primaryKeys];
-
     await knex.raw(upsertQuery, upsertBindings);
   }
 }
