@@ -9,6 +9,7 @@ import { logTime } from './utils/logTime';
 import PQueue from 'p-queue';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { primaryKeyNotNullFilter } from './utils/primaryKeyNotNullFilter';
+import { get } from 'lodash';
 
 const { knex } = getKnex();
 
@@ -27,13 +28,17 @@ async function createInsertForTable(tableName) {
     console.log(err);
   }
 
+  let constraintKeys = get(constraint, 'keys', []);
+
   return (data) => {
     let processedRows = data
       .map((row) => transformRow(row, tableName, columnSchema))
       // transformRow may make some fields proper dates, so filter by date after it.
-      .filter((row) => primaryKeyNotNullFilter(row, constraint) && dateCutoffFilter(row, tableName));
+      .filter(
+        (row) => primaryKeyNotNullFilter(row, constraint) && dateCutoffFilter(row, tableName)
+      );
 
-    return upsert(tableName, processedRows);
+    return upsert(tableName, processedRows, constraintKeys);
   };
 }
 

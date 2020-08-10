@@ -26,7 +26,8 @@ export function transformAikatauluVp(row) {
     row.laviimvoi = parse(laviimvoi, 'yyyyMMdd', new Date());
   }
 
-  // Set correct type
+  // Set correct type. If ajotyyppi has no value, that means it is a normal departure,
+  // marked as N.
   if (!ajotyyppi) {
     row.ajotyyppi = 'N';
   }
