@@ -5,6 +5,7 @@ import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
 import { syncSourceToDestination } from './sync';
+import { createRouteGeometry } from './createRouteGeometry';
 
 export const server = () => {
   const app = express();
@@ -32,6 +33,12 @@ export const server = () => {
   app.post('/run', (req, res) => {
     console.log('Running import');
     syncSourceToDestination();
+    res.redirect(PATH_PREFIX);
+  });
+  
+  app.post('/geometry', (req, res) => {
+    console.log('Creating geometry table');
+    createRouteGeometry();
     res.redirect(PATH_PREFIX);
   });
 
