@@ -11,6 +11,13 @@ const RunImport = () => {
       <form action={`${PATH_PREFIX}run/`} method="post">
         <input type="submit" value="Run import" />
       </form>
+      <h3>Create geometry table</h3>
+      <p>
+        Create the geometry table based on a few of the tables in the DB.
+      </p>
+      <form action={`${PATH_PREFIX}geometry/`} method="post">
+        <input type="submit" value="Create geometry table" />
+      </form>
     </>
   );
 };
