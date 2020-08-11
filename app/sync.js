@@ -10,6 +10,7 @@ import PQueue from 'p-queue';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { primaryKeyNotNullFilter } from './utils/primaryKeyNotNullFilter';
 import { get } from 'lodash';
+import { createRouteGeometry } from './createRouteGeometry';
 
 const { knex } = getKnex();
 
@@ -135,6 +136,9 @@ export async function syncSourceToDestination() {
   }
 
   await syncQueue.onIdle();
+  
+  logTime('[Status]   Creating route_geometry table', syncTime);
+  await createRouteGeometry()
 
   logTime('[Status]   Sync complete', syncTime);
 }
