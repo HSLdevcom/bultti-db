@@ -11,18 +11,19 @@ import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { primaryKeyNotNullFilter } from './utils/primaryKeyNotNullFilter';
 import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
+import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
 
-const { knex } = getKnex();
+const knex = getKnex();
 
-async function createInsertForTable(tableName) {
+async function createInsertForTable(schemaName, tableName) {
   let columnSchema;
   let constraint;
 
   try {
-    constraint = await getPrimaryConstraint(knex, tableName, 'jore');
+    constraint = await getPrimaryConstraint(knex, schemaName, tableName);
 
     columnSchema = await knex
-      .withSchema('jore')
+      .withSchema(schemaName)
       .table(tableName)
       .columnInfo();
   } catch (err) {
@@ -39,17 +40,17 @@ async function createInsertForTable(tableName) {
         (row) => primaryKeyNotNullFilter(row, constraint) && dateCutoffFilter(row, tableName)
       );
 
-    return upsert(tableName, processedRows, constraintKeys);
+    return upsert(schemaName, tableName, processedRows, constraintKeys);
   };
 }
 
-function syncTable(tableName, pool) {
+function syncTable(schemaName, tableName, pool) {
   return new Promise(async (resolve, reject) => {
     let request = pool.request();
     request.stream = true;
     request.query(`SELECT * FROM dbo.${tableName}`);
 
-    let rowsProcessor = await createInsertForTable(tableName);
+    let rowsProcessor = await createInsertForTable(schemaName, tableName);
 
     let rows = [];
 
@@ -95,6 +96,13 @@ export async function syncSourceToDestination() {
       max: 2,
     },
   };
+  
+  try {
+    await mssql.connect(mssqlConfig)
+  } catch(err) {
+    console.log('[Error]    MSSQL connection failed.', err)
+    return
+  }
 
   let tables = await getTables();
 
@@ -102,6 +110,8 @@ export async function syncSourceToDestination() {
     concurrency: 10,
     autoStart: true,
   });
+
+  let schemaName = await createImportSchema();
 
   /*
    * There is a problem with the Mssql library that results in the connection
@@ -125,7 +135,7 @@ export async function syncSourceToDestination() {
         });
 
         await pool.connect();
-        await syncTable(tableName, pool);
+        await syncTable(schemaName, tableName, pool);
 
         logTime(`[Status]   ${tableName} imported`, tableTime);
         console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
@@ -136,9 +146,11 @@ export async function syncSourceToDestination() {
   }
 
   await syncQueue.onIdle();
-  
+
   logTime('[Status]   Creating route_geometry table', syncTime);
-  await createRouteGeometry()
+  await createRouteGeometry(schemaName);
+
+  await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
 }

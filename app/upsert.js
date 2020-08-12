@@ -1,14 +1,12 @@
 import { getKnex } from './knex';
-import { chunk, uniqBy, toString } from 'lodash';
+import { chunk, uniqBy } from 'lodash';
 import { createPrimaryKey } from './utils/createPrimaryKey';
 
-const { knex } = getKnex();
-const schema = 'jore';
+const knex = getKnex();
 
 // "Upsert" function for PostgreSQL. Inserts or updates lines in bulk. Insert if
 // the primary key for the line is available, update otherwise.
-
-export async function upsert(tableName, data, primaryKeys = []) {
+export async function upsert(schema, tableName, data, primaryKeys = []) {
   let items = [];
 
   if (Array.isArray(data)) {
@@ -20,10 +18,8 @@ export async function upsert(tableName, data, primaryKeys = []) {
   if (items.length === 0) {
     return Promise.resolve();
   }
-
-  // Prepend the schema name to the table. This is more convenient in raw queries
-  // and batch queries where Knex doesn't use the withSchema function.
-  const tableId = `${schema}.${tableName}`;
+  
+  let tableId = `${schema}.${tableName}`
 
   // Get the set of keys for all items from the first item.
   // All items should have the same keys.

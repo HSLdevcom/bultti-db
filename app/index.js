@@ -5,7 +5,7 @@ import segfaultHandler from 'segfault-handler';
 
 segfaultHandler.registerHandler("segfault.log")
 
-const { knex } = getKnex();
+const knex = getKnex();
 
 (async () => {
   console.log('Bultti DB starting...');
