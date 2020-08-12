@@ -15,6 +15,16 @@ import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
 
 const knex = getKnex();
 
+let syncing = false;
+
+let startSync = () => {
+  syncing = true;
+};
+
+let endSync = () => {
+  syncing = false;
+};
+
 async function createInsertForTable(schemaName, tableName) {
   let columnSchema;
   let constraint;
@@ -84,6 +94,13 @@ function syncTable(schemaName, tableName, pool) {
 }
 
 export async function syncSourceToDestination() {
+  if(syncing) {
+    console.log('[Warning]  Syncing already in progress.')
+    return
+  }
+  
+  startSync()
+  
   let syncTime = process.hrtime();
 
   let mssqlConfig = {
@@ -96,12 +113,12 @@ export async function syncSourceToDestination() {
       max: 2,
     },
   };
-  
+
   try {
-    await mssql.connect(mssqlConfig)
-  } catch(err) {
-    console.log('[Error]    MSSQL connection failed.', err)
-    return
+    await mssql.connect(mssqlConfig);
+  } catch (err) {
+    console.log('[Error]    MSSQL connection failed.', err);
+    return;
   }
 
   let tables = await getTables();
@@ -153,4 +170,5 @@ export async function syncSourceToDestination() {
   await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
+  endSync()
 }
