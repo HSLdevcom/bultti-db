@@ -1,6 +1,6 @@
 import { get } from 'lodash';
 
-export async function getPrimaryConstraint(knex, tableName, schemaName = 'public') {
+export async function getPrimaryConstraint(knex, schemaName, tableName) {
   const { rows: constraintRows } = await knex.raw(
     `SELECT con.conname, con.conkey, con.contype
      FROM pg_catalog.pg_constraint con

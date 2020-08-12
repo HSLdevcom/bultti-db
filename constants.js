@@ -56,3 +56,5 @@ export const ENVIRONMENT = secretsEnv.ENVIRONMENT || 'unknown';
 export const MONITORING_ENABLED = secretsEnv.MONITORING_ENABLED === 'true';
 export const BATCH_SIZE = 10000;
 export const NS_PER_SEC = 1e9; // For tracking performance
+export const WRITE_SCHEMA_NAME = '_jore_import'
+export const READ_SCHEMA_NAME = 'jore'

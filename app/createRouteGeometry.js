@@ -5,7 +5,7 @@ import geojson from 'geojson';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { upsert } from './upsert';
 
-const { knex } = getKnex();
+const knex = getKnex();
 
 let createGroupKey = (row) => {
   return `${row.reitunnus}_${row.suusuunta}_${formatISO(row.suuvoimast)}_${formatISO(
@@ -13,9 +13,8 @@ let createGroupKey = (row) => {
   )}`;
 };
 
-export async function createRouteGeometry() {
-  let { rows } = await knex.raw(
-    `
+export async function createRouteGeometry(schemaName) {
+  let { rows } = await knex.raw(`
 SELECT suunta.reitunnus,
        suunta.suusuunta,
        suunta.suuvoimast,
@@ -26,15 +25,13 @@ SELECT suunta.reitunnus,
        piste.pisjarjnro,
        piste.pismx,
        piste.pismy
-FROM jore.jr_reitinsuunta suunta
-         LEFT JOIN jore.jr_reitinlinkki linkki USING (reitunnus, suusuunta, suuvoimast)
-         LEFT JOIN jore.jr_piste piste ON linkki.lnkverkko = piste.lnkverkko
+FROM ${schemaName}.jr_reitinsuunta suunta
+         LEFT JOIN ${schemaName}.jr_reitinlinkki linkki USING (reitunnus, suusuunta, suuvoimast)
+         LEFT JOIN ${schemaName}.jr_piste piste ON linkki.lnkverkko = piste.lnkverkko
     AND linkki.lnkalkusolmu = piste.lnkalkusolmu
     AND linkki.lnkloppusolmu = piste.lnkloppusolmu
 ORDER BY suunta.reitunnus, suunta.suusuunta, piste.pisjarjnro;
-  `,
-    []
-  );
+  `);
 
   let validRows = rows.filter((row) => !!row.pismx && !!row.pismy && !!row.pisjarjnro);
 
@@ -63,9 +60,9 @@ ORDER BY suunta.reitunnus, suunta.suusuunta, piste.pisjarjnro;
     };
   });
 
-  let constraint = await getPrimaryConstraint(knex, 'route_geometry', 'jore');
+  let constraint = await getPrimaryConstraint(knex, schemaName, 'route_geometry');
   let constraintKeys = get(constraint, 'keys', []);
 
-  await upsert('route_geometry', routeGroups, constraintKeys);
-  console.log('Geometry table created!');
+  await upsert(schemaName, 'route_geometry', routeGroups, constraintKeys);
+  console.log('[Status]   Geometry table created!');
 }

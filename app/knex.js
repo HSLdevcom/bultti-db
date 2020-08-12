@@ -1,13 +1,11 @@
 import Knex from 'knex';
-import KnexPostgis from 'knex-postgis';
 import { JORE_PG_CONNECTION, DEBUG } from '../constants';
 
 let knex = null;
-let st = null;
 
 export function getKnex() {
-  if (knex && st) {
-    return { knex, st };
+  if (knex) {
+    return knex;
   }
 
   knex = Knex({
@@ -22,8 +20,5 @@ export function getKnex() {
     },
   });
 
-  // install postgis functions in knex.postgis;
-  st = KnexPostgis(knex);
-
-  return { knex, st };
+  return knex
 }
