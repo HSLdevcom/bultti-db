@@ -1,13 +1,10 @@
-# Bultti / All
+# Bultti
 
 ak_aikataulukausi
 ak_kaavio
 ak_kaavion_lahto
 ak_kaavion_suoritteet
-ak_kalusto
 jr_ajoneuvo
-jr_kinf_kalusto
-jr_eritpvkalent
 jr_inf_aikataulu_vp
 jr_inf_kohde
 jr_inf_liik
@@ -19,7 +16,6 @@ jr_liikennoitsija
 jr_linkki
 jr_reitinlinkki
 jr_reitinsuunta
-jr_kinf_linja3
 jr_linja_vaatimus
 
 # Reittiloki
@@ -32,4 +28,5 @@ jr_linja
 jr_lij_terminaalialue
 jr_raidekalusto
 jr_korvpvkalent
+jr_eritpvkalent
 jr_piste

@@ -1,8 +1,7 @@
 import { getKnex, getSt } from './knex';
-import { groupBy, orderBy, get, chunk } from 'lodash';
+import { groupBy, orderBy, uniqBy } from 'lodash';
 import { formatISO } from 'date-fns';
-import { getPrimaryConstraint } from './getPrimaryConstraint';
-import { upsert } from './upsert';
+import { logTime } from './utils/logTime';
 
 const knex = getKnex();
 const st = getSt();
@@ -14,6 +13,8 @@ let createGroupKey = (row) => {
 };
 
 export async function createRouteGeometry(schemaName) {
+  let syncTime = process.hrtime();
+
   let { rows } = await knex.raw(`
       SELECT suunta.reitunnus,
              suunta.suusuunta,
@@ -21,27 +22,24 @@ export async function createRouteGeometry(schemaName) {
              suunta.suuvoimviimpvm,
              suunta.suupituus,
              piste.pisjarjnro,
-             piste.pisy,
-             piste.pisx
+             ST_GeomFromText('POINT(' || COALESCE(solmu.solmx, piste.pismx) || ' ' || COALESCE(solmu.solmy, piste.pismy) ||')',4326) point
       FROM ${schemaName}.jr_reitinsuunta suunta
          LEFT JOIN ${schemaName}.jr_reitinlinkki linkki USING (reitunnus, suusuunta, suuvoimast)
+         LEFT JOIN ${schemaName}.jr_solmu solmu ON linkki.lnkalkusolmu = solmu.soltunnus
          LEFT JOIN ${schemaName}.jr_piste piste ON linkki.lnkverkko = piste.lnkverkko
-            AND linkki.lnkalkusolmu = piste.lnkalkusolmu
-            AND linkki.lnkloppusolmu = piste.lnkloppusolmu
-      WHERE piste.pisjarjnro IS NOT NULL
-        AND piste.pisy IS NOT NULL
-        AND piste.pisx IS NOT NULL
+                                                AND linkki.lnkalkusolmu = piste.lnkalkusolmu
+                                                AND linkki.lnkloppusolmu = piste.lnkloppusolmu
+      ORDER BY suunta.reitunnus, suunta.suusuunta, suunta.suuvoimast, suunta.suuvoimviimpvm, linkki.reljarjnro
   `);
 
-  let routeGroups = groupBy(rows, createGroupKey);
+  let validRows = rows.filter((row) => !!row.point && !!row.pisjarjnro);
+  let routeGroups = groupBy(validRows, createGroupKey);
 
-  console.log('groups')
-  
   let routeGeometries = Object.values(routeGroups).map((geometryGroup) => {
     let props = geometryGroup[0];
 
-    let linePoints = orderBy(geometryGroup, 'pisjarjnro').map((g) =>
-      st.transform(st.geomFromText(`POINT(${g.pisy} ${g.pisx})`, 2392), 4326)
+    let linePoints = orderBy(uniqBy(geometryGroup, 'pisjarjnro'), 'pisjarjnro').map(
+      (g) => g.point
     );
 
     return {
@@ -54,11 +52,9 @@ export async function createRouteGeometry(schemaName) {
     };
   });
 
-  console.log('geometries')
-  
-  let constraint = await getPrimaryConstraint(knex, schemaName, 'route_geometry');
-  let constraintKeys = get(constraint, 'keys', []);
-  
-  await upsert(schemaName, 'route_geometry', routeGeometries, constraintKeys);
-  console.log('[Status]   Geometry table created!');
+  console.log('Geometries data created');
+
+  await knex.batchInsert(`${schemaName}.route_geometry`, routeGeometries);
+
+  logTime('[Status]   Geometry table created', syncTime);
 }
