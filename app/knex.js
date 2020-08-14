@@ -1,6 +1,8 @@
 import Knex from 'knex';
+import KnexPostgis from 'knex-postgis';
 import { JORE_PG_CONNECTION, DEBUG } from '../constants';
 
+let st = null;
 let knex = null;
 
 export function getKnex() {
@@ -19,6 +21,20 @@ export function getKnex() {
       max: 50,
     },
   });
+  
+  st = KnexPostgis(knex);
 
   return knex
+}
+
+export function getSt() {
+  if(st) {
+    return st
+  }
+  
+  if(knex) {
+    st = KnexPostgis(knex)
+  }
+  
+  return st
 }

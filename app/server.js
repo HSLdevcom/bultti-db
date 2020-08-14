@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
 import express from 'express';
 import basicAuth from 'express-basic-auth';
-import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX } from '../constants';
+import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX, READ_SCHEMA_NAME } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
 import { syncSourceToDestination } from './sync';
@@ -38,7 +38,7 @@ export const server = () => {
   
   app.post('/geometry', (req, res) => {
     console.log('Creating geometry table');
-    createRouteGeometry();
+    createRouteGeometry(READ_SCHEMA_NAME);
     res.redirect(PATH_PREFIX);
   });
 
