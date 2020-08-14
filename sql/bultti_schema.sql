@@ -1,2 +1,0 @@
-CREATE SCHEMA IF NOT EXISTS bultti;
-ALTER SCHEMA bultti OWNER TO postgres;
