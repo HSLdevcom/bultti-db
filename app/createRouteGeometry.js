@@ -18,13 +18,13 @@ export async function createRouteGeometry(schemaName) {
                  piste.lnkalkusolmu,
                  piste.lnkloppusolmu,
                  piste.pisjarjnro,
-                 st_transform(st_setsrid(st_makepoint((piste.pisy)::double precision , (piste.pisx)::double precision ), 2392), 4326) pos
+                 ST_GeomFromText('POINT(' || piste.pismx || ' ' || piste.pismy ||')',4326) pos
           FROM ${schemaName}.jr_piste piste
       ), route_line AS (
           SELECT COALESCE(st_addpoint(
-                                  st_addpoint(b.geom, st_transform(st_setsrid(st_makepoint((sl.solsty)::double precision, (sl.solstx)::double precision), 2392), 4326), 0),
-                                  st_transform(st_setsrid(st_makepoint((ll.solsty)::double precision, (ll.solstx)::double precision), 2392), 4326)),
-                          st_makeline(st_transform(st_setsrid(st_makepoint((sl.solsty)::double precision, (sl.solstx)::double precision), 2392), 4326), st_transform(st_setsrid(st_makepoint((ll.solsty)::double precision, (ll.solstx)::double precision), 2392), 4326))
+                                  st_addpoint(b.geom, st_transform(st_setsrid(st_makepoint((sl.solstx)::double precision, (sl.solsty)::double precision), 2392), 4326), 0),
+                                  st_transform(st_setsrid(st_makepoint((ll.solstx)::double precision, (ll.solsty)::double precision), 2392), 4326)),
+                          st_makeline(st_transform(st_setsrid(st_makepoint((sl.solstx)::double precision, (sl.solsty)::double precision), 2392), 4326), st_transform(st_setsrid(st_makepoint((ll.solstx)::double precision, (ll.solsty)::double precision), 2392), 4326))
                      )AS geom,
                  b.lnkverkko,
                  b.lnkalkusolmu,
