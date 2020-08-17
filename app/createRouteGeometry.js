@@ -60,7 +60,7 @@ export async function createRouteGeometry(schemaName) {
       ...geometryGroup[0]
     }
 
-    let linkLines = orderBy(geometryGroup, 'reljarjnro').map((g) => g.geom);
+    let linkLines = geometryGroup.map((g) => g.geom);
 
     return {
       route_id: props.reitunnus,
