@@ -94,13 +94,13 @@ function syncTable(schemaName, tableName, pool) {
 }
 
 export async function syncSourceToDestination() {
-  if(syncing) {
-    console.log('[Warning]  Syncing already in progress.')
-    return
+  if (syncing) {
+    console.log('[Warning]  Syncing already in progress.');
+    return;
   }
-  
-  startSync()
-  
+
+  startSync();
+
   let syncTime = process.hrtime();
 
   let mssqlConfig = {
@@ -130,6 +130,8 @@ export async function syncSourceToDestination() {
 
   let schemaName = await createImportSchema();
 
+  let pendingTables = [...tables];
+
   /*
    * There is a problem with the Mssql library that results in the connection
    * just stalling after a few tables in the loop below. No amount of adjusting
@@ -154,8 +156,15 @@ export async function syncSourceToDestination() {
         await pool.connect();
         await syncTable(schemaName, tableName, pool);
 
+        let pendingIdx = pendingTables.indexOf(tableName);
+
+        if (pendingIdx !== -1) {
+          pendingTables.splice(pendingIdx, 1);
+        }
+
         logTime(`[Status]   ${tableName} imported`, tableTime);
         console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
+        console.log(`[Pending]  ${pendingTables.join(', ')}`);
       })
       .catch((err) => {
         console.log(`[Error]    Sync error on table ${tableName}`, err);
@@ -170,5 +179,5 @@ export async function syncSourceToDestination() {
   await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
-  endSync()
+  endSync();
 }

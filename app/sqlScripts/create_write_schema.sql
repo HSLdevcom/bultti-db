@@ -224,82 +224,6 @@ create table :schema:.jr_eritpvkalent
 
 alter table :schema:.jr_eritpvkalent owner to postgres;
 
-create table :schema:.jr_inf_aikataulu_vp
-(
-    solmutunnus numeric not null,
-    reitunnus varchar not null,
-    suunta numeric not null,
-    paiva varchar not null,
-    jarjnro numeric not null,
-    vrkvht boolean not null,
-    ohitustunnit numeric not null,
-    ohitusminuutit numeric not null,
-    matlatt boolean,
-    lavoimast date not null,
-    laviimvoi date not null,
-    tyyppi numeric not null,
-    voimok boolean,
-    viitem varchar,
-    kaltyyppi numeric,
-    tvrkvht boolean,
-    tohitustunnit numeric,
-    tohitusminuutit numeric,
-    maksviivaika numeric,
-    id numeric not null,
-    ajotyyppi varchar not null,
-    constraint jr_inf_aikataulu_vp_pk
-        primary key (solmutunnus, reitunnus, suunta, paiva, ohitustunnit, ohitusminuutit, lavoimast, laviimvoi, ajotyyppi, tyyppi, jarjnro)
-);
-
-alter table :schema:.jr_inf_aikataulu_vp owner to postgres;
-
-create index jr_inf_aikataulu_vp_jarjnro_index
-    on :schema:.jr_inf_aikataulu_vp (jarjnro);
-
-create index jr_inf_aikataulu_vp_paiva_index
-    on :schema:.jr_inf_aikataulu_vp (paiva);
-
-create index jr_inf_aikataulu_vp_solmutunnus_index
-    on :schema:.jr_inf_aikataulu_vp (solmutunnus);
-
-create index jr_inf_aikataulu_vp_reitunnus_index
-    on :schema:.jr_inf_aikataulu_vp (reitunnus);
-
-create table :schema:.jr_inf_kohde
-(
-    kohtunnus varchar not null,
-    kohalkpvm date,
-    kohpaattpvm date,
-    kohtilorg varchar,
-    ilmoitus1 numeric,
-    ilmoitus2 boolean,
-    selite varchar,
-    lintunnus varchar not null,
-    liitunnus numeric not null,
-    liirooli numeric,
-    liialkpvm date not null,
-    liipaattpvm date not null,
-    koulutus numeric,
-    helmi numeric,
-    perehdytys numeric,
-    constraint jr_inf_kohde_pk
-        primary key (kohtunnus, lintunnus, liitunnus, liialkpvm, liipaattpvm)
-);
-
-alter table :schema:.jr_inf_kohde owner to postgres;
-
-create index operator_id
-    on :schema:.jr_inf_kohde (liitunnus);
-
-create index line_id
-    on :schema:.jr_inf_kohde (lintunnus);
-
-create index kohtunnus_operator_line_id
-    on :schema:.jr_inf_kohde (kohtunnus, liitunnus, lintunnus);
-
-create index start_date_end_date
-    on :schema:.jr_inf_kohde (kohalkpvm, kohpaattpvm);
-
 create table :schema:.jr_kilpailukohd
 (
     kohtunnus varchar not null
@@ -515,45 +439,6 @@ create index reitinsuunta_reitunnus
 create index reitinsuunta_suupituus
     on :schema:.jr_reitinsuunta (suupituus);
 
-create table :schema:.jr_kinf_linja3
-(
-    reitunnus varchar not null,
-    suuvoimast date not null,
-    suuviimvoi date not null,
-    suunta numeric not null,
-    reitinnimi varchar,
-    reitinnimir varchar,
-    jllaji numeric,
-    lahpaik varchar,
-    lahpaikr varchar,
-    lahsolmu varchar,
-    pituus numeric,
-    paapaik varchar,
-    paapaikr varchar,
-    paasolmu varchar,
-    nimilyh varchar,
-    nimilyhr varchar,
-    constraint jr_kinf_linja3_pk
-        primary key (reitunnus, suunta, suuvoimast, suuviimvoi)
-);
-
-alter table :schema:.jr_kinf_linja3 owner to postgres;
-
-create index kinf_linja3_reitti
-    on :schema:.jr_kinf_linja3 (reitunnus);
-
-create index kinf_linja3_suunta
-    on :schema:.jr_kinf_linja3 (suunta);
-
-create index kinf_linja3_reitti_suunta
-    on :schema:.jr_kinf_linja3 (reitunnus, suunta);
-
-create index kinf_linja3_solmu1
-    on :schema:.jr_kinf_linja3 (lahsolmu);
-
-create index kinf_linja3_solmu2
-    on :schema:.jr_kinf_linja3 (paasolmu);
-
 create table :schema:.jr_linja_vaatimus
 (
     lintunnus varchar not null,
@@ -610,42 +495,9 @@ create index ak_kaavion_suoritteet_kaaid_index
 create index suorite_kaaid_reitti_aika
     on :schema:.ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
 
-create table :schema:.jr_kinf_kalusto
-(
-    tyyppi varchar,
-    reknro varchar not null,
-    kylkinro varchar not null,
-    ika numeric,
-    kaltyyppi varchar,
-    teli boolean,
-    ulkovari varchar,
-    liitunnus numeric not null,
-    paastoluokka numeric,
-    paastoluokkaselite varchar,
-    constraint jr_kinf_kalusto_pkey
-        primary key (reknro, kylkinro, liitunnus)
-);
-
-alter table :schema:.jr_kinf_kalusto owner to postgres;
-
-create index kalusto_reknro
-    on :schema:.jr_kinf_kalusto (reknro);
-
-create index kalusto_liitunnus
-    on :schema:.jr_kinf_kalusto (liitunnus);
-
-create index kalusto_kylkinro
-    on :schema:.jr_kinf_kalusto (kylkinro);
-
-create index kalusto_tyyppi
-    on :schema:.jr_kinf_kalusto (tyyppi);
-
-create index kalusto_paastoluokka
-    on :schema:.jr_kinf_kalusto (paastoluokka);
-
 create table :schema:.jr_linkki
 (
-    lnkverkko numeric not null,
+    lnkverkko varchar not null,
     lnkalkusolmu varchar not null,
     lnkloppusolmu varchar not null,
     lnkmitpituus numeric,
@@ -674,42 +526,6 @@ create index jr_linkki_lnkalkusolmu_lnkloppusolmu_index
 
 create index jr_linkki_lnkloppusolmu_index
     on :schema:.jr_linkki (lnkloppusolmu);
-
-create table :schema:.ak_kalusto
-(
-    katyyppi char(2) not null
-        constraint ak_kalusto_pk
-            primary key,
-    kamatlatt char,
-    kaselite varchar(40),
-    jarjnro smallint,
-    perustaja varchar(8),
-    perustpvm timestamp with time zone,
-    muuttaja varchar(8),
-    muutospvm timestamp with time zone
-);
-
-alter table :schema:.ak_kalusto owner to postgres;
-
-create table :schema:.jr_inf_joukkollaji
-(
-    koodi char(2) not null
-        constraint jr_inf_joukkollaji_pk
-            primary key,
-    selite char(50)
-);
-
-alter table :schema:.jr_inf_joukkollaji owner to postgres;
-
-create table :schema:.jr_inf_liik
-(
-    liitunnus numeric not null
-        constraint jr_inf_liik_pk
-            primary key,
-    liinimi varchar(40)
-);
-
-alter table :schema:.jr_inf_liik owner to postgres;
 
 create table :schema:.jr_solmu
 (
@@ -945,26 +761,10 @@ create table :schema:.route_geometry
     route_id varchar not null,
     direction varchar not null,
     date_begin date not null,
-    date_end date not null,
-    route_length numeric,
-    start_stop varchar,
-    end_stop varchar,
-    geojson varchar,
+    geom geometry(LineString,4326),
     constraint route_geometry_pk
-        primary key (route_id, direction, date_begin, date_end)
+        primary key (route_id, direction, date_begin)
 );
 
 alter table :schema:.route_geometry owner to postgres;
-
-create index route_geometry_date_begin_date_end_index
-    on :schema:.route_geometry (date_begin, date_end);
-
-create index route_geometry_direction_index
-    on :schema:.route_geometry (direction);
-
-create index route_geometry_route_id_direction_index
-    on :schema:.route_geometry (route_id, direction);
-
-create index route_geometry_route_id_index
-    on :schema:.route_geometry (route_id);
 
