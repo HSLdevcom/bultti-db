@@ -1,60 +1,78 @@
 import { getKnex, getSt } from './knex';
-import { groupBy, orderBy, uniqBy } from 'lodash';
+import { groupBy, orderBy } from 'lodash';
 import { formatISO } from 'date-fns';
 import { logTime } from './utils/logTime';
 
 const knex = getKnex();
-const st = getSt();
 
 let createGroupKey = (row) => {
-  return `${row.reitunnus}_${row.suusuunta}_${formatISO(row.suuvoimast)}_${formatISO(
-    row.suuvoimviimpvm
-  )}`;
+  return `${row.reitunnus}_${row.suusuunta}_${formatISO(row.suuvoimast)}`;
 };
 
 export async function createRouteGeometry(schemaName) {
   let syncTime = process.hrtime();
 
   let { rows } = await knex.raw(`
-      SELECT suunta.reitunnus,
-             suunta.suusuunta,
-             suunta.suuvoimast,
-             suunta.suuvoimviimpvm,
-             suunta.suupituus,
-             piste.pisjarjnro,
-             ST_GeomFromText('POINT(' || COALESCE(solmu.solmx, piste.pismx) || ' ' || COALESCE(solmu.solmy, piste.pismy) ||')',4326) point
-      FROM ${schemaName}.jr_reitinsuunta suunta
-         LEFT JOIN ${schemaName}.jr_reitinlinkki linkki USING (reitunnus, suusuunta, suuvoimast)
-         LEFT JOIN ${schemaName}.jr_solmu solmu ON linkki.lnkalkusolmu = solmu.soltunnus
-         LEFT JOIN ${schemaName}.jr_piste piste ON linkki.lnkverkko = piste.lnkverkko
-                                                AND linkki.lnkalkusolmu = piste.lnkalkusolmu
-                                                AND linkki.lnkloppusolmu = piste.lnkloppusolmu
-      ORDER BY suunta.reitunnus, suunta.suusuunta, suunta.suuvoimast, suunta.suuvoimviimpvm, linkki.reljarjnro
+      WITH point_pos AS (
+          SELECT piste.lnkverkko,
+                 piste.lnkalkusolmu,
+                 piste.lnkloppusolmu,
+                 piste.pisjarjnro,
+                 st_transform(st_setsrid(st_makepoint((piste.pisy)::double precision , (piste.pisx)::double precision ), 2392), 4326) pos
+          FROM ${schemaName}.jr_piste piste
+      ), route_line AS (
+          SELECT COALESCE(st_addpoint(
+                                  st_addpoint(b.geom, st_transform(st_setsrid(st_makepoint((sl.solsty)::double precision, (sl.solstx)::double precision), 2392), 4326), 0),
+                                  st_transform(st_setsrid(st_makepoint((ll.solsty)::double precision, (ll.solstx)::double precision), 2392), 4326)),
+                          st_makeline(st_transform(st_setsrid(st_makepoint((sl.solsty)::double precision, (sl.solstx)::double precision), 2392), 4326), st_transform(st_setsrid(st_makepoint((ll.solsty)::double precision, (ll.solstx)::double precision), 2392), 4326))
+                     )AS geom,
+                 b.lnkverkko,
+                 b.lnkalkusolmu,
+                 b.lnkloppusolmu
+          FROM ((
+                    SELECT l.lnkverkko,
+                           l.lnkalkusolmu,
+                           l.lnkloppusolmu,
+                           st_makeline(pg.pos ORDER BY pg.lnkverkko, pg.lnkalkusolmu, pg.lnkloppusolmu, pg.pisjarjnro) AS geom
+                    FROM ${schemaName}.jr_linkki l
+                             LEFT JOIN point_pos pg ON ((pg.lnkverkko = l.lnkverkko) AND (pg.lnkalkusolmu = l.lnkalkusolmu) AND (pg.lnkloppusolmu = l.lnkloppusolmu))
+                    GROUP BY l.lnkverkko, l.lnkalkusolmu, l.lnkloppusolmu) b
+                   LEFT JOIN ${schemaName}.jr_solmu sl ON (b.lnkalkusolmu = sl.soltunnus)
+                   LEFT JOIN ${schemaName}.jr_solmu ll ON (b.lnkloppusolmu = ll.soltunnus))
+      )
+      SELECT linkki.reitunnus,
+             linkki.suusuunta,
+             linkki.suuvoimast,
+             linkki.reljarjnro,
+             line.geom
+      FROM route_line line
+            LEFT JOIN ${schemaName}.jr_reitinlinkki linkki ON line.lnkverkko = linkki.lnkverkko
+              AND line.lnkalkusolmu = linkki.lnkalkusolmu
+              AND line.lnkloppusolmu = linkki.lnkloppusolmu
+      WHERE linkki.suuvoimast IS NOT NULL
+      ORDER BY linkki.reitunnus, linkki.suusuunta, linkki.suuvoimast, linkki.reljarjnro;
   `);
-
-  let validRows = rows.filter((row) => !!row.point && !!row.pisjarjnro);
-  let routeGroups = groupBy(validRows, createGroupKey);
+;
+  let routeGroups = groupBy(rows, createGroupKey);
 
   let routeGeometries = Object.values(routeGroups).map((geometryGroup) => {
-    let props = geometryGroup[0];
+    let props = {
+      ...geometryGroup[0]
+    }
 
-    let linePoints = orderBy(uniqBy(geometryGroup, 'pisjarjnro'), 'pisjarjnro').map(
-      (g) => g.point
-    );
+    let linkLines = orderBy(geometryGroup, 'reljarjnro').map((g) => g.geom);
 
     return {
       route_id: props.reitunnus,
       direction: props.suusuunta,
       date_begin: props.suuvoimast,
-      date_end: props.suuvoimviimpvm,
-      route_length: props.suupituus,
-      geom: knex.raw(`ST_MakeLine(ARRAY[${linePoints.map(() => '?').join(',')}])`, linePoints),
+      geom: knex.raw(`ST_MakeLine(ARRAY[${linkLines.map(() => '?').join(',')}])`, linkLines),
     };
   });
 
   console.log('Geometries data created');
 
-  await knex.batchInsert(`${schemaName}.route_geometry`, routeGeometries);
+  await knex.batchInsert(`${schemaName}.route_geometry`, routeGeometries, 100);
 
   logTime('[Status]   Geometry table created', syncTime);
 }
