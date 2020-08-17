@@ -503,17 +503,15 @@ create table :schema:.jr_linkki
     lnkmitpituus numeric,
     lnkpituus numeric,
     lnkstid numeric,
-    katkunta numeric,
+    katkunta varchar,
     katnimi varchar,
     kaoosnro numeric,
-    lnksuunta numeric,
+    lnksuunta varchar,
     lnkosnro numeric,
-    lnkostrk varchar,
+    lnkostrk varchar(1),
     lnkkuka varchar,
     lnkviimpvm timestamp with time zone,
-    lnkhis boolean,
-    constraint jr_linkki_pk
-        primary key (lnkalkusolmu, lnkloppusolmu, lnkverkko)
+    lnkhis boolean
 );
 
 alter table :schema:.jr_linkki owner to postgres;
@@ -521,11 +519,11 @@ alter table :schema:.jr_linkki owner to postgres;
 create index jr_linkki_lnkalkusolmu_index
     on :schema:.jr_linkki (lnkalkusolmu);
 
-create index jr_linkki_lnkalkusolmu_lnkloppusolmu_index
-    on :schema:.jr_linkki (lnkalkusolmu, lnkloppusolmu);
-
 create index jr_linkki_lnkloppusolmu_index
     on :schema:.jr_linkki (lnkloppusolmu);
+
+create index jr_linkki_lnkalkusolmu_lnkloppusolmu_index
+    on :schema:.jr_linkki (lnkalkusolmu, lnkloppusolmu);
 
 create table :schema:.jr_solmu
 (
