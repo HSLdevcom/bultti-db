@@ -361,7 +361,7 @@ create table jr_liikennoitsija
     postitoimipaikka varchar,
     lijliikennoitsija boolean,
     constraint jr_liikennoitsija_pk
-        primary key (liitunnus, liinimi)
+        primary key (liitunnus)
 );
 
 alter table jr_liikennoitsija owner to postgres;
