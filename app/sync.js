@@ -4,11 +4,10 @@ import { upsert } from './upsert';
 import { getKnex } from './knex';
 import { transformRow } from './dataTransform';
 import { getTables } from './utils/fetchTables';
-import { dateCutoffFilter } from './utils/dateCutoffFilter';
 import { logTime } from './utils/logTime';
 import PQueue from 'p-queue';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
-import { primaryKeyNotNullFilter } from './utils/primaryKeyNotNullFilter';
+import { notNullFilter } from './utils/notNullFilter';
 import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
@@ -46,9 +45,7 @@ async function createInsertForTable(schemaName, tableName) {
     let processedRows = data
       .map((row) => transformRow(row, tableName, columnSchema))
       // transformRow may make some fields proper dates, so filter by date after it.
-      .filter(
-        (row) => primaryKeyNotNullFilter(row, constraint) && dateCutoffFilter(row, tableName)
-      );
+      .filter((row) => notNullFilter(row, constraint, columnSchema));
 
     return upsert(schemaName, tableName, processedRows, constraintKeys);
   };

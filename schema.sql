@@ -1,7 +1,7 @@
-create schema if not exists :schema:;
-alter schema :schema: owner to postgres;
+create schema if not exists jore;
+alter schema jore owner to postgres;
 
-SET SCHEMA ':schema:';
+SET schema 'jore';
 
 create table ak_aikataulukausi
 (
