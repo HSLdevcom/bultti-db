@@ -417,6 +417,9 @@ create index jr_reitinlinkki_lnkloppusolmu_index
 create index jr_reitinlinkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
     on jr_reitinlinkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
 
+create index jr_reitinlinkki_relpysakki_lnkalkusolmu_index
+    on jr_reitinlinkki (relpysakki, lnkalkusolmu);
+
 create table jr_reitinsuunta
 (
     reitunnus varchar not null,
@@ -627,6 +630,9 @@ alter table jr_pysakki owner to postgres;
 
 create index jr_pysakki_soltunnus_index
     on jr_pysakki (soltunnus);
+
+create index jr_pysakki_terminaali_index
+    on jr_pysakki (terminaali);
 
 create table jr_pysakkivali
 (
