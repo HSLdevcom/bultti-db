@@ -142,6 +142,8 @@ export async function syncSourceToDestination() {
     syncQueue
       .add(async () => {
         console.log(`[Status]   Importing ${tableName}`);
+        console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
+
         let tableTime = process.hrtime();
 
         let pool = new mssql.ConnectionPool(mssqlConfig);
@@ -160,7 +162,6 @@ export async function syncSourceToDestination() {
         }
 
         logTime(`[Status]   ${tableName} imported`, tableTime);
-        console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
         console.log(`[Pending]  ${pendingTables.join(', ')}`);
       })
       .catch((err) => {

@@ -1,6 +1,6 @@
 import Knex from 'knex';
 import KnexPostgis from 'knex-postgis';
-import { JORE_PG_CONNECTION, DEBUG } from '../constants';
+import { JORE_PG_CONNECTION, DEBUG, WRITE_SCHEMA_NAME, READ_SCHEMA_NAME } from '../constants';
 
 let st = null;
 let knex = null;
@@ -14,6 +14,10 @@ export function getKnex() {
     dialect: 'postgres',
     client: 'pg',
     connection: JORE_PG_CONNECTION,
+    searchPath: [WRITE_SCHEMA_NAME, READ_SCHEMA_NAME, 'public'],
+    migrations: {
+      schemaName: 'public',
+    },
     pool: {
       log: (message, logLevel) =>
         DEBUG ? console.log(`Pool ${logLevel}: ${message}`) : undefined,
@@ -21,20 +25,20 @@ export function getKnex() {
       max: 50,
     },
   });
-  
+
   st = KnexPostgis(knex);
 
-  return knex
+  return knex;
 }
 
 export function getSt() {
-  if(st) {
-    return st
+  if (st) {
+    return st;
   }
-  
-  if(knex) {
-    st = KnexPostgis(knex)
+
+  if (knex) {
+    st = KnexPostgis(knex);
   }
-  
-  return st
+
+  return st;
 }
