@@ -1,24 +1,31 @@
 // Ensure primary key columns are not null
 import { trim, uniq, get } from 'lodash';
 
-export function notNullFilter(row, constraint, columnSchema) {
-  if ((!constraint || constraint.keys.length === 0) && !columnSchema) {
-    return true;
-  }
-
-  let nonNullableKeys = Object.entries(columnSchema)
+export function createNotNullFilter(constraint, columnSchema) {
+  let nonNullableKeys = Object.entries(columnSchema || {})
     .filter(([, schema]) => schema.nullable === false)
     .map(([key]) => key);
 
   let notNullKeys = uniq([...get(constraint, 'keys', []), ...nonNullableKeys]);
 
-  return !notNullKeys.some((pk) => {
-    let val = row[pk];
+  if (notNullKeys.length === 0) {
+    return () => true;
+  }
 
-    if (typeof val === 'string') {
-      return !trim(val);
-    }
+  return (row) => {
+    return notNullKeys.every((pk) => {
+      let val = row[pk];
 
-    return !val;
-  });
+      if (typeof val === 'string') {
+        val = trim(val);
+      }
+
+      // All numbers are valid, but 0 will evaluate to false. Set val to 1 to avoid this.
+      if (typeof val === 'number') {
+        val = 1;
+      }
+
+      return !!val;
+    });
+  };
 }

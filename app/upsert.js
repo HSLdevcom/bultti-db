@@ -18,8 +18,8 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   if (items.length === 0) {
     return Promise.resolve();
   }
-  
-  let tableId = `${schema}.${tableName}`
+
+  let tableId = `${schema}.${tableName}`;
 
   // Get the set of keys for all items from the first item.
   // All items should have the same keys.
@@ -40,16 +40,19 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   let upsertQueryFragment =
     primaryKeys.length !== 0
       ? `ON CONFLICT ${onConflictKeys} DO UPDATE SET ${updateKeys}`
-      : '';
+      : 'ON CONFLICT DO NOTHING';
 
-  // 30k bindings is slightly under what the node-pg library can handle per query.
+  // 30k bindings is a conservative estimate of what the node-pg library can handle per query.
   let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
   // Split the items up into chunks
   let queryChunks = chunk(items, itemsPerQuery);
 
   // Create upsert queries for each chunk of items.
   for (let itemsChunk of queryChunks) {
-    let uniqItems = uniqBy(itemsChunk, (item) => createPrimaryKey(item, primaryKeys));
+    let uniqItems =
+      primaryKeys.length !== 0
+        ? uniqBy(itemsChunk, (item) => createPrimaryKey(item, primaryKeys))
+        : itemsChunk;
 
     let chunkLength = uniqItems.length;
     // Create a string of placeholder values (?,?,?) for each item we want to insert
