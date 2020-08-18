@@ -1,8 +1,6 @@
 create schema if not exists :schema:;
 alter schema :schema: owner to postgres;
 
-SET SCHEMA ':schema:';
-
 create table ak_aikataulukausi
 (
     aktunnus varchar not null

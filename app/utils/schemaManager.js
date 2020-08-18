@@ -33,5 +33,5 @@ export async function createImportSchema() {
 
 export async function activateFreshSchema() {
   await switchWriteSchemaToRead();
-  return READ_SCHEMA_NAME
+  return READ_SCHEMA_NAME;
 }
