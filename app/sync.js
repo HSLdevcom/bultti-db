@@ -7,7 +7,7 @@ import { getTables } from './utils/fetchTables';
 import { logTime } from './utils/logTime';
 import PQueue from 'p-queue';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
-import { notNullFilter } from './utils/notNullFilter';
+import { createNotNullFilter } from './utils/notNullFilter';
 import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
@@ -40,12 +40,12 @@ async function createInsertForTable(schemaName, tableName) {
   }
 
   let constraintKeys = get(constraint, 'keys', []);
+  let notNullFilter = createNotNullFilter(constraint, columnSchema);
 
   return (data) => {
     let processedRows = data
-      .map((row) => transformRow(row, tableName, columnSchema))
-      // transformRow may make some fields proper dates, so filter by date after it.
-      .filter((row) => notNullFilter(row, constraint, columnSchema));
+      .filter(notNullFilter)
+      .map((row) => transformRow(row, tableName, columnSchema));
 
     return upsert(schemaName, tableName, processedRows, constraintKeys);
   };
