@@ -34,6 +34,11 @@ let ignoreCutoffForTables = [
   'ak_kaavion_suoritteet',
   'ak_kaavion_lahto',
   'ak_kaavio',
+  'jr_reitinlinkki',
+  'jr_linkki',
+  'jr_piste',
+  'jr_solmu',
+  'jr_reitinsuunta',
 ];
 
 // Filter function to only include rows that are active after the cutoff date.
