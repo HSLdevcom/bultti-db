@@ -864,3 +864,108 @@ create index jr_linkki_lnkloppusolmu_index
 create index jr_linkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
     on jr_linkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
 
+create table jr_lahto
+(
+    reitunnus varchar not null,
+    lavoimast timestamp with time zone not null,
+    lhpaivat char(2) not null,
+    lhsuunta numeric not null,
+    lhvrkvht char not null,
+    lhlahaik numeric(4,2) not null,
+    lhjarjnro smallint,
+    lhajotyyppi varchar(2),
+    lhmatlatt varchar(1),
+    lhviitem varchar(4),
+    lhvoimok varchar(2),
+    lhkuka varchar(20),
+    lhviimpvm timestamp with time zone,
+    lhkaltyyppi varchar(2),
+    kohtunnus varchar(12),
+    termaika integer,
+    elpymisaika integer,
+    pakollkaltyyppi varchar(2),
+    maksviivaika integer,
+    junanumero integer,
+    yksikkolkm integer,
+    "LIJid" integer,
+    constraint jr_lahto_pk
+        primary key (reitunnus, lhsuunta, lavoimast, lhpaivat, lhvrkvht, lhlahaik)
+);
+
+alter table jr_lahto owner to postgres;
+
+create index jr_lahto_lhlahaik_index
+    on jr_lahto (lhlahaik);
+
+create index jr_lahto_lhpaivat_index
+    on jr_lahto (lhpaivat);
+
+create index jr_lahto_lhpaivat_lhlahaik_index
+    on jr_lahto (lhpaivat, lhlahaik);
+
+create index jr_lahto_reitunnus_index
+    on jr_lahto (reitunnus);
+
+create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
+    on jr_lahto (reitunnus, lhsuunta, lavoimast);
+
+create table jr_aikataulu
+(
+    reitunnus varchar not null,
+    lavoimast timestamp with time zone not null,
+    laviimvoi timestamp with time zone not null,
+    lakuka varchar(20),
+    laviimpvm timestamp with time zone,
+    constraint jr_aikataulu_pk
+        primary key (reitunnus, lavoimast, laviimvoi)
+);
+
+alter table jr_aikataulu owner to postgres;
+
+create index jr_aikataulu_lavoimast_laviimvoi_index
+    on jr_aikataulu (lavoimast, laviimvoi);
+
+create index jr_aikataulu_reitunnus_index
+    on jr_aikataulu (reitunnus);
+
+create table jr_liik_kilpa_suhde
+(
+    liitunnus varchar(6) not null,
+    kohtunnus varchar(12) not null,
+    liirooli varchar(2),
+    liialkpvm timestamp with time zone,
+    liipaattpvm timestamp with time zone,
+    constraint jr_liik_kilpa_suhde_pk
+        primary key (liitunnus, kohtunnus)
+);
+
+alter table jr_liik_kilpa_suhde owner to postgres;
+
+create index jr_liik_kilpa_suhde_kohtunnus_index
+    on jr_liik_kilpa_suhde (kohtunnus);
+
+create index jr_liik_kilpa_suhde_liitunnus_index
+    on jr_liik_kilpa_suhde (liitunnus);
+
+create table jr_valipisteaika
+(
+    reitunnus varchar,
+    lavoimast timestamp with time zone,
+    lhpaivat char(2),
+    lhsuunta numeric,
+    lhvrkvht char,
+    lhlahaik numeric(4,2),
+    vastunnus char(7),
+    vaslaika numeric(4,2),
+    vaslvrkvht char,
+    vasjarjnro smallint,
+    vaskuka varchar(20),
+    vasviimpvm timestamp with time zone,
+    vaslahde varchar(2),
+    vastaika numeric(4,2),
+    vastvrkvht char,
+    raide char(3)
+);
+
+alter table jr_valipisteaika owner to postgres;
+
