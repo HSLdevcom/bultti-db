@@ -342,7 +342,9 @@ create index jr_koodisto_kookoodi_index
 
 create table jr_liikennoitsija
 (
-    liitunnus numeric not null,
+    liitunnus numeric not null
+        constraint jr_liikennoitsija_pk
+            primary key,
     liinimi varchar not null,
     liinimir varchar,
     liinimilyh varchar,
@@ -361,9 +363,7 @@ create table jr_liikennoitsija
     status numeric,
     postinumero numeric,
     postitoimipaikka varchar,
-    lijliikennoitsija boolean,
-    constraint jr_liikennoitsija_pk
-        primary key (liitunnus, liinimi)
+    lijliikennoitsija boolean
 );
 
 alter table jr_liikennoitsija owner to postgres;
@@ -418,6 +418,9 @@ create index jr_reitinlinkki_lnkloppusolmu_index
 
 create index jr_reitinlinkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
     on jr_reitinlinkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
+
+create index jr_reitinlinkki_lnkalkusolmu_relpysakki_index
+    on jr_reitinlinkki (lnkalkusolmu, relpysakki);
 
 create table jr_reitinsuunta
 (
@@ -630,6 +633,9 @@ alter table jr_pysakki owner to postgres;
 create index jr_pysakki_soltunnus_index
     on jr_pysakki (soltunnus);
 
+create index jr_pysakki_terminaali_index
+    on jr_pysakki (terminaali);
+
 create table jr_pysakkivali
 (
     id integer not null,
@@ -810,7 +816,7 @@ create index jr_piste_pisx_pisy_index
 create table route_geometry
 (
     route_id varchar not null,
-    direction varchar not null,
+    direction numeric not null,
     date_begin date not null,
     geom geometry(LineString,4326),
     constraint route_geometry_pk
@@ -819,14 +825,14 @@ create table route_geometry
 
 alter table route_geometry owner to postgres;
 
+create index route_geometry_route_id_index
+    on route_geometry (route_id);
+
 create index route_geometry_route_id_direction_date_begin_index
     on route_geometry (route_id, direction, date_begin);
 
 create index route_geometry_route_id_direction_index
     on route_geometry (route_id, direction);
-
-create index route_geometry_route_id_index
-    on route_geometry (route_id);
 
 create table jr_linkki
 (
