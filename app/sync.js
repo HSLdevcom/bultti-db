@@ -11,6 +11,7 @@ import { createNotNullFilter } from './utils/notNullFilter';
 import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
+import { getPool } from './mssql';
 
 const knex = getKnex();
 
@@ -97,28 +98,10 @@ export async function syncSourceToDestination() {
   }
 
   startSync();
-
   let syncTime = process.hrtime();
 
-  let mssqlConfig = {
-    ...MSSQL_CONNECTION,
-    options: {
-      enableArithAbort: false,
-    },
-    pool: {
-      min: 0,
-      max: 2,
-    },
-  };
-
-  try {
-    await mssql.connect(mssqlConfig);
-  } catch (err) {
-    console.log('[Error]    MSSQL connection failed.', err);
-    return;
-  }
-
   let tables = await getTables();
+  let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
     concurrency: 10,
@@ -126,8 +109,6 @@ export async function syncSourceToDestination() {
   });
 
   let schemaName = await createImportSchema();
-
-  let pendingTables = [...tables];
 
   /*
    * There is a problem with the Mssql library that results in the connection
@@ -145,14 +126,8 @@ export async function syncSourceToDestination() {
         console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
 
         let tableTime = process.hrtime();
+        let pool = await getPool();
 
-        let pool = new mssql.ConnectionPool(mssqlConfig);
-
-        pool.on('error', (err) => {
-          console.log('[Error]    Pool error', err);
-        });
-
-        await pool.connect();
         await syncTable(schemaName, tableName, pool);
 
         let pendingIdx = pendingTables.indexOf(tableName);
