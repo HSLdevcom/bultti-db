@@ -984,9 +984,64 @@ create index jr_valipisteaika_reitunnus_index
 create index jr_valipisteaika_reitunnus_lhsuunta_index
     on jr_valipisteaika (reitunnus, lhsuunta);
 
-create table departures
+create table departure
 (
-    stop_id varchar not null,
-    route_id varchar not null,
-    direction smallint not null
-)
+    stop_id varchar(7) not null,
+    origin_stop_id varchar(7) not null,
+    route_id varchar(6) not null,
+    direction smallint not null,
+    day_type varchar(2) not null,
+    departure_id smallint not null,
+    is_next_day boolean not null,
+    hours smallint not null,
+    minutes smallint not null,
+    origin_hours smallint not null,
+    origin_minutes smallint not null,
+    arrival_is_next_day boolean not null,
+    arrival_hours smallint not null,
+    arrival_minutes smallint not null,
+    date_begin date not null,
+    date_end date not null,
+    extra_departure varchar(2) default 'N'::character varying not null,
+    terminal_time smallint,
+    recovery_time smallint,
+    equipment_type varchar(2),
+    equipment_required smallint,
+    procurement_unit_id varchar(12),
+    operator_id varchar(6),
+    available_operators varchar(20),
+    trunk_color_required smallint,
+    constraint departure_pkey
+        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure),
+    constraint departure_route_id_direction_date_begin_date_end_hours_minutes_
+        unique (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure)
+);
+
+alter table departure owner to postgres;
+
+create index departure_stop_id_index
+    on departure (stop_id);
+
+create index departure_route_id_index
+    on departure (route_id);
+
+create index departure_day_type_index
+    on departure (day_type);
+
+create index departure_departure_id_index
+    on departure (departure_id);
+
+create index departure_date_begin_index
+    on departure (date_begin);
+
+create index departure_route_id_direction_stop_id_idx
+    on departure (route_id, direction, stop_id);
+
+create index departure_origin_index
+    on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
+
+create index departure_stop_id_day_type
+    on departure (stop_id, day_type);
+
+create index departure_origin_time_index
+    on departure (origin_hours, origin_minutes);
