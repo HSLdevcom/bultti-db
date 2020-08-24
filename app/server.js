@@ -1,11 +1,11 @@
 /* eslint-disable consistent-return */
 import express from 'express';
-import basicAuth from 'express-basic-auth';
-import { ADMIN_PASSWORD, SERVER_PORT, PATH_PREFIX, READ_SCHEMA_NAME } from '../constants';
+import { SERVER_PORT, PATH_PREFIX, READ_SCHEMA_NAME } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
 import { syncSourceToDestination } from './sync';
 import { createRouteGeometry } from './createRouteGeometry';
+import { createDepartures } from './createDepartures';
 
 export const server = () => {
   const app = express();
@@ -35,10 +35,16 @@ export const server = () => {
     syncSourceToDestination();
     res.redirect(PATH_PREFIX);
   });
-  
+
   app.post('/geometry', (req, res) => {
     console.log('Creating geometry table');
     createRouteGeometry(READ_SCHEMA_NAME);
+    res.redirect(PATH_PREFIX);
+  });
+  
+  app.post('/departures', (req, res) => {
+    console.log('Creating departures table');
+    createDepartures(READ_SCHEMA_NAME);
     res.redirect(PATH_PREFIX);
   });
 
