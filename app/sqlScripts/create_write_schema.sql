@@ -947,23 +947,40 @@ create index jr_liik_kilpa_suhde_liitunnus_index
 
 create table jr_valipisteaika
 (
-    reitunnus varchar,
-    lavoimast timestamp with time zone,
-    lhpaivat char(2),
-    lhsuunta numeric,
+    reitunnus varchar not null,
+    lavoimast timestamp with time zone not null,
+    lhpaivat char(2) not null,
+    lhsuunta numeric not null,
     lhvrkvht char,
-    lhlahaik numeric(4,2),
-    vastunnus char(7),
-    vaslaika numeric(4,2),
-    vaslvrkvht char,
+    lhlahaik numeric(4,2) not null,
+    vastunnus char(7) not null,
+    vaslaika numeric(4,2) not null,
+    vaslvrkvht char not null,
     vasjarjnro smallint,
     vaskuka varchar(20),
     vasviimpvm timestamp with time zone,
     vaslahde varchar(2),
     vastaika numeric(4,2),
     vastvrkvht char,
-    raide char(3)
+    raide char(3),
+    constraint jr_valipisteaika_pk
+        primary key (reitunnus, lhsuunta, lhpaivat, lhlahaik, lavoimast, vastunnus, vaslaika, vaslvrkvht)
 );
 
 alter table jr_valipisteaika owner to postgres;
+
+create index jr_valipisteaika_lhlahaik_index
+    on jr_valipisteaika (lhlahaik);
+
+create index jr_valipisteaika_lhlahaik_vastunnus_index
+    on jr_valipisteaika (lhlahaik, vastunnus);
+
+create index jr_valipisteaika_lhpaivat_index
+    on jr_valipisteaika (lhpaivat);
+
+create index jr_valipisteaika_reitunnus_index
+    on jr_valipisteaika (reitunnus);
+
+create index jr_valipisteaika_reitunnus_lhsuunta_index
+    on jr_valipisteaika (reitunnus, lhsuunta);
 
