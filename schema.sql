@@ -83,7 +83,7 @@ create table ak_kaavion_lahto
 (
     kaaid numeric not null,
     reitunnus varchar not null,
-    suunta numeric not null,
+    suunta smallint not null,
     lahaika varchar not null,
     ajoaika numeric,
     kaltyyppi varchar,
@@ -115,9 +115,6 @@ create index reitunnus
 create index kaaid
     on ak_kaavion_lahto (kaaid);
 
-create index suunta
-    on ak_kaavion_lahto (suunta);
-
 create index kaltyyppi
     on ak_kaavion_lahto (kaltyyppi);
 
@@ -126,6 +123,9 @@ create index liitunnus
 
 create index lahto_lahtoaika
     on ak_kaavion_lahto (lahaika);
+
+create index suunta
+    on ak_kaavion_lahto (suunta);
 
 create table jr_ajoneuvo
 (
@@ -374,7 +374,7 @@ create index jr_liikennoitsija_liitunnus_index
 create table jr_reitinlinkki
 (
     reitunnus varchar not null,
-    suusuunta numeric not null,
+    suusuunta smallint not null,
     suuvoimast timestamp with time zone not null,
     reljarjnro numeric not null,
     relid numeric not null,
@@ -407,9 +407,6 @@ create index jr_reitinlinkki_reitunnus_index
 create index jr_reitinlinkki_relpysakki_index
     on jr_reitinlinkki (relpysakki);
 
-create index jr_reitinlinkki_suusuunta_index
-    on jr_reitinlinkki (suusuunta);
-
 create index jr_reitinlinkki_lnkalkusolmu_index
     on jr_reitinlinkki (lnkalkusolmu);
 
@@ -422,10 +419,13 @@ create index jr_reitinlinkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
 create index jr_reitinlinkki_lnkalkusolmu_relpysakki_index
     on jr_reitinlinkki (lnkalkusolmu, relpysakki);
 
+create index jr_reitinlinkki_suusuunta_index
+    on jr_reitinlinkki (suusuunta);
+
 create table jr_reitinsuunta
 (
     reitunnus varchar not null,
-    suusuunta numeric not null,
+    suusuunta smallint not null,
     suuvoimast date not null,
     suuvoimviimpvm date not null,
     suulahpaik varchar,
@@ -453,14 +453,14 @@ create table jr_reitinsuunta
 
 alter table jr_reitinsuunta owner to postgres;
 
-create index reitinsuunta_suunta
-    on jr_reitinsuunta (suusuunta);
-
 create index reitinsuunta_reitunnus
     on jr_reitinsuunta (reitunnus);
 
 create index reitinsuunta_suupituus
     on jr_reitinsuunta (suupituus);
+
+create index reitinsuunta_suunta
+    on jr_reitinsuunta (suusuunta);
 
 create index jr_reitinsuunta_reitunnus_suusuunta_suuvoimast_suuvoimviimpvm_i
     on jr_reitinsuunta (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm);
@@ -483,7 +483,7 @@ create table ak_kaavion_suoritteet
 (
     kaaid numeric not null,
     reitunnus varchar not null,
-    suunta numeric not null,
+    suunta smallint not null,
     lahaika varchar not null,
     vrkvht boolean,
     autokierto numeric not null,
@@ -509,14 +509,14 @@ create index ak_kaavion_suoritteet_metrit_index
 create index ak_kaavion_suoritteet_reitunnus_index
     on ak_kaavion_suoritteet (reitunnus);
 
+create index ak_kaavion_suoritteet_kaaid_index
+    on ak_kaavion_suoritteet (kaaid);
+
 create index ak_kaavion_suoritteet_reitunnus_suunta_metrit_index
     on ak_kaavion_suoritteet (reitunnus, suunta, metrit);
 
 create index ak_kaavion_suoritteet_suunta_index
     on ak_kaavion_suoritteet (suunta);
-
-create index ak_kaavion_suoritteet_kaaid_index
-    on ak_kaavion_suoritteet (kaaid);
 
 create index suorite_kaaid_reitti_aika
     on ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
@@ -869,9 +869,9 @@ create table jr_lahto
     reitunnus varchar not null,
     lavoimast timestamp with time zone not null,
     lhpaivat char(2) not null,
-    lhsuunta numeric not null,
+    lhsuunta smallint not null,
     lhvrkvht char not null,
-    lhlahaik numeric(4,2) not null,
+    lhlahaik varchar not null,
     lhjarjnro smallint,
     lhajotyyppi varchar(2),
     lhmatlatt varchar(1),
@@ -894,17 +894,17 @@ create table jr_lahto
 
 alter table jr_lahto owner to postgres;
 
-create index jr_lahto_lhlahaik_index
-    on jr_lahto (lhlahaik);
-
 create index jr_lahto_lhpaivat_index
     on jr_lahto (lhpaivat);
 
-create index jr_lahto_lhpaivat_lhlahaik_index
-    on jr_lahto (lhpaivat, lhlahaik);
-
 create index jr_lahto_reitunnus_index
     on jr_lahto (reitunnus);
+
+create index jr_lahto_lhlahaik_index
+    on jr_lahto (lhlahaik);
+
+create index jr_lahto_lhpaivat_lhlahaik_index
+    on jr_lahto (lhpaivat, lhlahaik);
 
 create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
     on jr_lahto (reitunnus, lhsuunta, lavoimast);
