@@ -1,8 +1,8 @@
 import { getKnex } from './knex';
-import { formatISO, format } from 'date-fns';
+import { format } from 'date-fns';
 import { logTime } from './utils/logTime';
 import { getPool } from './mssql';
-import { uniqBy, get } from 'lodash';
+import { uniqBy, flatten } from 'lodash';
 import { upsert } from './upsert';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
@@ -23,7 +23,7 @@ async function departuresQuery(route, pool) {
 
   // language=TSQL
   let { recordset = [] } = await request.query`
-        SELECT lah.reitunnus route_id,
+        SELECT TRIM(lah.reitunnus) route_id,
                CAST(lah.lhsuunta AS smallint) direction,
                lah.lhpaivat day_type,
                CAST(lah.lhlahaik AS varchar) origin_departure_time,
@@ -71,7 +71,7 @@ async function getRoutes(pool) {
 
   // language=TSQL
   let { recordset = [] } = await request.query(`
-      SELECT reitunnus, suusuunta, lnkalkusolmu, suuvoimast
+      SELECT TRIM(reitunnus), suusuunta, lnkalkusolmu, suuvoimast
       FROM dbo.jr_reitinlinkki
       WHERE relpysakki != 'E'
         AND suuvoimast >= '2019-01-01'
@@ -83,7 +83,7 @@ async function getRoutes(pool) {
 
 export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
-  
+
   let pool = await getPool(10);
   let routes = await getRoutes(pool);
 
@@ -107,14 +107,19 @@ export async function createDepartures(schemaName) {
     concurrency: 5,
     autoStart: true,
   });
-  
+
+  let routeDepartures = new Map();
+
   for (let route of routes) {
-    let routeName = `${route.reitunnus}/${route.suusuunta}/${route.lnkalkusolmu}/${format(route.suuvoimast, 'yyyy-MM-dd')}`;
+    let routeName = `${route.reitunnus}/${route.suusuunta}/${route.lnkalkusolmu}/${format(
+      route.suuvoimast,
+      'yyyy-MM-dd'
+    )}`;
 
     syncQueue
       .add(async () => {
         console.log(`[Status]   Importing ${routeName}`);
-        
+
         let rows = await departuresQuery(route, pool);
 
         let departures = rows.map((depRow) => {
@@ -167,13 +172,8 @@ export async function createDepartures(schemaName) {
             )
         );
 
-        let uniqDepartures = uniqBy(validDepartures, createDeparturesKey);
-
-        console.log(`[Status]   Departures of ${routeName} processed, importing now.`);
-
-        await upsert(schemaName, 'departure', uniqDepartures);
-  
-        console.log(`[Status]   Departures of ${routeName} imported.`);
+        routeDepartures.set(routeName, validDepartures);
+        console.log(`[Status]   Departures of ${routeName} processed.`);
       })
       .catch((err) => {
         console.log(`[Error]    Sync error on table ${routeName}`, err);
@@ -181,6 +181,14 @@ export async function createDepartures(schemaName) {
   }
 
   await syncQueue.onIdle();
+  
+  logTime('[Status]   Raw departures fetched', syncTime);
+  
+  let allDepartures = flatten(routeDepartures.values());
+  routeDepartures.clear(); // Free some memory
+
+  let uniqDepartures = uniqBy(allDepartures, createDeparturesKey);
+  await upsert(schemaName, 'departure', uniqDepartures);
 
   console.log('Departures data created');
   logTime('[Status]   Departures table created.', syncTime);
