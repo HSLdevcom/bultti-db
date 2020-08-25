@@ -1,24 +1,24 @@
 import { getKnex } from './knex';
-import { formatISO } from 'date-fns';
+import { formatISO, format } from 'date-fns';
 import { logTime } from './utils/logTime';
 import { getPool } from './mssql';
 import { uniqBy, get } from 'lodash';
 import { upsert } from './upsert';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
+import PQueue from 'p-queue';
 
 const knex = getKnex();
 
 let createDeparturesKey = (row) => {
   return `${row.stop_id}_${row.route_id}_${row.direction}_${row.day_type}_${row.hours}_${
     row.minutes
-  }_${formatISO(row.date_begin)}_${formatISO(row.date_end)}_${row.extra_departure}_${
-    row.is_next_day
-  }`;
+  }_${format(row.date_begin, 'yyyy-MM-dd')}_${format(row.date_end, 'yyyy-MM-dd')}_${
+    row.extra_departure
+  }_${row.is_next_day}`;
 };
 
-async function departuresQuery(route) {
-  let pool = await getPool();
+async function departuresQuery(route, pool) {
   let request = pool.request();
 
   // language=TSQL
@@ -66,8 +66,7 @@ async function departuresQuery(route) {
   return recordset;
 }
 
-async function getRoutes() {
-  let pool = await getPool();
+async function getRoutes(pool) {
   let request = pool.request();
 
   // language=TSQL
@@ -84,7 +83,9 @@ async function getRoutes() {
 
 export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
-  let routes = await getRoutes();
+  
+  let pool = await getPool(10);
+  let routes = await getRoutes(pool);
 
   let columnSchema;
   let constraint;
@@ -100,69 +101,87 @@ export async function createDepartures(schemaName) {
     console.log(err);
   }
 
-  let constraintKeys = get(constraint, 'keys', []);
   let notNullFilter = createNotNullFilter(constraint, columnSchema);
 
+  let syncQueue = new PQueue({
+    concurrency: 5,
+    autoStart: true,
+  });
+  
   for (let route of routes) {
-    let rows = await departuresQuery(route);
+    let routeName = `${route.reitunnus}/${route.suusuunta}/${route.lnkalkusolmu}/${format(route.suuvoimast, 'yyyy-MM-dd')}`;
 
-    let departures = rows.map((depRow) => {
-      let {
-        origin_departure_time,
-        departure_time,
-        arrival_time,
-        trunk_color_required,
-        is_next_day,
-        equipment_required,
-        arrival_is_next_day,
-        ...depProps
-      } = depRow;
+    syncQueue
+      .add(async () => {
+        console.log(`[Status]   Importing ${routeName}`);
+        
+        let rows = await departuresQuery(route, pool);
 
-      let [origin_hours = -1, origin_minutes = -1] = (origin_departure_time || '')
-        .split('.')
-        .map((num) => parseInt(num, 10));
+        let departures = rows.map((depRow) => {
+          let {
+            origin_departure_time,
+            departure_time,
+            arrival_time,
+            trunk_color_required,
+            is_next_day,
+            equipment_required,
+            arrival_is_next_day,
+            ...depProps
+          } = depRow;
 
-      let [hours = -1, minutes = -1] = (departure_time || '')
-        .split('.')
-        .map((num = '-1') => parseInt(num, 10));
+          let [origin_hours = -1, origin_minutes = -1] = (origin_departure_time || '')
+            .split('.')
+            .map((num) => parseInt(num, 10));
 
-      let [arrival_hours = -1, arrival_minutes = -1] = (arrival_time || '')
-        .split('.')
-        .map((num = '-1') => parseInt(num, 10));
+          let [hours = -1, minutes = -1] = (departure_time || '')
+            .split('.')
+            .map((num = '-1') => parseInt(num, 10));
 
-      return {
-        origin_stop_id: route.lnkalkusolmu,
-        ...depProps,
-        origin_hours: isNaN(origin_hours) ? -1 : origin_hours,
-        origin_minutes: isNaN(origin_minutes) ? -1 : origin_minutes,
-        hours: isNaN(hours) ? -1 : hours,
-        minutes: isNaN(minutes) ? -1 : minutes,
-        arrival_hours: isNaN(arrival_hours) ? -1 : arrival_hours,
-        arrival_minutes: isNaN(arrival_minutes) ? -1 : arrival_minutes,
-        trunk_color_required: trunk_color_required === '2',
-        is_next_day: !!is_next_day,
-        equipment_required: !!equipment_required,
-        arrival_is_next_day: !!arrival_is_next_day,
-      };
-    });
+          let [arrival_hours = -1, arrival_minutes = -1] = (arrival_time || '')
+            .split('.')
+            .map((num = '-1') => parseInt(num, 10));
 
-    let validDepartures = departures.filter(
-      (dep) =>
-        notNullFilter(dep) &&
-        Object.values(dep).every((val) => typeof val !== 'number' || !isNaN(val) || val !== -1)
-    );
+          return {
+            origin_stop_id: route.lnkalkusolmu,
+            ...depProps,
+            origin_hours: isNaN(origin_hours) ? -1 : origin_hours,
+            origin_minutes: isNaN(origin_minutes) ? -1 : origin_minutes,
+            hours: isNaN(hours) ? -1 : hours,
+            minutes: isNaN(minutes) ? -1 : minutes,
+            arrival_hours: isNaN(arrival_hours) ? -1 : arrival_hours,
+            arrival_minutes: isNaN(arrival_minutes) ? -1 : arrival_minutes,
+            trunk_color_required: trunk_color_required === '2',
+            is_next_day: !!is_next_day,
+            equipment_required: !!equipment_required,
+            arrival_is_next_day: !!arrival_is_next_day,
+          };
+        });
 
-    let uniqDepartures = uniqBy(validDepartures, createDeparturesKey);
+        console.log(`[Status]   Departures of ${routeName} fetched`);
 
-    try {
-      await upsert(schemaName, 'departure', uniqDepartures, constraintKeys);
-    } catch (err) {
-      console.log(err);
-      console.log(departures);
-      break;
-    }
+        let validDepartures = departures.filter(
+          (dep) =>
+            notNullFilter(dep) &&
+            Object.values(dep).every(
+              (val) => typeof val !== 'number' || !isNaN(val) || val !== -1
+            )
+        );
+
+        let uniqDepartures = uniqBy(validDepartures, createDeparturesKey);
+
+        console.log(`[Status]   Departures of ${routeName} processed, importing now.`);
+
+        await upsert(schemaName, 'departure', uniqDepartures);
+  
+        console.log(`[Status]   Departures of ${routeName} imported.`);
+      })
+      .catch((err) => {
+        console.log(`[Error]    Sync error on table ${routeName}`, err);
+      });
   }
 
+  await syncQueue.onIdle();
+
   console.log('Departures data created');
-  logTime('[Status]   Departures table created', syncTime);
+  logTime('[Status]   Departures table created.', syncTime);
 }
