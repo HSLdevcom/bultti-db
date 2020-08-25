@@ -2,11 +2,19 @@ import { getKnex } from './knex';
 import { formatISO } from 'date-fns';
 import { logTime } from './utils/logTime';
 import { getPool } from './mssql';
+import { uniqBy, get } from 'lodash';
+import { upsert } from './upsert';
+import { getPrimaryConstraint } from './getPrimaryConstraint';
+import { createNotNullFilter } from './utils/notNullFilter';
 
 const knex = getKnex();
 
 let createDeparturesKey = (row) => {
-  return `${row.reitunnus}_${row.suusuunta}_${formatISO(row.suuvoimast)}`;
+  return `${row.stop_id}_${row.route_id}_${row.direction}_${row.day_type}_${row.hours}_${
+    row.minutes
+  }_${formatISO(row.date_begin)}_${formatISO(row.date_end)}_${row.extra_departure}_${
+    row.is_next_day
+  }`;
 };
 
 async function departuresQuery(route) {
@@ -22,9 +30,9 @@ async function departuresQuery(route) {
                CAST(ROW_NUMBER() over (
                    PARTITION BY lah.reitunnus, lah.lhsuunta, lah.lhlahaik, lah.lhpaivat, lah.lavoimast
                    ORDER BY lah.lhjarjnro
-               ) AS smallint) departure_id,
+               ) AS int) departure_id,
                COALESCE(NULLIF(TRIM(lah.lhajotyyppi), ''), 'N') extra_departure,
-               COALESCE(lah.lhkaltyyppi, 'Unknown') equipment_type,
+               COALESCE(lah.lhkaltyyppi, 'ET') equipment_type,
                lah.kohtunnus procurement_unit_id,
                CAST(lah.termaika AS smallint) terminal_time,
                CAST(lah.elpymisaika AS smallint) recovery_time,
@@ -36,8 +44,9 @@ async function departuresQuery(route) {
                CAST(vpa.vaslaika AS varchar) departure_time,
                CAST(vpa.vastaika AS varchar) arrival_time,
                COALESCE(CONVERT(smallint, vpa.vaslvrkvht), 0) is_next_day,
+               COALESCE(CONVERT(smallint, vpa.vastvrkvht), 0) arrival_is_next_day,
                kk.liitunnus operator_id,
-               COALESCE(CONVERT(smallint, lv.kookoodi), 0) trunk_color_required
+               COALESCE(lv.kookoodi, '0') trunk_color_required
         FROM dbo.jr_lahto lah
            LEFT JOIN dbo.jr_aikataulu aik on lah.lavoimast = aik.lavoimast
                 and lah.reitunnus = aik.reitunnus
@@ -77,42 +86,83 @@ export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
   let routes = await getRoutes();
 
-  let routeDepartures = [];
+  let columnSchema;
+  let constraint;
+
+  try {
+    constraint = await getPrimaryConstraint(knex, schemaName, 'departure');
+
+    columnSchema = await knex
+      .withSchema(schemaName)
+      .table('departure')
+      .columnInfo();
+  } catch (err) {
+    console.log(err);
+  }
+
+  let constraintKeys = get(constraint, 'keys', []);
+  let notNullFilter = createNotNullFilter(constraint, columnSchema);
 
   for (let route of routes) {
     let rows = await departuresQuery(route);
 
     let departures = rows.map((depRow) => {
-      let {origin_departure_time, departure_time, arrival_time, ...depProps} = depRow
-      
+      let {
+        origin_departure_time,
+        departure_time,
+        arrival_time,
+        trunk_color_required,
+        is_next_day,
+        equipment_required,
+        arrival_is_next_day,
+        ...depProps
+      } = depRow;
+
       let [origin_hours = -1, origin_minutes = -1] = (origin_departure_time || '')
         .split('.')
         .map((num) => parseInt(num, 10));
-  
+
       let [hours = -1, minutes = -1] = (departure_time || '')
         .split('.')
-        .map((num) => parseInt(num, 10));
-  
+        .map((num = '-1') => parseInt(num, 10));
+
       let [arrival_hours = -1, arrival_minutes = -1] = (arrival_time || '')
         .split('.')
-        .map((num) => parseInt(num, 10));
+        .map((num = '-1') => parseInt(num, 10));
 
       return {
         origin_stop_id: route.lnkalkusolmu,
         ...depProps,
-        origin_hours,
-        origin_minutes,
-        hours,
-        minutes,
-        arrival_hours,
-        arrival_minutes
+        origin_hours: isNaN(origin_hours) ? -1 : origin_hours,
+        origin_minutes: isNaN(origin_minutes) ? -1 : origin_minutes,
+        hours: isNaN(hours) ? -1 : hours,
+        minutes: isNaN(minutes) ? -1 : minutes,
+        arrival_hours: isNaN(arrival_hours) ? -1 : arrival_hours,
+        arrival_minutes: isNaN(arrival_minutes) ? -1 : arrival_minutes,
+        trunk_color_required: trunk_color_required === '2',
+        is_next_day: !!is_next_day,
+        equipment_required: !!equipment_required,
+        arrival_is_next_day: !!arrival_is_next_day,
       };
     });
 
-    routeDepartures = [...routeDepartures, ...departures];
+    let validDepartures = departures.filter(
+      (dep) =>
+        notNullFilter(dep) &&
+        Object.values(dep).every((val) => typeof val !== 'number' || !isNaN(val) || val !== -1)
+    );
+
+    let uniqDepartures = uniqBy(validDepartures, createDeparturesKey);
+
+    try {
+      await upsert(schemaName, 'departure', uniqDepartures, constraintKeys);
+    } catch (err) {
+      console.log(err);
+      console.log(departures);
+      break;
+    }
   }
 
   console.log('Departures data created');
-  await knex.batchInsert(`${schemaName}.departures`, routeDepartures, 5000);
   logTime('[Status]   Departures table created', syncTime);
 }

@@ -7,7 +7,7 @@ pids
 *.pid
 *.seed
 
-data/*.csv
+data/*
 data-backup/*
 data-done/*
 data_prev/*

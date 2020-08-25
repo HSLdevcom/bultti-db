@@ -1012,9 +1012,7 @@ create table departure
     available_operators varchar(20),
     trunk_color_required smallint,
     constraint departure_pkey
-        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure),
-    constraint departure_route_id_direction_date_begin_date_end_hours_minutes_
-        unique (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure)
+        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure)
 );
 
 alter table departure owner to postgres;
@@ -1045,3 +1043,4 @@ create index departure_stop_id_day_type
 
 create index departure_origin_time_index
     on departure (origin_hours, origin_minutes);
+
