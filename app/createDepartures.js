@@ -2,7 +2,7 @@ import { getKnex } from './knex';
 import { format } from 'date-fns';
 import { logTime } from './utils/logTime';
 import { getPool } from './mssql';
-import { uniqBy, groupBy } from 'lodash';
+import { uniqBy, toString } from 'lodash';
 import { upsert } from './upsert';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
@@ -10,12 +10,20 @@ import PQueue from 'p-queue';
 
 const knex = getKnex();
 
-let createDeparturesKey = (row) => {
-  return `${row.stop_id}_${row.route_id}_${row.direction}_${row.day_type}_${row.hours}_${
-    row.minutes
-  }_${format(row.date_begin, 'yyyy-MM-dd')}_${format(row.date_end, 'yyyy-MM-dd')}_${
-    row.extra_departure
-  }_${row.is_next_day}`;
+let createDeparturesKey = (constraint) => {
+  let primaryKeys = constraint.keys;
+
+  return (row) => {
+    return primaryKeys.reduce((key, pk) => {
+      let val = row[pk];
+
+      if (pk.startsWith('date')) {
+        return key + format(val, 'yyyy-MM-dd');
+      }
+
+      return key + toString(val);
+    }, '');
+  };
 };
 
 async function departuresQuery(route, pool) {
@@ -103,6 +111,7 @@ export async function createDepartures(schemaName) {
   }
 
   let notNullFilter = createNotNullFilter(constraint, columnSchema);
+  let createRowKey = createDeparturesKey(constraint);
 
   let syncQueue = new PQueue({
     concurrency: 10,
@@ -160,12 +169,12 @@ export async function createDepartures(schemaName) {
           return {
             origin_stop_id: route.lnkalkusolmu,
             ...depProps,
-            origin_hours: isNaN(origin_hours) ? -1 : origin_hours,
-            origin_minutes: isNaN(origin_minutes) ? -1 : origin_minutes,
-            hours: isNaN(hours) ? -1 : hours,
-            minutes: isNaN(minutes) ? -1 : minutes,
-            arrival_hours: isNaN(arrival_hours) ? -1 : arrival_hours,
-            arrival_minutes: isNaN(arrival_minutes) ? -1 : arrival_minutes,
+            origin_hours: origin_hours,
+            origin_minutes: origin_minutes,
+            hours: hours,
+            minutes: minutes,
+            arrival_hours: arrival_hours,
+            arrival_minutes: arrival_minutes,
             trunk_color_required: trunk_color_required === '2',
             is_next_day: is_next_day === 1,
             arrival_is_next_day: arrival_is_next_day === 1,
@@ -175,16 +184,9 @@ export async function createDepartures(schemaName) {
 
         console.log(`[Status]   Departures of ${routeName} fetched`);
 
-        let validDepartures = departures.filter(
-          (dep) =>
-            notNullFilter(dep) &&
-            Object.values(dep).every(
-              (val) => typeof val !== 'number' || (!isNaN(val) && val !== -1)
-            )
-        );
-
-        let uniqDepartures = uniqBy(validDepartures, createDeparturesKey);
-
+        let validDepartures = departures.filter((dep) => notNullFilter(dep));
+        let uniqDepartures = uniqBy(validDepartures, createRowKey);
+        
         if (uniqDepartures.length !== 0) {
           await upsert(schemaName, 'departure', uniqDepartures);
         }
