@@ -1,5 +1,5 @@
 import { getKnex } from './knex';
-import { format } from 'date-fns';
+import { format, addMonths, subYears } from 'date-fns';
 import { logTime } from './utils/logTime';
 import { getPool } from './mssql';
 import { uniqBy, toString } from 'lodash';
@@ -28,6 +28,9 @@ let createDeparturesKey = (constraint) => {
 
 async function departuresQuery(route, pool) {
   let request = pool.request();
+  
+  let maxDate = format(addMonths(new Date(), 1), 'yyyy-MM-dd')
+  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd')
 
   // language=TSQL
   let { recordset = [] } = await request.query(`
@@ -69,7 +72,8 @@ async function departuresQuery(route, pool) {
            LEFT JOIN dbo.jr_linja_vaatimus lv on lah.reitunnus = lv.lintunnus
         WHERE lah.reitunnus = '${route.reitunnus}'
           AND lah.lhsuunta = '${route.suusuunta}'
-          AND lah.lavoimast >= '2019-01-01'
+          AND lah.lavoimast >= ${minDate}
+          AND lah.lavoimast <= ${maxDate}
         ORDER BY CAST(lah.lhlahaik AS decimal)
     `);
 
@@ -85,7 +89,7 @@ async function getRoutes() {
       SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu
       FROM dbo.jr_reitinlinkki
       WHERE relpysakki != 'E'
-        AND suuvoimast >= '2019-01-01'
+        AND suuvoimast >= '2020-01-01'
         AND reljarjnro = 1
     `);
 
