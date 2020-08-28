@@ -110,6 +110,8 @@ async function createRowsProcessor(schemaName) {
   let createRowKey = createDeparturesKey(constraint);
 
   return async (rows) => {
+    let chunkTime = process.hrtime();
+    console.log(`[Status]   Processing departure rows.`);
     /*let firstDepartures = uniqBy(
       rows,
       (dep) => `${dep.origin_departure_time}_${dep.day_type}_${dep.date_begin}`
@@ -169,12 +171,17 @@ async function createRowsProcessor(schemaName) {
     if (uniqDepartures.length !== 0) {
       await upsert(schemaName, 'departure', uniqDepartures);
     }
+
+    logTime(
+      `[Status]   ${uniqDepartures.length} departure rows processed and inserted`,
+      chunkTime
+    );
   };
 }
 
 export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
-  console.log(`[Status]   Importing departures.`);
+  console.log(`[Status]   Creating departures table.`);
 
   await new Promise(async (resolve, reject) => {
     let request = await departuresQuery();

@@ -12,6 +12,7 @@ import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
 import { getPool } from './mssql';
+import { createDepartures } from './createDepartures';
 
 const knex = getKnex();
 
@@ -144,11 +145,12 @@ export async function syncSourceToDestination() {
       });
   }
 
-  await syncQueue.onIdle();
-
-  logTime('[Status]   Creating route_geometry table', syncTime);
-  await createRouteGeometry(schemaName);
-
+  await Promise.all([
+    syncQueue.onIdle(),
+    createRouteGeometry(schemaName),
+    createDepartures(schemaName)
+  ])
+  
   await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
