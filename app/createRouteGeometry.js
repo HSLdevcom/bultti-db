@@ -54,13 +54,13 @@ export async function createRouteGeometry(schemaName) {
       WHERE linkki.suuvoimast IS NOT NULL
       ORDER BY linkki.reitunnus, linkki.suusuunta, linkki.suuvoimast, linkki.reljarjnro;
   `);
-;
+
   let routeGroups = groupBy(rows, createGroupKey);
 
   let routeGeometries = Object.values(routeGroups).map((geometryGroup) => {
     let props = {
-      ...geometryGroup[0]
-    }
+      ...geometryGroup[0],
+    };
 
     let linkLines = geometryGroup.map((g) => g.geom);
 
