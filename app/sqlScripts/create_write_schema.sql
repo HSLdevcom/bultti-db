@@ -125,6 +125,25 @@ create index lahto_lahtoaika
 create index suunta
     on ak_kaavion_lahto (suunta);
 
+create table ak_kalusto
+(
+    katyyppi varchar(2) not null
+        constraint ak_kalusto_pk
+            primary key,
+    kamatlatt varchar,
+    kaselite varchar(40),
+    jarjnro smallint,
+    perustaja varchar(8),
+    perustpvm timestamp with time zone,
+    muuttaja varchar(8),
+    muutospvm timestamp with time zone
+);
+
+alter table ak_kalusto owner to postgres;
+
+create index ak_kalusto_katyyppi_index
+    on ak_kalusto (katyyppi);
+
 create table jr_ajoneuvo
 (
     id varchar not null,

@@ -4,6 +4,7 @@ ak_aikataulukausi
 ak_kaavio
 ak_kaavion_lahto
 ak_kaavion_suoritteet
+ak_kalusto
 jr_ajoneuvo
 jr_kilpailukohd
 jr_konserni
@@ -26,7 +27,7 @@ jr_raidekalusto
 jr_korvpvkalent
 jr_eritpvkalent
 jr_piste
-jr_aikataulu
-jr_lahto
+#jr_aikataulu
+#jr_lahto
 #jr_valipisteaika
 jr_liik_kilpa_suhde
