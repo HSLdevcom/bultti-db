@@ -966,45 +966,6 @@ create index jr_liik_kilpa_suhde_kohtunnus_index
 create index jr_liik_kilpa_suhde_liitunnus_index
     on jr_liik_kilpa_suhde (liitunnus);
 
-create table jr_valipisteaika
-(
-    reitunnus varchar not null,
-    lavoimast timestamp with time zone not null,
-    lhpaivat char(2) not null,
-    lhsuunta numeric not null,
-    lhvrkvht char,
-    lhlahaik numeric(4,2) not null,
-    vastunnus char(7) not null,
-    vaslaika numeric(4,2) not null,
-    vaslvrkvht char not null,
-    vasjarjnro smallint,
-    vaskuka varchar(20),
-    vasviimpvm timestamp with time zone,
-    vaslahde varchar(2),
-    vastaika numeric(4,2),
-    vastvrkvht char,
-    raide char(3),
-    constraint jr_valipisteaika_pk
-        primary key (reitunnus, lhsuunta, lhpaivat, lhlahaik, lavoimast, vastunnus, vaslaika, vaslvrkvht)
-);
-
-alter table jr_valipisteaika owner to postgres;
-
-create index jr_valipisteaika_lhlahaik_index
-    on jr_valipisteaika (lhlahaik);
-
-create index jr_valipisteaika_lhlahaik_vastunnus_index
-    on jr_valipisteaika (lhlahaik, vastunnus);
-
-create index jr_valipisteaika_lhpaivat_index
-    on jr_valipisteaika (lhpaivat);
-
-create index jr_valipisteaika_reitunnus_index
-    on jr_valipisteaika (reitunnus);
-
-create index jr_valipisteaika_reitunnus_lhsuunta_index
-    on jr_valipisteaika (reitunnus, lhsuunta);
-
 create table departure
 (
     stop_id varchar(7) not null,
@@ -1012,13 +973,13 @@ create table departure
     route_id varchar(6) not null,
     direction smallint not null,
     day_type varchar(2) not null,
-    departure_id smallint not null,
-    is_next_day boolean not null,
+    departure_id integer not null,
+    is_next_day boolean default false not null,
     hours smallint not null,
     minutes smallint not null,
     origin_hours smallint not null,
     origin_minutes smallint not null,
-    arrival_is_next_day boolean not null,
+    arrival_is_next_day boolean default false not null,
     arrival_hours smallint not null,
     arrival_minutes smallint not null,
     date_begin date not null,
@@ -1027,13 +988,15 @@ create table departure
     terminal_time smallint,
     recovery_time smallint,
     equipment_type varchar(2),
-    equipment_required smallint,
+    equipment_required boolean default false,
     procurement_unit_id varchar(12),
     operator_id varchar(6),
     available_operators varchar(20),
-    trunk_color_required smallint,
+    trunk_color_required boolean default false,
+    train_number integer,
+    date_modified timestamp with time zone,
     constraint departure_pkey
-        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure)
+        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure, origin_hours, origin_minutes)
 );
 
 alter table departure owner to postgres;
@@ -1047,17 +1010,11 @@ create index departure_route_id_index
 create index departure_day_type_index
     on departure (day_type);
 
-create index departure_departure_id_index
-    on departure (departure_id);
-
 create index departure_date_begin_index
     on departure (date_begin);
 
 create index departure_route_id_direction_stop_id_idx
     on departure (route_id, direction, stop_id);
-
-create index departure_origin_index
-    on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
 
 create index departure_stop_id_day_type
     on departure (stop_id, day_type);
@@ -1065,3 +1022,8 @@ create index departure_stop_id_day_type
 create index departure_origin_time_index
     on departure (origin_hours, origin_minutes);
 
+create index departure_departure_id_index
+    on departure (departure_id);
+
+create index departure_origin_index
+    on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
