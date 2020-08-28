@@ -4,8 +4,9 @@
 node_modules
 postgres-data
 disabled_migrations
-data-done
 .env
 secrets
-data-done
-data_prev
+data
+legacy_scripts
+test_dsn
+yarn-error.log
