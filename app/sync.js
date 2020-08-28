@@ -147,9 +147,10 @@ export async function syncSourceToDestination() {
 
   await Promise.all([
     syncQueue.onIdle(),
-    createRouteGeometry(schemaName),
     createDepartures(schemaName)
   ])
+  
+  await createRouteGeometry(schemaName)
   
   await activateFreshSchema();
 
