@@ -11,7 +11,9 @@ let createGroupKey = (row) => {
 
 export async function createRouteGeometry(schemaName) {
   let syncTime = process.hrtime();
+  console.log('[Status]   Creating route_geometry table.');
 
+  // language=PostgreSQL
   let { rows } = await knex.raw(`
       WITH point_pos AS (
           SELECT piste.lnkverkko,
@@ -69,8 +71,6 @@ export async function createRouteGeometry(schemaName) {
       geom: knex.raw(`ST_MakeLine(ARRAY[${linkLines.map(() => '?').join(',')}])`, linkLines),
     };
   });
-
-  console.log('Geometries data created');
 
   await knex.batchInsert(`${schemaName}.route_geometry`, routeGeometries, 100);
 
