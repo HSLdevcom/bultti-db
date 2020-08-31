@@ -62,18 +62,35 @@ async function departuresQuery() {
             lah.junanumero train_number,
             aik.lavoimast date_begin,
             aik.laviimvoi date_end,
-            COALESCE(vpa.vastunnus, route.lnkalkusolmu) stop_id,
-            COALESCE(CAST(vpa.vaslaika AS varchar), CAST(lah.lhlahaik AS varchar)) departure_time,
-            COALESCE(CAST(vpa.vastaika AS varchar), CAST(lah.lhlahaik AS varchar)) arrival_time,
-            COALESCE(CAST(vpa.vaslvrkvht AS smallint), CAST(lah.lhvrkvht AS smallint), 0) is_next_day,
-            COALESCE(CAST(vpa.vastvrkvht AS smallint), CAST(lah.lhvrkvht AS smallint), 0) arrival_is_next_day,
+            COALESCE(vpa.vastunnus, origin.origin_stop_id) stop_id,
+            COALESCE(CAST(vpa.vaslaika AS varchar), CAST(origin.origin_departure_time AS varchar)) departure_time,
+            COALESCE(CAST(vpa.vastaika AS varchar), CAST(origin.origin_departure_time AS varchar)) arrival_time,
+            COALESCE(CAST(vpa.vaslvrkvht AS smallint), CAST(origin.is_next_day AS smallint), 0) is_next_day,
+            COALESCE(CAST(vpa.vastvrkvht AS smallint), CAST(origin.is_next_day AS smallint), 0) arrival_is_next_day,
             kk.liitunnus operator_id,
             COALESCE(lv.kookoodi, '0') trunk_color_required,
             aik.laviimpvm date_modified
       FROM departure_routes route
          LEFT JOIN dbo.jr_lahto lah on lah.reitunnus = route.reitunnus
               AND lah.lhsuunta = route.suusuunta
-         LEFT JOIN dbo.jr_valipisteaika vpa on lah.reitunnus = vpa.reitunnus
+         LEFT JOIN (
+            SELECT r.reitunnus route_id,
+                   r.suusuunta direction,
+                   r.lnkalkusolmu origin_stop_id,
+                   l.lhlahaik origin_departure_time,
+                   l.lhpaivat day_type,
+                   l.lavoimast date_begin,
+                   l.lhvrkvht is_next_day
+            FROM departure_routes r
+            LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
+             AND l.lhsuunta = r.suusuunta
+        ) origin ON lah.reitunnus = origin.route_id
+               AND lah.lhsuunta = origin.direction
+               AND lah.lhlahaik = origin.origin_departure_time
+               AND lah.lhpaivat = origin.day_type
+               AND lah.lavoimast = origin.date_begin
+               AND lah.lhvrkvht = origin.is_next_day
+         LEFT OUTER JOIN dbo.jr_valipisteaika vpa on lah.reitunnus = vpa.reitunnus
               and lah.lhsuunta = vpa.lhsuunta
               and lah.lhpaivat = vpa.lhpaivat
               and lah.lhlahaik = vpa.lhlahaik
@@ -111,7 +128,7 @@ async function createRowsProcessor(schemaName) {
 
   return async (rows) => {
     let chunkTime = process.hrtime();
-    /*let firstDepartures = uniqBy(
+    /* let firstDepartures = uniqBy(
       rows,
       (dep) => `${dep.origin_departure_time}_${dep.day_type}_${dep.date_begin}`
     );
@@ -123,7 +140,7 @@ async function createRowsProcessor(schemaName) {
       stop_id: route.lnkalkusolmu,
     }));
   
-    let rawDepartures = [...originDepartures, ...rows];*/
+    let rawDepartures = [...originDepartures, ...rows]; */
 
     let departures = rows.map((depRow) => {
       let {
@@ -202,7 +219,7 @@ export async function createDepartures(schemaName) {
     request.on('row', async (row) => {
       rows.push(row);
 
-      if (rows.length >= BATCH_SIZE) {
+      if (rows.length >= 1000) {
         request.pause();
         await processRows();
       }
