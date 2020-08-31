@@ -111,7 +111,6 @@ async function createRowsProcessor(schemaName) {
 
   return async (rows) => {
     let chunkTime = process.hrtime();
-    console.log(`[Status]   Processing departure rows.`);
     /*let firstDepartures = uniqBy(
       rows,
       (dep) => `${dep.origin_departure_time}_${dep.day_type}_${dep.date_begin}`
