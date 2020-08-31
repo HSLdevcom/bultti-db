@@ -199,7 +199,7 @@ export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
-  await new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     let request = await departuresQuery();
     let rowsProcessor = await createRowsProcessor(schemaName);
 
@@ -219,7 +219,7 @@ export async function createDepartures(schemaName) {
     request.on('row', async (row) => {
       rows.push(row);
 
-      if (rows.length >= 1000) {
+      if (rows.length >= BATCH_SIZE) {
         request.pause();
         await processRows();
       }
@@ -227,11 +227,10 @@ export async function createDepartures(schemaName) {
 
     request.on('done', async () => {
       await processRows();
+      logTime('[Status]   Departures table created.', syncTime);
       resolve();
     });
 
     request.on('error', reject);
-  });
-
-  logTime('[Status]   Departures table created.', syncTime);
+  })
 }

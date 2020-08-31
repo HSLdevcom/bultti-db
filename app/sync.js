@@ -145,13 +145,10 @@ export async function syncSourceToDestination() {
       });
   }
 
-  await Promise.all([
-    syncQueue.onIdle(),
-    createDepartures(schemaName)
-  ])
-  
-  await createRouteGeometry(schemaName)
-  
+  await createDepartures(schemaName);
+  await syncQueue.onIdle();
+  await createRouteGeometry(schemaName);
+
   await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
