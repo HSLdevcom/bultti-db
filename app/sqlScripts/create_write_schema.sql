@@ -1,5 +1,6 @@
 create schema if not exists :schema:;
-alter schema :schema: owner to postgres;
+alter schema :schema: owner to CURRENT_USER;
+GRANT ALL ON SCHEMA :schema: TO CURRENT_USER;
 
 create table ak_aikataulukausi
 (
@@ -17,7 +18,7 @@ create table ak_aikataulukausi
     muutospvm timestamp with time zone
 );
 
-alter table ak_aikataulukausi owner to postgres;
+alter table ak_aikataulukausi owner to CURRENT_USER;
 
 create index ak_aikataulukausi_akalkpvm_akpaattpvm_index
     on ak_aikataulukausi (akalkpvm, akpaattpvm);
@@ -48,7 +49,7 @@ create table ak_kaavio
         primary key (aktunnus, kaaversio, kaatunnus, kaaid)
 );
 
-alter table ak_kaavio owner to postgres;
+alter table ak_kaavio owner to CURRENT_USER;
 
 create index ak_kaavio_kaaid_index
     on ak_kaavio (kaaid);
@@ -105,7 +106,7 @@ create table ak_kaavion_lahto
         primary key (kaaid, reitunnus, suunta, lahaika)
 );
 
-alter table ak_kaavion_lahto owner to postgres;
+alter table ak_kaavion_lahto owner to CURRENT_USER;
 
 create index reitunnus
     on ak_kaavion_lahto (reitunnus);
@@ -139,7 +140,7 @@ create table ak_kalusto
     muutospvm timestamp with time zone
 );
 
-alter table ak_kalusto owner to postgres;
+alter table ak_kalusto owner to CURRENT_USER;
 
 create index ak_kalusto_katyyppi_index
     on ak_kalusto (katyyppi);
@@ -223,7 +224,7 @@ create table jr_ajoneuvo
         primary key (id, reknro, kylkinro, liitunnus)
 );
 
-alter table jr_ajoneuvo owner to postgres;
+alter table jr_ajoneuvo owner to CURRENT_USER;
 
 create index ajoneuvo_reknro
     on jr_ajoneuvo (reknro);
@@ -247,7 +248,7 @@ create table jr_eritpvkalent
         primary key (eritpoikpvm, eritpaiva)
 );
 
-alter table jr_eritpvkalent owner to postgres;
+alter table jr_eritpvkalent owner to CURRENT_USER;
 
 create index jr_eritpvkalent_eritpoikpvm_eritpaiva_eritviikpaiva_index
     on jr_eritpvkalent (eritpoikpvm, eritpaiva, eritviikpaiva);
@@ -307,7 +308,7 @@ create table jr_kilpailukohd
         primary key (kohtunnus, liitunnus, kohalkpvm, kohpaattpvm)
 );
 
-alter table jr_kilpailukohd owner to postgres;
+alter table jr_kilpailukohd owner to CURRENT_USER;
 
 create index kohtunnus
     on jr_kilpailukohd (kohtunnus);
@@ -335,7 +336,7 @@ create table jr_konserni
         primary key (kontunnus, konnimi)
 );
 
-alter table jr_konserni owner to postgres;
+alter table jr_konserni owner to CURRENT_USER;
 
 create table jr_koodisto
 (
@@ -352,7 +353,7 @@ create table jr_koodisto
         primary key (kookoodi, koolista)
 );
 
-alter table jr_koodisto owner to postgres;
+alter table jr_koodisto owner to CURRENT_USER;
 
 create index jr_koodisto_kookoodi_index
     on jr_koodisto (kookoodi);
@@ -383,7 +384,7 @@ create table jr_liikennoitsija
     lijliikennoitsija boolean
 );
 
-alter table jr_liikennoitsija owner to postgres;
+alter table jr_liikennoitsija owner to CURRENT_USER;
 
 create index jr_liikennoitsija_liitunnus_index
     on jr_liikennoitsija (liitunnus);
@@ -416,7 +417,7 @@ create table jr_reitinlinkki
         primary key (reitunnus, suusuunta, suuvoimast, reljarjnro, relid, relpysakki, lnkverkko, lnkalkusolmu, lnkloppusolmu)
 );
 
-alter table jr_reitinlinkki owner to postgres;
+alter table jr_reitinlinkki owner to CURRENT_USER;
 
 create index jr_reitinlinkki_reitunnus_index
     on jr_reitinlinkki (reitunnus);
@@ -468,7 +469,7 @@ create table jr_reitinsuunta
         primary key (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm)
 );
 
-alter table jr_reitinsuunta owner to postgres;
+alter table jr_reitinsuunta owner to CURRENT_USER;
 
 create index reitinsuunta_reitunnus
     on jr_reitinsuunta (reitunnus);
@@ -491,7 +492,7 @@ create table jr_linja_vaatimus
         primary key (lintunnus, kookoodi)
 );
 
-alter table jr_linja_vaatimus owner to postgres;
+alter table jr_linja_vaatimus owner to CURRENT_USER;
 
 create index linja_vaatimus_lintunnus
     on jr_linja_vaatimus (lintunnus);
@@ -518,7 +519,7 @@ create table ak_kaavion_suoritteet
         primary key (kaaid, reitunnus, suunta, lahaika, autokierto, kaltyyppi)
 );
 
-alter table ak_kaavion_suoritteet owner to postgres;
+alter table ak_kaavion_suoritteet owner to CURRENT_USER;
 
 create index ak_kaavion_suoritteet_metrit_index
     on ak_kaavion_suoritteet (metrit);
@@ -572,7 +573,7 @@ create table jr_solmu
     mkjmy numeric(8,6)
 );
 
-alter table jr_solmu owner to postgres;
+alter table jr_solmu owner to CURRENT_USER;
 
 create index jr_solmu_solsty_solstx_index
     on jr_solmu (solsty, solstx);
@@ -603,7 +604,7 @@ create table jr_reitti
     reiviimpvm timestamp with time zone
 );
 
-alter table jr_reitti owner to postgres;
+alter table jr_reitti owner to CURRENT_USER;
 
 create index jr_reitti_reitunnus_index
     on jr_reitti (reitunnus);
@@ -645,7 +646,7 @@ create table jr_pysakki
     postinro varchar(5)
 );
 
-alter table jr_pysakki owner to postgres;
+alter table jr_pysakki owner to CURRENT_USER;
 
 create index jr_pysakki_soltunnus_index
     on jr_pysakki (soltunnus);
@@ -668,7 +669,7 @@ create table jr_pysakkivali
         primary key (id, pystunnus1, pystunnus2)
 );
 
-alter table jr_pysakkivali owner to postgres;
+alter table jr_pysakkivali owner to CURRENT_USER;
 
 create index jr_pysakkivali_pystunnus1_pystunnus2_index
     on jr_pysakkivali (pystunnus1, pystunnus2);
@@ -694,7 +695,7 @@ create table jr_linja
     puhelinnumero varchar(20)
 );
 
-alter table jr_linja owner to postgres;
+alter table jr_linja owner to CURRENT_USER;
 
 create index jr_linja_linjoukkollaji_index
     on jr_linja (linjoukkollaji);
@@ -725,7 +726,7 @@ create table jr_lij_terminaalialue
     kaytossa varchar(1)
 );
 
-alter table jr_lij_terminaalialue owner to postgres;
+alter table jr_lij_terminaalialue owner to CURRENT_USER;
 
 create index jr_lij_terminaalialue_termid_index
     on jr_lij_terminaalialue (termid);
@@ -763,7 +764,7 @@ create table jr_raidekalusto
         primary key (id, kylkinro, reknro, liitunnus)
 );
 
-alter table jr_raidekalusto owner to postgres;
+alter table jr_raidekalusto owner to CURRENT_USER;
 
 create index jr_raidekalusto_kylkinro_index
     on jr_raidekalusto (kylkinro);
@@ -791,7 +792,7 @@ create table jr_korvpvkalent
         primary key (korvpoikpvm, korvpaiva, korvjoukkollaji, korvviikpaiva)
 );
 
-alter table jr_korvpvkalent owner to postgres;
+alter table jr_korvpvkalent owner to CURRENT_USER;
 
 create index jr_korvpvkalent_korvjoukkollaji_index
     on jr_korvpvkalent (korvjoukkollaji);
@@ -819,7 +820,7 @@ create table jr_piste
         primary key (lnkverkko, lnkalkusolmu, lnkloppusolmu, pisjarjnro, pisid, pisx, pisy)
 );
 
-alter table jr_piste owner to postgres;
+alter table jr_piste owner to CURRENT_USER;
 
 create index jr_piste_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
     on jr_piste (lnkverkko, lnkalkusolmu, lnkloppusolmu);
@@ -840,7 +841,7 @@ create table route_geometry
         primary key (route_id, direction, date_begin)
 );
 
-alter table route_geometry owner to postgres;
+alter table route_geometry owner to CURRENT_USER;
 
 create index route_geometry_route_id_index
     on route_geometry (route_id);
@@ -870,7 +871,7 @@ create table jr_linkki
     lnkhis boolean
 );
 
-alter table jr_linkki owner to postgres;
+alter table jr_linkki owner to CURRENT_USER;
 
 create index jr_linkki_lnkalkusolmu_index
     on jr_linkki (lnkalkusolmu);
@@ -909,7 +910,7 @@ create table jr_lahto
         primary key (reitunnus, lhsuunta, lavoimast, lhpaivat, lhvrkvht, lhlahaik)
 );
 
-alter table jr_lahto owner to postgres;
+alter table jr_lahto owner to CURRENT_USER;
 
 create index jr_lahto_lhpaivat_index
     on jr_lahto (lhpaivat);
@@ -937,7 +938,7 @@ create table jr_aikataulu
         primary key (reitunnus, lavoimast, laviimvoi)
 );
 
-alter table jr_aikataulu owner to postgres;
+alter table jr_aikataulu owner to CURRENT_USER;
 
 create index jr_aikataulu_lavoimast_laviimvoi_index
     on jr_aikataulu (lavoimast, laviimvoi);
@@ -956,7 +957,7 @@ create table jr_liik_kilpa_suhde
         primary key (liitunnus, kohtunnus)
 );
 
-alter table jr_liik_kilpa_suhde owner to postgres;
+alter table jr_liik_kilpa_suhde owner to CURRENT_USER;
 
 create index jr_liik_kilpa_suhde_kohtunnus_index
     on jr_liik_kilpa_suhde (kohtunnus);
@@ -997,7 +998,7 @@ create table departure
         primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure, origin_hours, origin_minutes)
 );
 
-alter table departure owner to postgres;
+alter table departure owner to CURRENT_USER;
 
 create index departure_stop_id_index
     on departure (stop_id);
