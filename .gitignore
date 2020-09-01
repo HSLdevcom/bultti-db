@@ -18,3 +18,4 @@ secrets
 test
 node_modules
 test_dsn
+docker-compose.yml

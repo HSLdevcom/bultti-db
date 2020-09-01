@@ -10,3 +10,4 @@ data
 legacy_scripts
 test_dsn
 yarn-error.log
+docker-compose.yml

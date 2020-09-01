@@ -36,7 +36,7 @@
   },
   "scripts": {
     "start": "node --max-old-space-size=32768 --unhandled-rejections=strict --inspect=9299 -r esm -r dotenv/config app/index.js",
-    "start:production": "forever start -c \"node --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
+    "start:production": "forever start -c \"node --max-old-space-size=25600 --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
     "prettier": "prettier */**.{js,json} --write",
     "knex": "knex",
     "knex:local": "env-cmd knex"
