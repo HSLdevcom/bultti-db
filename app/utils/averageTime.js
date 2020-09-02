@@ -11,7 +11,7 @@ export function averageTime(name = '') {
       let length = Math.max(1, durations.length)
       let avg = round(sum / length, 4)
   
-      console.log(`${name ? `${name}:` : ''} average duration: ${avg} s`);
+      console.log(`--- [Average Time]   ${name ? `${name}:` : ''} average duration: ${avg} s ---`);
       
       durations = []
     }

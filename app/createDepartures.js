@@ -8,6 +8,7 @@ import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
 import { BATCH_SIZE } from '../constants';
 import { averageTime } from './utils/averageTime';
+import PQueue from 'p-queue';
 
 const knex = getKnex();
 
@@ -132,18 +133,18 @@ async function createRowsProcessor(schemaName) {
   return async (rows) => {
     let chunkTime = process.hrtime();
     /* let firstDepartures = uniqBy(
-      rows,
-      (dep) => `${dep.origin_departure_time}_${dep.day_type}_${dep.date_begin}`
-    );
-  
-    let originDepartures = firstDepartures.map((dep) => ({
-      ...dep,
-      departure_time: dep.origin_departure_time,
-      arrival_time: dep.origin_departure_time,
-      stop_id: route.lnkalkusolmu,
-    }));
-  
-    let rawDepartures = [...originDepartures, ...rows]; */
+        rows,
+        (dep) => `${dep.origin_departure_time}_${dep.day_type}_${dep.date_begin}`
+      );
+    
+      let originDepartures = firstDepartures.map((dep) => ({
+        ...dep,
+        departure_time: dep.origin_departure_time,
+        arrival_time: dep.origin_departure_time,
+        stop_id: route.lnkalkusolmu,
+      }));
+    
+      let rawDepartures = [...originDepartures, ...rows]; */
 
     let departures = rows.map((depRow) => {
       let {
@@ -184,7 +185,7 @@ async function createRowsProcessor(schemaName) {
       };
     });
 
-    let validDepartures = departures.filter((dep) => notNullFilter(dep));
+    let validDepartures = departures.filter(notNullFilter);
     let uniqDepartures = uniqBy(validDepartures, createRowKey);
 
     if (uniqDepartures.length !== 0) {
@@ -204,36 +205,43 @@ export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
-  return new Promise(async (resolve, reject) => {
-    let request = await departuresQuery();
-    let rowsProcessor = await createRowsProcessor(schemaName);
-
-    let rows = [];
-
-    async function processRows() {
-      rowsProcessor(rows).catch((err) =>
-        console.log(`[Error]    Insert error on table departure`, err)
-      );
-
-      rows = [];
-      request.resume();
-    }
-
-    request.on('row', async (row) => {
-      rows.push(row);
-
-      if (rows.length >= BATCH_SIZE) {
-        request.pause();
-        await processRows();
-      }
-    });
-
-    request.on('done', async () => {
-      await processRows();
-      logTime('[Status]   Departures table created.', syncTime);
-      resolve();
-    });
-
-    request.on('error', reject);
+  let queue = new PQueue({
+    autoStart: true,
+    concurrency: 20,
   });
+
+  let request = await departuresQuery();
+  let rowsProcessor = await createRowsProcessor(schemaName);
+
+  let rows = [];
+
+  function processRows() {
+    queue
+      .add(() => rowsProcessor(rows))
+      .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
+
+    rows = [];
+    request.resume();
+  }
+
+  request.on('row', (row) => {
+    rows.push(row);
+
+    if (rows.length >= BATCH_SIZE) {
+      request.pause();
+      processRows();
+    }
+  });
+
+  request.on('done', async () => {
+    processRows();
+    logTime('[Status]   Departures table created.', syncTime);
+  });
+
+  request.on('error', (err) => {
+    queue.clear();
+    console.log(`[Error]   MSSQL query error`, err);
+  });
+
+  return queue.onIdle();
 }
