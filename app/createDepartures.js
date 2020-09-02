@@ -110,6 +110,38 @@ async function departuresQuery() {
   return request;
 }
 
+async function enableIndices(schemaName) {
+  console.log('[Status]   Enabling indices.')
+  // language=PostgreSQL
+  return knex.raw(`
+      create index concurrently if not exists departure_stop_id_index on ${schemaName}.departure (stop_id);
+      create index concurrently if not exists departure_route_id_index on ${schemaName}.departure (route_id);
+      create index concurrently if not exists departure_day_type_index on ${schemaName}.departure (day_type);
+      create index concurrently if not exists departure_date_begin_index on ${schemaName}.departure (date_begin);
+      create index concurrently if not exists departure_route_id_direction_stop_id_idx on ${schemaName}.departure (route_id, direction, stop_id);
+      create index concurrently if not exists departure_stop_id_day_type on ${schemaName}.departure (stop_id, day_type);
+      create index concurrently if not exists departure_origin_time_index on ${schemaName}.departure (origin_hours, origin_minutes);
+      create index concurrently if not exists departure_departure_id_index on ${schemaName}.departure (departure_id);
+      create index concurrently if not exists departure_origin_index on ${schemaName}.departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
+  `);
+}
+
+async function disableIndices(schemaName) {
+  console.log('[Status]   Disabling indices.')
+  // language=PostgreSQL
+  return knex.raw(`
+      drop index if exists ${schemaName}.departure_stop_id_index;
+      drop index if exists ${schemaName}.departure_route_id_index;
+      drop index if exists ${schemaName}.departure_day_type_index;
+      drop index if exists ${schemaName}.departure_date_begin_index;
+      drop index if exists ${schemaName}.departure_route_id_direction_stop_id_idx;
+      drop index if exists ${schemaName}.departure_stop_id_day_type;
+      drop index if exists ${schemaName}.departure_origin_time_index;
+      drop index if exists ${schemaName}.departure_departure_id_index;
+      drop index if exists ${schemaName}.departure_origin_index;
+  `);
+}
+
 async function createRowsProcessor(schemaName) {
   let columnSchema;
   let constraint;
@@ -209,39 +241,45 @@ export async function createDepartures(schemaName) {
     autoStart: true,
     concurrency: 20,
   });
-
-  let request = await departuresQuery();
-  let rowsProcessor = await createRowsProcessor(schemaName);
-
-  let rows = [];
-
-  function processRows() {
-    queue
-      .add(() => rowsProcessor(rows))
-      .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
-
-    rows = [];
-    request.resume();
-  }
-
-  request.on('row', (row) => {
-    rows.push(row);
-
-    if (rows.length >= BATCH_SIZE) {
-      request.pause();
-      processRows();
+  
+  return new Promise(async (resolve, reject) => {
+    let request = await departuresQuery();
+    let rowsProcessor = await createRowsProcessor(schemaName);
+  
+    await disableIndices(schemaName);
+  
+    let rows = [];
+  
+    function processRows() {
+      queue
+        .add(() => rowsProcessor(rows))
+        .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
+    
+      rows = [];
+      request.resume();
     }
-  });
-
-  request.on('done', async () => {
-    processRows();
-    logTime('[Status]   Departures table created.', syncTime);
-  });
-
-  request.on('error', (err) => {
-    queue.clear();
-    console.log(`[Error]   MSSQL query error`, err);
-  });
-
-  return queue.onIdle();
+  
+    request.on('row', (row) => {
+      rows.push(row);
+    
+      if (rows.length >= BATCH_SIZE) {
+        request.pause();
+        processRows();
+      }
+    });
+  
+    request.on('done', async () => {
+      processRows();
+      await queue.onIdle();
+      await enableIndices(schemaName);
+      logTime('[Status]   Departures table created.', syncTime);
+      resolve()
+    });
+  
+    request.on('error', (err) => {
+      queue.clear();
+      console.log(`[Error]   MSSQL query error`, err);
+      reject(err)
+    });
+  })
 }
