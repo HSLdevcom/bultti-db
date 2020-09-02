@@ -7,6 +7,10 @@ export function logTime(message = 'Database synced', time) {
   } else {
     let [execS, execNs] = process.hrtime(time);
     let ms = (execS * NS_PER_SEC + execNs) / 1000000;
-    console.log(`${message} in ${floor(ms / 1000, 3)} s`);
+    let seconds = floor(ms / 1000, 3);
+
+    console.log(`${message} in ${seconds} s`);
+
+    return seconds;
   }
 }

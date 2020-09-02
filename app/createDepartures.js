@@ -7,6 +7,7 @@ import { upsert } from './upsert';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
 import { BATCH_SIZE } from '../constants';
+import { averageTime } from './utils/averageTime';
 
 const knex = getKnex();
 
@@ -126,6 +127,8 @@ async function createRowsProcessor(schemaName) {
   let notNullFilter = createNotNullFilter(constraint, columnSchema);
   let createRowKey = createDeparturesKey(constraint);
 
+  let logAverageTime = averageTime('Departure chunk');
+
   return async (rows) => {
     let chunkTime = process.hrtime();
     /* let firstDepartures = uniqBy(
@@ -188,10 +191,12 @@ async function createRowsProcessor(schemaName) {
       await upsert(schemaName, 'departure', uniqDepartures);
     }
 
-    logTime(
+    let seconds = logTime(
       `[Status]   ${uniqDepartures.length} departure rows processed and inserted`,
       chunkTime
     );
+
+    logAverageTime(seconds);
   };
 }
 
@@ -206,11 +211,9 @@ export async function createDepartures(schemaName) {
     let rows = [];
 
     async function processRows() {
-      try {
-        await rowsProcessor(rows);
-      } catch (err) {
-        console.log(`[Error]    Insert error on table departure`, err);
-      }
+      rowsProcessor(rows).catch((err) =>
+        console.log(`[Error]    Insert error on table departure`, err)
+      );
 
       rows = [];
       request.resume();
@@ -232,5 +235,5 @@ export async function createDepartures(schemaName) {
     });
 
     request.on('error', reject);
-  })
+  });
 }
