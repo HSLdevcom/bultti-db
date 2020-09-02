@@ -12,37 +12,24 @@ import PQueue from 'p-queue';
 
 const knex = getKnex();
 
-const primaryKeys = [
-  'stop_id',
-  'origin_stop_id',
-  'route_id',
-  'direction',
-  'date_begin',
-  'date_end',
-  'hours',
-  'minutes',
-  'day_type',
-  'extra_departure',
-  'origin_hours',
-  'origin_minutes',
-  'is_next_day',
-];
+let createDepartureKey = (constraint) => {
+  let primaryKeys = constraint.keys || [];
 
-let createDepartureKey = (row) => {
-  let key = '';
+  return (row) => {
+    let key = '';
 
-  for (let pk of primaryKeys) {
-    let val = row[pk];
+    for (let pk of primaryKeys) {
+      let val = row[pk];
 
-    if (pk.startsWith('date')) {
-      key += format(val, 'yyyy-MM-dd');
-    } else {
-      key += toString(val);
+      if (val instanceof Date) {
+        key += format(val, 'yyyy-MM-dd');
+      } else {
+        key += toString(val);
+      }
     }
-  }
 
-  console.log(key);
-  return key;
+    return key;
+  };
 };
 
 async function departuresQuery() {
@@ -108,7 +95,7 @@ FROM departure_routes route
                  LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
                                          AND l.lhsuunta = r.suusuunta
         )
-        UNION ALL
+        UNION
         (
             SELECT vpa.reitunnus route_id,
                    vpa.lhsuunta  direction,
@@ -174,8 +161,11 @@ async function disableIndices(schemaName) {
 
 async function createRowsProcessor(schemaName) {
   let columnSchema;
+  let constraint;
 
   try {
+    constraint = await getPrimaryConstraint(knex, schemaName, 'departure');
+
     columnSchema = await knex
       .withSchema(schemaName)
       .table('departure')
@@ -184,7 +174,8 @@ async function createRowsProcessor(schemaName) {
     console.log(err);
   }
 
-  let notNullFilter = createNotNullFilter(undefined, columnSchema);
+  let notNullFilter = createNotNullFilter(constraint, columnSchema);
+  let getRowKey = createDepartureKey(constraint);
   let logAverageTime = averageTime('Departure chunk');
 
   return async (rows) => {
@@ -243,7 +234,7 @@ async function createRowsProcessor(schemaName) {
     });
 
     let validDepartures = departures.filter(notNullFilter);
-    let uniqDepartures = uniqBy(validDepartures, createRowKey);
+    let uniqDepartures = uniqBy(validDepartures, getRowKey);
 
     if (uniqDepartures.length !== 0) {
       await upsert(schemaName, 'departure', uniqDepartures);
