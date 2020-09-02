@@ -12,20 +12,37 @@ import PQueue from 'p-queue';
 
 const knex = getKnex();
 
-let createDeparturesKey = (constraint) => {
-  let primaryKeys = constraint.keys;
+const primaryKeys = [
+  'stop_id',
+  'origin_stop_id',
+  'route_id',
+  'direction',
+  'date_begin',
+  'date_end',
+  'hours',
+  'minutes',
+  'day_type',
+  'extra_departure',
+  'origin_hours',
+  'origin_minutes',
+  'is_next_day',
+];
 
-  return (row) => {
-    return primaryKeys.reduce((key, pk) => {
-      let val = row[pk];
+let createDepartureKey = (row) => {
+  let key = '';
 
-      if (pk.startsWith('date')) {
-        return key + format(val, 'yyyy-MM-dd');
-      }
+  for (let pk of primaryKeys) {
+    let val = row[pk];
 
-      return key + toString(val);
-    }, '');
-  };
+    if (pk.startsWith('date')) {
+      key += format(val, 'yyyy-MM-dd');
+    } else {
+      key += toString(val);
+    }
+  }
+
+  console.log(key);
+  return key;
 };
 
 async function departuresQuery() {
@@ -39,79 +56,92 @@ async function departuresQuery() {
 
   // language=TSQL
   request.query(`
-      WITH departure_routes as (
-          SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu
-          FROM dbo.jr_reitinlinkki
-          WHERE relpysakki != 'E'
-            AND suuvoimast >= '${minDate}'
-            AND reljarjnro = 1
-      )
-      SELECT TRIM(lah.reitunnus) route_id,
-            CAST(lah.lhsuunta AS smallint) direction,
-            lah.lhpaivat day_type,
-            CAST(lah.lhlahaik AS varchar) origin_departure_time,
-            route.lnkalkusolmu origin_stop_id,
-            CAST(ROW_NUMBER() over (
-               PARTITION BY lah.reitunnus, lah.lhsuunta, lah.lhpaivat, lah.lavoimast, vpa.vastunnus
-               ORDER BY vpa.vaslaika
-            ) AS int) departure_id,
-            COALESCE(NULLIF(TRIM(lah.lhajotyyppi), ''), 'N') extra_departure,
-            COALESCE(lah.lhkaltyyppi, 'ET') equipment_type,
-            lah.kohtunnus procurement_unit_id,
-            CAST(lah.termaika AS smallint) terminal_time,
-            CAST(lah.elpymisaika AS smallint) recovery_time,
-            COALESCE(CAST(lah.pakollkaltyyppi AS smallint), 0) equipment_required,
-            lah.junanumero train_number,
-            aik.lavoimast date_begin,
-            aik.laviimvoi date_end,
-            COALESCE(vpa.vastunnus, origin.origin_stop_id) stop_id,
-            COALESCE(CAST(vpa.vaslaika AS varchar), CAST(origin.origin_departure_time AS varchar)) departure_time,
-            COALESCE(CAST(vpa.vastaika AS varchar), CAST(origin.origin_departure_time AS varchar)) arrival_time,
-            COALESCE(CAST(vpa.vaslvrkvht AS smallint), CAST(origin.is_next_day AS smallint), 0) is_next_day,
-            COALESCE(CAST(vpa.vastvrkvht AS smallint), CAST(origin.is_next_day AS smallint), 0) arrival_is_next_day,
-            kk.liitunnus operator_id,
-            COALESCE(lv.kookoodi, '0') trunk_color_required,
-            aik.laviimpvm date_modified
-      FROM departure_routes route
-         LEFT JOIN dbo.jr_lahto lah on lah.reitunnus = route.reitunnus
-              AND lah.lhsuunta = route.suusuunta
-         LEFT JOIN (
+WITH departure_routes as (
+    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu
+    FROM dbo.jr_reitinlinkki
+    WHERE relpysakki != 'E'
+      AND suuvoimast >= '${minDate}'
+      AND reljarjnro = 1
+)
+SELECT TRIM(lah.reitunnus) route_id,
+       CAST(lah.lhsuunta AS smallint) direction,
+       lah.lhpaivat day_type,
+       CAST(lah.lhlahaik AS varchar) origin_departure_time,
+       route.lnkalkusolmu origin_stop_id,
+       CAST(ROW_NUMBER() over (
+           PARTITION BY lah.reitunnus, lah.lhsuunta, lah.lhpaivat, lah.lavoimast, departure.stop_id
+           ORDER BY departure.departure_time
+       ) AS int) departure_id,
+       COALESCE(NULLIF(TRIM(lah.lhajotyyppi), ''), 'N') extra_departure,
+       COALESCE(lah.lhkaltyyppi, 'ET') equipment_type,
+       lah.kohtunnus procurement_unit_id,
+       CAST(lah.termaika AS smallint) terminal_time,
+       CAST(lah.elpymisaika AS smallint) recovery_time,
+       COALESCE(CAST(lah.pakollkaltyyppi AS smallint), 0) equipment_required,
+       lah.junanumero train_number,
+       aik.lavoimast date_begin,
+       aik.laviimvoi date_end,
+       COALESCE(departure.stop_id, route.lnkalkusolmu) stop_id,
+       COALESCE(CAST(departure.departure_time AS varchar), CAST(departure.origin_departure_time AS varchar)) departure_time,
+       COALESCE(CAST(departure.arrival_time AS varchar), CAST(departure.origin_departure_time AS varchar)) arrival_time,
+       COALESCE(CAST(departure.is_next_day AS smallint), CAST(lah.lhvrkvht AS smallint), 0) is_next_day,
+       COALESCE(CAST(departure.arrival_is_next_day AS smallint), CAST(lah.lhvrkvht AS smallint), 0) arrival_is_next_day,
+       kk.liitunnus operator_id,
+       COALESCE(lv.kookoodi, '0') trunk_color_required,
+       aik.laviimpvm date_modified
+FROM departure_routes route
+     LEFT JOIN dbo.jr_lahto lah on lah.reitunnus = route.reitunnus
+                               AND lah.lhsuunta = route.suusuunta
+     LEFT JOIN (
+         (
             SELECT r.reitunnus route_id,
                    r.suusuunta direction,
-                   r.lnkalkusolmu origin_stop_id,
+                   r.lnkalkusolmu stop_id,
                    l.lhlahaik origin_departure_time,
+                   l.lhlahaik departure_time,
                    l.lhpaivat day_type,
                    l.lavoimast date_begin,
-                   l.lhvrkvht is_next_day
+                   l.lhvrkvht is_next_day,
+                   l.lhvrkvht arrival_is_next_day,
+                   l.lhlahaik arrival_time
             FROM departure_routes r
-            LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
-             AND l.lhsuunta = r.suusuunta
-        ) origin ON lah.reitunnus = origin.route_id
-               AND lah.lhsuunta = origin.direction
-               AND lah.lhlahaik = origin.origin_departure_time
-               AND lah.lhpaivat = origin.day_type
-               AND lah.lavoimast = origin.date_begin
-               AND lah.lhvrkvht = origin.is_next_day
-         LEFT OUTER JOIN dbo.jr_valipisteaika vpa on lah.reitunnus = vpa.reitunnus
-              and lah.lhsuunta = vpa.lhsuunta
-              and lah.lhpaivat = vpa.lhpaivat
-              and lah.lhlahaik = vpa.lhlahaik
-              and lah.lavoimast = vpa.lavoimast
-              and lah.lhvrkvht = vpa.lhvrkvht
-         LEFT JOIN dbo.jr_aikataulu aik on lah.lavoimast = aik.lavoimast
-              and lah.reitunnus = aik.reitunnus
-         LEFT JOIN dbo.jr_kilpailukohd kk on lah.kohtunnus = kk.kohtunnus
-         LEFT JOIN dbo.jr_linja_vaatimus lv on lah.reitunnus = lv.lintunnus
-      WHERE lah.lavoimast >= '${minDate}'
-        AND lah.lavoimast <= '${maxDate}'
-      ORDER BY CAST(lah.lhlahaik AS decimal)
+                 LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
+                                         AND l.lhsuunta = r.suusuunta
+        )
+        UNION ALL
+        (
+            SELECT vpa.reitunnus route_id,
+                   vpa.lhsuunta  direction,
+                   vpa.vastunnus stop_id,
+                   vpa.lhlahaik  origin_departure_time,
+                   vpa.vaslaika  departure_time,
+                   vpa.lhpaivat  day_type,
+                   vpa.lavoimast date_begin,
+                   vpa.lhvrkvht  is_next_day,
+                   vpa.vastvrkvht arrival_is_next_day,
+                   vpa.vastaika arrival_time
+            FROM dbo.jr_valipisteaika vpa
+        )
+    ) departure ON lah.reitunnus = departure.route_id
+            AND lah.lhsuunta = departure.direction
+            AND lah.lhlahaik = departure.origin_departure_time
+            AND lah.lhpaivat = departure.day_type
+            AND lah.lavoimast = departure.date_begin
+            AND lah.lhvrkvht = departure.is_next_day
+    LEFT JOIN dbo.jr_aikataulu aik on lah.lavoimast = aik.lavoimast
+                                  and lah.reitunnus = aik.reitunnus
+    LEFT JOIN dbo.jr_kilpailukohd kk on lah.kohtunnus = kk.kohtunnus
+    LEFT JOIN dbo.jr_linja_vaatimus lv on lah.reitunnus = lv.lintunnus
+WHERE lah.lavoimast >= '${minDate}'
+  AND lah.lavoimast <= '${maxDate}'
+ORDER BY lah.lhlahaik
   `);
 
   return request;
 }
 
 async function enableIndices(schemaName) {
-  console.log('[Status]   Enabling indices.')
+  console.log('[Status]   Enabling indices.');
   // language=PostgreSQL
   return knex.raw(`
       create index concurrently if not exists departure_stop_id_index on ${schemaName}.departure (stop_id);
@@ -127,7 +157,7 @@ async function enableIndices(schemaName) {
 }
 
 async function disableIndices(schemaName) {
-  console.log('[Status]   Disabling indices.')
+  console.log('[Status]   Disabling indices.');
   // language=PostgreSQL
   return knex.raw(`
       drop index if exists ${schemaName}.departure_stop_id_index;
@@ -144,11 +174,8 @@ async function disableIndices(schemaName) {
 
 async function createRowsProcessor(schemaName) {
   let columnSchema;
-  let constraint;
 
   try {
-    constraint = await getPrimaryConstraint(knex, schemaName, 'departure');
-
     columnSchema = await knex
       .withSchema(schemaName)
       .table('departure')
@@ -157,9 +184,7 @@ async function createRowsProcessor(schemaName) {
     console.log(err);
   }
 
-  let notNullFilter = createNotNullFilter(constraint, columnSchema);
-  let createRowKey = createDeparturesKey(constraint);
-
+  let notNullFilter = createNotNullFilter(undefined, columnSchema);
   let logAverageTime = averageTime('Departure chunk');
 
   return async (rows) => {
@@ -241,45 +266,45 @@ export async function createDepartures(schemaName) {
     autoStart: true,
     concurrency: 20,
   });
-  
+
   return new Promise(async (resolve, reject) => {
     let request = await departuresQuery();
     let rowsProcessor = await createRowsProcessor(schemaName);
-  
+
     await disableIndices(schemaName);
-  
+
     let rows = [];
-  
+
     function processRows() {
       queue
         .add(() => rowsProcessor(rows))
         .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
-    
+
       rows = [];
       request.resume();
     }
-  
+
     request.on('row', (row) => {
       rows.push(row);
-    
+
       if (rows.length >= BATCH_SIZE) {
         request.pause();
         processRows();
       }
     });
-  
+
     request.on('done', async () => {
       processRows();
       await queue.onIdle();
       await enableIndices(schemaName);
       logTime('[Status]   Departures table created.', syncTime);
-      resolve()
+      resolve();
     });
-  
+
     request.on('error', (err) => {
       queue.clear();
       console.log(`[Error]   MSSQL query error`, err);
-      reject(err)
+      reject(err);
     });
-  })
+  });
 }
