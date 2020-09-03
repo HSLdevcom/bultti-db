@@ -8,6 +8,7 @@ import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
 import { averageTime } from './utils/averageTime';
 import { syncStream } from './utils/syncStream';
+import { BATCH_SIZE } from '../constants';
 
 const knex = getKnex();
 
@@ -271,7 +272,7 @@ export async function createDepartures(schemaName) {
   console.log(`[Status]   Querying JORE departures.`);
 
   try {
-    await syncStream(request, rowsProcessor, 25, 1000);
+    await syncStream(request, rowsProcessor, 50, BATCH_SIZE);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
   }
