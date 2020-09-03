@@ -20,7 +20,7 @@ export function syncStream(
       queue
         .add(() => {
           let rows = rowsMap.get(currentKey);
-          return chunkProcessor(rows).then(() => currentKey);
+          return chunkProcessor(rows || []).then(() => currentKey);
         })
         .then((usedKey) => {
           rowsMap.delete(usedKey);
@@ -39,7 +39,8 @@ export function syncStream(
         requestStream.pause();
         processRows(rowsKey);
 
-        if (queue.size > concurrency) {
+        // Wait
+        if (queue.size > concurrency * 2) {
           await queue.onEmpty();
         }
 
@@ -49,7 +50,8 @@ export function syncStream(
     });
 
     requestStream.on('done', () => {
-      processRows();
+      processRows(rowsKey);
+
       queue
         .onIdle()
         .then(resolve)

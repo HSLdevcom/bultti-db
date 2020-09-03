@@ -22,7 +22,7 @@ export function getKnex() {
       log: (message, logLevel) =>
         DEBUG ? console.log(`Pool ${logLevel}: ${message}`) : undefined,
       min: 2,
-      max: 75,
+      max: 100,
     },
   });
 
