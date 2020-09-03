@@ -271,7 +271,7 @@ export async function createDepartures(schemaName) {
   console.log(`[Status]   Querying JORE departures.`);
 
   try {
-    await syncStream(request, rowsProcessor, 10, 1000);
+    await syncStream(request, rowsProcessor, 50, 1000);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
   }
