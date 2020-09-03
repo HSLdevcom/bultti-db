@@ -15,21 +15,18 @@ const knex = getKnex();
 let createDepartureKey = (constraint) => {
   let primaryKeys = constraint.keys || [];
 
-  return (row) => {
-    let key = '';
+  return (row) =>
+    primaryKeys
+      .map((pk) => {
+        let val = row[pk];
 
-    for (let pk of primaryKeys) {
-      let val = row[pk];
+        if (val instanceof Date) {
+          return format(val, 'yyyy-MM-dd');
+        }
 
-      if (val instanceof Date) {
-        key += format(val, 'yyyy-MM-dd');
-      } else {
-        key += toString(val);
-      }
-    }
-
-    return key;
-  };
+        return toString(val);
+      })
+      .join('__');
 };
 
 async function departuresQuery() {
