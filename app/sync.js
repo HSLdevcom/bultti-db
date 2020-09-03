@@ -44,7 +44,7 @@ async function createInsertForTable(schemaName, tableName) {
   let constraintKeys = get(constraint, 'keys', []);
   let notNullFilter = createNotNullFilter(constraint, columnSchema);
 
-  return (data) => {
+  return (data = []) => {
     let processedRows = data
       .filter(notNullFilter)
       .map((row) => transformRow(row, tableName, columnSchema));
@@ -126,8 +126,7 @@ export async function syncSourceToDestination() {
       });
   }
 
-  await syncQueue.onIdle();
-  await createDepartures(schemaName);
+  await Promise.all([syncQueue.onIdle(), createDepartures(schemaName)]);
   await createRouteGeometry(schemaName);
 
   await activateFreshSchema();

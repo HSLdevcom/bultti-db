@@ -194,7 +194,7 @@ async function createRowsProcessor(schemaName) {
   let getRowKey = createDepartureKey(constraint);
   let logAverageTime = averageTime('Departure chunk');
 
-  return async (rows) => {
+  return async (rows = []) => {
     let chunkTime = process.hrtime();
     /* let firstDepartures = uniqBy(
         rows,
@@ -272,7 +272,7 @@ export async function createDepartures(schemaName) {
   console.log(`[Status]   Querying JORE departures.`);
 
   try {
-    await syncStream(request, rowsProcessor, 50, BATCH_SIZE);
+    await syncStream(request, rowsProcessor, 25, BATCH_SIZE);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
   }
