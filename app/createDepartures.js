@@ -279,18 +279,19 @@ export async function createDepartures(schemaName) {
     let rowsProcessor = await createRowsProcessor(schemaName);
 
     await disableIndices(schemaName);
-  
+
     console.log(`[Status]   Querying JORE departures.`);
-    
+
     let rows = [];
 
     function processRows() {
+      let insertRows = [...rows];
+
       queue
-        .add(() => rowsProcessor(rows))
+        .add(() => rowsProcessor(insertRows))
         .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
 
       rows = [];
-      request.resume();
     }
 
     request.on('row', (row) => {
@@ -299,15 +300,18 @@ export async function createDepartures(schemaName) {
       if (rows.length >= BATCH_SIZE) {
         request.pause();
         processRows();
+        request.resume();
       }
     });
 
-    request.on('done', async () => {
+    request.on('done', () => {
       processRows();
-      await queue.onIdle();
-      await enableIndices(schemaName);
-      logTime('[Status]   Departures table created.', syncTime);
-      resolve();
+
+      queue
+        .onIdle()
+        .then(() => enableIndices(schemaName))
+        .then(() => logTime('[Status]   Departures table created.', syncTime))
+        .then(resolve);
     });
 
     request.on('error', (err) => {

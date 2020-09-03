@@ -54,6 +54,11 @@ async function createInsertForTable(schemaName, tableName) {
 }
 
 function syncTable(schemaName, tableName, pool) {
+  let tableQueue = new PQueue({
+    concurrency: 10,
+    autoStart: true,
+  });
+
   return new Promise(async (resolve, reject) => {
     let request = pool.request();
     request.stream = true;
@@ -63,29 +68,29 @@ function syncTable(schemaName, tableName, pool) {
 
     let rows = [];
 
-    async function processRows() {
-      try {
-        await rowsProcessor(rows);
-      } catch (err) {
-        console.log(`[Error]    Insert error on table ${tableName}`, err);
-      }
+    function processRows() {
+      let insertRows = [...rows];
+
+      tableQueue
+        .add(() => rowsProcessor(insertRows))
+        .catch((err) => console.log(`[Error]    Insert error on table ${tableName}`, err));
 
       rows = [];
-      request.resume();
     }
 
-    request.on('row', async (row) => {
+    request.on('row', (row) => {
       rows.push(row);
 
       if (rows.length >= BATCH_SIZE) {
         request.pause();
-        await processRows();
+        processRows();
+        request.resume();
       }
     });
 
-    request.on('done', async () => {
-      await processRows();
-      resolve();
+    request.on('done', () => {
+      processRows();
+      tableQueue.onIdle().then(resolve);
     });
 
     request.on('error', reject);
@@ -105,7 +110,7 @@ export async function syncSourceToDestination() {
   let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
-    concurrency: 10,
+    concurrency: 5,
     autoStart: true,
   });
 
