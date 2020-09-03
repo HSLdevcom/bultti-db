@@ -995,7 +995,7 @@ create table departure
     train_number integer,
     date_modified timestamp with time zone,
     constraint departure_pkey
-        primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure, origin_hours, origin_minutes)
+        primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
 
 alter table departure owner to CURRENT_USER;

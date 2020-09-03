@@ -1,14 +1,13 @@
 import { getKnex } from './knex';
 import { format, addMonths, subYears } from 'date-fns';
-import { logTime } from './utils/logTime';
+import { logTime, currentSeconds } from './utils/logTime';
 import { getPool } from './mssql';
 import { uniqBy, toString } from 'lodash';
 import { upsert } from './upsert';
 import { getPrimaryConstraint } from './getPrimaryConstraint';
 import { createNotNullFilter } from './utils/notNullFilter';
-import { BATCH_SIZE } from '../constants';
 import { averageTime } from './utils/averageTime';
-import PQueue from 'p-queue';
+import { syncStream } from './utils/syncStream';
 
 const knex = getKnex();
 
@@ -256,12 +255,7 @@ async function createRowsProcessor(schemaName) {
       await upsert(schemaName, 'departure', uniqDepartures);
     }
 
-    let seconds = logTime(
-      `[Status]   ${uniqDepartures.length} departure rows processed and inserted`,
-      chunkTime
-    );
-
-    logAverageTime(seconds);
+    logAverageTime(currentSeconds(chunkTime));
   };
 }
 
@@ -269,55 +263,19 @@ export async function createDepartures(schemaName) {
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
-  let queue = new PQueue({
-    autoStart: true,
-    concurrency: 20,
-  });
+  let request = await departuresQuery();
+  let rowsProcessor = await createRowsProcessor(schemaName);
 
-  return new Promise(async (resolve, reject) => {
-    let request = await departuresQuery();
-    let rowsProcessor = await createRowsProcessor(schemaName);
+  await disableIndices(schemaName);
+  
+  console.log(`[Status]   Querying JORE departures.`);
 
-    await disableIndices(schemaName);
+  try {
+    await syncStream(request, rowsProcessor, 10);
+  } catch (err) {
+    console.log(`[Error]    Insert error on table departure`, err);
+  }
 
-    console.log(`[Status]   Querying JORE departures.`);
-
-    let rows = [];
-
-    function processRows() {
-      let insertRows = [...rows];
-
-      queue
-        .add(() => rowsProcessor(insertRows))
-        .catch((err) => console.log(`[Error]    Insert error on table departure`, err));
-
-      rows = [];
-    }
-
-    request.on('row', (row) => {
-      rows.push(row);
-
-      if (rows.length >= BATCH_SIZE) {
-        request.pause();
-        processRows();
-        request.resume();
-      }
-    });
-
-    request.on('done', () => {
-      processRows();
-
-      queue
-        .onIdle()
-        .then(() => enableIndices(schemaName))
-        .then(() => logTime('[Status]   Departures table created.', syncTime))
-        .then(resolve);
-    });
-
-    request.on('error', (err) => {
-      queue.clear();
-      console.log(`[Error]   MSSQL query error`, err);
-      reject(err);
-    });
-  });
+  await enableIndices(schemaName);
+  logTime('[Status]   Departures table created.', syncTime);
 }

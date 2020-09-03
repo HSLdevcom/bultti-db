@@ -12,9 +12,9 @@
     "fs-extra": "^9.0.1",
     "geojson": "^0.5.0",
     "got": "^11.5.1",
-    "knex": "^0.21.2",
+    "knex": "^0.21.5",
     "knex-postgis": "^0.12.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.20",
     "mssql": "^6.2.1",
     "node-dev": "^5.1.0",
     "p-all": "^3.0.0",
@@ -35,7 +35,7 @@
     "prettier": "^1.19.1"
   },
   "scripts": {
-    "start": "node --max-old-space-size=32768 --inspect=9229 --unhandled-rejections=strict -r esm -r dotenv/config app/index.js",
+    "start": "node --inspect=9229 --unhandled-rejections=strict --max-old-space-size=25600 -r esm -r dotenv/config app/index.js",
     "start:production": "forever start -c \"node --max-old-space-size=25600 --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
     "prettier": "prettier */**.{js,json} --write",
     "knex": "knex",
