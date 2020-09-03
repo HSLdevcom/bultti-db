@@ -267,11 +267,11 @@ export async function createDepartures(schemaName) {
   let rowsProcessor = await createRowsProcessor(schemaName);
 
   await disableIndices(schemaName);
-  
+
   console.log(`[Status]   Querying JORE departures.`);
 
   try {
-    await syncStream(request, rowsProcessor, 10);
+    await syncStream(request, rowsProcessor, 10, 1000);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
   }
