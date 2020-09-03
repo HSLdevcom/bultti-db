@@ -129,18 +129,34 @@ ORDER BY lah.lhlahaik
 
 async function enableIndices(schemaName) {
   console.log('[Status]   Enabling indices.');
-  // language=PostgreSQL
-  return knex.raw(`
-      create index concurrently if not exists departure_stop_id_index on ${schemaName}.departure (stop_id);
-      create index concurrently if not exists departure_route_id_index on ${schemaName}.departure (route_id);
-      create index concurrently if not exists departure_day_type_index on ${schemaName}.departure (day_type);
-      create index concurrently if not exists departure_date_begin_index on ${schemaName}.departure (date_begin);
-      create index concurrently if not exists departure_route_id_direction_stop_id_idx on ${schemaName}.departure (route_id, direction, stop_id);
-      create index concurrently if not exists departure_stop_id_day_type on ${schemaName}.departure (stop_id, day_type);
-      create index concurrently if not exists departure_origin_time_index on ${schemaName}.departure (origin_hours, origin_minutes);
-      create index concurrently if not exists departure_departure_id_index on ${schemaName}.departure (departure_id);
-      create index concurrently if not exists departure_origin_index on ${schemaName}.departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
-  `);
+
+  await knex.raw(
+    `create index concurrently if not exists departure_stop_id_index on ${schemaName}.departure (stop_id)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_route_id_index on ${schemaName}.departure (route_id)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_day_type_index on ${schemaName}.departure (day_type)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_date_begin_index on ${schemaName}.departure (date_begin)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_route_id_direction_stop_id_idx on ${schemaName}.departure (route_id, direction, stop_id)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_stop_id_day_type on ${schemaName}.departure (stop_id, day_type)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_origin_time_index on ${schemaName}.departure (origin_hours, origin_minutes)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_departure_id_index on ${schemaName}.departure (departure_id)`
+  );
+  await knex.raw(
+    `create index concurrently if not exists departure_origin_index on ${schemaName}.departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type)`
+  );
 }
 
 async function disableIndices(schemaName) {
@@ -263,7 +279,9 @@ export async function createDepartures(schemaName) {
     let rowsProcessor = await createRowsProcessor(schemaName);
 
     await disableIndices(schemaName);
-
+  
+    console.log(`[Status]   Querying JORE departures.`);
+    
     let rows = [];
 
     function processRows() {
