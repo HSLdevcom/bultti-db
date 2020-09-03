@@ -1,7 +1,12 @@
 import PQueue from 'p-queue';
 import { BATCH_SIZE } from '../../constants';
 
-export function syncStream(requestStream, chunkProcessor, concurrency = 10) {
+export function syncStream(
+  requestStream,
+  chunkProcessor,
+  concurrency = 10,
+  batchSize = BATCH_SIZE
+) {
   return new Promise((resolve, reject) => {
     let queue = new PQueue({
       autoStart: true,
@@ -15,21 +20,28 @@ export function syncStream(requestStream, chunkProcessor, concurrency = 10) {
       queue
         .add(() => {
           let rows = rowsMap.get(currentKey);
-          return chunkProcessor(rows).then(() => rowsMap.delete(currentKey));
+          return chunkProcessor(rows).then(() => currentKey);
+        })
+        .then((usedKey) => {
+          rowsMap.delete(usedKey);
         })
         .catch(reject);
     }
 
-    requestStream.on('row', (row) => {
+    requestStream.on('row', async (row) => {
       let currentIndex = rowsKey.index;
 
       let rows = rowsMap.get(rowsKey) || [];
       rows.push(row);
       rowsMap.set(rowsKey, rows);
 
-      if (rows.length >= BATCH_SIZE) {
+      if (rows.length >= batchSize) {
         requestStream.pause();
         processRows(rowsKey);
+
+        if (queue.size > concurrency) {
+          await queue.onEmpty();
+        }
 
         rowsKey = { index: currentIndex + 1 };
         requestStream.resume();
