@@ -12,6 +12,7 @@ import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
 import { getPool } from './mssql';
 import { createDepartures } from './createDepartures';
 import { syncStream } from './utils/syncStream';
+import { BATCH_SIZE } from '../constants';
 
 const knex = getKnex();
 
@@ -78,7 +79,7 @@ async function syncTable(schemaName, tableName) {
   let rowsProcessor = await createInsertForTable(schemaName, tableName);
 
   try {
-    await syncStream(request, rowsProcessor, 10);
+    await syncStream(request, rowsProcessor, 10, BATCH_SIZE);
   } catch (err) {
     console.log(`[Error]    Insert error on table ${tableName}`, err);
   }
