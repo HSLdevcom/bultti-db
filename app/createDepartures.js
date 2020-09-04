@@ -40,12 +40,17 @@ async function departuresQuery() {
 
   // language=TSQL
   request.query(`
-WITH departure_routes as (
-    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu
+WITH route_origin as (
+    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu, suuvoimast
     FROM dbo.jr_reitinlinkki
     WHERE relpysakki != 'E'
       AND suuvoimast >= '${minDate}'
       AND reljarjnro = 1
+), route_stop AS (
+    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu, suuvoimast, COALESCE(ajantaspys, '0') ajantaspys
+    FROM dbo.jr_reitinlinkki
+    WHERE relpysakki != 'E'
+      AND suuvoimast >= '${minDate}'
 )
 SELECT TRIM(lah.reitunnus) route_id,
        CAST(lah.lhsuunta AS smallint) direction,
@@ -63,9 +68,10 @@ SELECT TRIM(lah.reitunnus) route_id,
        CAST(lah.elpymisaika AS smallint) recovery_time,
        COALESCE(CAST(lah.pakollkaltyyppi AS smallint), 0) equipment_required,
        lah.junanumero train_number,
-       aik.lavoimast date_begin,
+       COALESCE(aik.lavoimast, lah.lavoimast) date_begin,
        aik.laviimvoi date_end,
        COALESCE(departure.stop_id, route.lnkalkusolmu) stop_id,
+       COALESCE(stop.ajantaspys, '0') is_timing_stop,
        COALESCE(CAST(departure.departure_time AS varchar), CAST(departure.origin_departure_time AS varchar)) departure_time,
        COALESCE(CAST(departure.arrival_time AS varchar), CAST(departure.origin_departure_time AS varchar)) arrival_time,
        COALESCE(CAST(departure.is_next_day AS smallint), CAST(lah.lhvrkvht AS smallint), 0) is_next_day,
@@ -73,9 +79,10 @@ SELECT TRIM(lah.reitunnus) route_id,
        kk.liitunnus operator_id,
        COALESCE(lv.kookoodi, '0') trunk_color_required,
        aik.laviimpvm date_modified
-FROM departure_routes route
+FROM route_origin route
      LEFT JOIN dbo.jr_lahto lah on lah.reitunnus = route.reitunnus
                                AND lah.lhsuunta = route.suusuunta
+                               AND lah.lavoimast >= route.suuvoimast
      LEFT JOIN (
          (
             SELECT r.reitunnus route_id,
@@ -88,7 +95,7 @@ FROM departure_routes route
                    l.lhvrkvht is_next_day,
                    l.lhvrkvht arrival_is_next_day,
                    l.lhlahaik arrival_time
-            FROM departure_routes r
+            FROM route_origin r
                  LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
                                          AND l.lhsuunta = r.suusuunta
         )
@@ -112,6 +119,10 @@ FROM departure_routes route
             AND lah.lhpaivat = departure.day_type
             AND lah.lavoimast = departure.date_begin
             AND lah.lhvrkvht = departure.is_next_day
+    LEFT JOIN route_stop stop ON lah.reitunnus = stop.reitunnus
+                               AND lah.lhsuunta = stop.suusuunta
+                               AND route.suuvoimast = stop.suuvoimast
+                               AND departure.stop_id = stop.lnkalkusolmu
     LEFT JOIN dbo.jr_aikataulu aik on lah.lavoimast = aik.lavoimast
                                   and lah.reitunnus = aik.reitunnus
     LEFT JOIN dbo.jr_kilpailukohd kk on lah.kohtunnus = kk.kohtunnus
@@ -216,6 +227,7 @@ async function createRowsProcessor(schemaName) {
         is_next_day,
         equipment_required,
         arrival_is_next_day,
+        is_timing_stop,
         ...depProps
       } = depRow;
 
@@ -243,6 +255,7 @@ async function createRowsProcessor(schemaName) {
         is_next_day: is_next_day === 1,
         arrival_is_next_day: arrival_is_next_day === 1,
         equipment_required: equipment_required === 1,
+        is_timing_stop: is_timing_stop !== '0',
       };
     });
 
@@ -250,7 +263,7 @@ async function createRowsProcessor(schemaName) {
     let uniqDepartures = uniqBy(validDepartures, getRowKey);
 
     if (uniqDepartures.length !== 0) {
-      await upsert(schemaName, 'departure', uniqDepartures);
+      await upsert(schemaName, 'departure', uniqDepartures, constraint.keys || []);
     }
 
     logAverageTime(currentSeconds(chunkTime));
@@ -275,5 +288,5 @@ export async function createDepartures(schemaName) {
   }
 
   await enableIndices(schemaName);
-  logTime('[Status]   Departures table created.', syncTime);
+  logTime('[Status]   Departures table created', syncTime);
 }

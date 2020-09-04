@@ -994,6 +994,7 @@ create table departure
     trunk_color_required boolean default false,
     train_number integer,
     date_modified timestamp with time zone,
+    is_timing_stop boolean default false,
     constraint departure_pkey
         primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
@@ -1026,4 +1027,3 @@ create index departure_departure_id_index
 
 create index departure_origin_index
     on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
-
