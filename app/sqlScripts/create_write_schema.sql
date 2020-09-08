@@ -995,11 +995,13 @@ create table departure
     train_number integer,
     date_modified timestamp with time zone,
     is_timing_stop boolean default false,
+    duration_from_previous integer default 0,
+    duration_from_start integer default 0,
     constraint departure_pkey
         primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
 
-alter table departure owner to CURRENT_USER;
+alter table departure owner to postgres;
 
 create index departure_stop_id_index
     on departure (stop_id);
@@ -1027,3 +1029,4 @@ create index departure_departure_id_index
 
 create index departure_origin_index
     on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
+
