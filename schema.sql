@@ -1,5 +1,6 @@
 create schema if not exists jore;
-alter schema jore owner to postgres;
+alter schema jore owner to CURRENT_USER;
+GRANT ALL ON SCHEMA jore TO CURRENT_USER;
 
 SET schema 'jore';
 
@@ -995,6 +996,7 @@ create table departure
     trunk_color_required boolean default false,
     train_number integer,
     date_modified timestamp with time zone,
+    stop_index integer default 0,
     constraint departure_pkey
         primary key (route_id, direction, date_begin, date_end, hours, minutes, stop_id, day_type, extra_departure, origin_hours, origin_minutes)
 );
