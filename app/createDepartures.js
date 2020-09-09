@@ -41,7 +41,17 @@ async function departuresQuery() {
   // language=TSQL
   request.query(`
 WITH route_stop AS (
-    SELECT DISTINCT TRIM(dir.reitunnus) reitunnus, dir.suusuunta, link.lnkalkusolmu, link.reljarjnro, dir.suuvoimast, dir.suuvoimviimpvm, link.ajantaspys
+    SELECT DISTINCT TRIM(dir.reitunnus) reitunnus,
+                    dir.suusuunta,
+                    link.lnkalkusolmu,
+                    link.reljarjnro,
+                    dir.suuvoimast,
+                    dir.suuvoimviimpvm,
+                    link.ajantaspys,
+                    CAST(row_number() OVER (
+                        PARTITION BY dir.reitunnus, dir.suusuunta, dir.suuvoimast, dir.suuvoimviimpvm
+                        ORDER BY link.reljarjnro
+                    ) AS integer) stop_index
     FROM dbo.jr_reitinsuunta dir
     INNER JOIN dbo.jr_reitinlinkki link ON link.reitunnus = dir.reitunnus
                                         AND link.suusuunta = dir.suusuunta
@@ -73,6 +83,7 @@ SELECT TRIM(lah.reitunnus) route_id,
        aik.laviimvoi date_end,
        COALESCE(departure.stop_id, route.lnkalkusolmu) stop_id,
        COALESCE(stop.ajantaspys, '0') is_timing_stop,
+       COALESCE(stop.stop_index, 1) stop_index,
        COALESCE(CAST(departure.departure_time AS varchar), CAST(departure.origin_departure_time AS varchar)) departure_time,
        COALESCE(CAST(departure.arrival_time AS varchar), CAST(departure.origin_departure_time AS varchar)) arrival_time,
        COALESCE(CAST(departure.is_next_day AS smallint), CAST(lah.lhvrkvht AS smallint), 0) is_next_day,
@@ -126,6 +137,7 @@ FROM route_origin route
     LEFT JOIN route_stop stop ON lah.reitunnus = stop.reitunnus
                                AND lah.lhsuunta = stop.suusuunta
                                AND route.suuvoimast = stop.suuvoimast
+                               AND route.suuvoimviimpvm = stop.suuvoimviimpvm
                                AND departure.stop_id = stop.lnkalkusolmu
     LEFT JOIN dbo.jr_aikataulu aik on lah.lavoimast = aik.lavoimast
                                   and lah.reitunnus = aik.reitunnus
