@@ -995,8 +995,7 @@ create table departure
     train_number integer,
     date_modified timestamp with time zone,
     is_timing_stop boolean default false,
-    duration_from_previous integer default 0,
-    duration_from_start integer default 0,
+    stop_index integer default 0,
     constraint departure_pkey
         primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
