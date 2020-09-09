@@ -40,17 +40,18 @@ async function departuresQuery() {
 
   // language=TSQL
   request.query(`
-WITH route_origin as (
-    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu, suuvoimast
-    FROM dbo.jr_reitinlinkki
+WITH route_stop AS (
+    SELECT DISTINCT TRIM(dir.reitunnus) reitunnus, dir.suusuunta, link.lnkalkusolmu, link.reljarjnro, dir.suuvoimast, dir.suuvoimviimpvm, link.ajantaspys
+    FROM dbo.jr_reitinsuunta dir
+    INNER JOIN dbo.jr_reitinlinkki link ON link.reitunnus = dir.reitunnus
+                                        AND link.suusuunta = dir.suusuunta
+                                        AND link.suuvoimast = dir.suuvoimast
     WHERE relpysakki != 'E'
-      AND suuvoimast >= '${minDate}'
-      AND reljarjnro = 1
-), route_stop AS (
-    SELECT DISTINCT TRIM(reitunnus) reitunnus, suusuunta, lnkalkusolmu, suuvoimast, COALESCE(ajantaspys, '0') ajantaspys
-    FROM dbo.jr_reitinlinkki
-    WHERE relpysakki != 'E'
-      AND suuvoimast >= '${minDate}'
+),
+route_origin AS (
+   SELECT *
+   FROM route_stop
+   WHERE reljarjnro = 1
 )
 SELECT TRIM(lah.reitunnus) route_id,
        CAST(lah.lhsuunta AS smallint) direction,
@@ -83,6 +84,7 @@ FROM route_origin route
      LEFT JOIN dbo.jr_lahto lah on lah.reitunnus = route.reitunnus
                                AND lah.lhsuunta = route.suusuunta
                                AND lah.lavoimast >= route.suuvoimast
+                               AND lah.lavoimast <= route.suuvoimviimpvm
      LEFT JOIN (
          (
             SELECT r.reitunnus route_id,
@@ -98,6 +100,8 @@ FROM route_origin route
             FROM route_origin r
                  LEFT JOIN dbo.jr_lahto l on l.reitunnus = r.reitunnus
                                          AND l.lhsuunta = r.suusuunta
+                                         AND l.lavoimast >= r.suuvoimast
+                                         AND l.lavoimast <= r.suuvoimviimpvm
         )
         UNION
         (
@@ -257,7 +261,7 @@ async function createRowsProcessor(schemaName) {
         equipment_required: equipment_required === 1,
         is_timing_stop: is_timing_stop !== '0',
         duration_from_previous: 0,
-        duration_from_start: 0
+        duration_from_start: 0,
       };
     });
 
