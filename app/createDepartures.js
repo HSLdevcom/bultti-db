@@ -271,9 +271,7 @@ async function createRowsProcessor(schemaName) {
         is_next_day: is_next_day === 1,
         arrival_is_next_day: arrival_is_next_day === 1,
         equipment_required: equipment_required === 1,
-        is_timing_stop: is_timing_stop !== '0',
-        duration_from_previous: 0,
-        duration_from_start: 0,
+        is_timing_stop: is_timing_stop !== '0'
       };
     });
 
