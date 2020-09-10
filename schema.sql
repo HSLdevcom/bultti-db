@@ -442,6 +442,9 @@ create index jr_reitinlinkki_lnkalkusolmu_relpysakki_index
 create index jr_reitinlinkki_suusuunta_index
     on jr_reitinlinkki (suusuunta);
 
+create index jr_reitinlinkki_relpysakki_active
+    on jr_reitinlinkki (relpysakki) WHERE relpysakki != 'E';
+
 create table jr_reitinsuunta
 (
     reitunnus varchar not null,
