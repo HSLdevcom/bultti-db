@@ -443,10 +443,17 @@ create index jr_reitinlinkki_suusuunta_index
     on jr_reitinlinkki (suusuunta);
 
 create index jr_reitinlinkki_relpysakki_active
-    on jr_reitinlinkki (relpysakki) WHERE relpysakki != 'E';
+    on jr_reitinlinkki (relpysakki)
+    where ((relpysakki)::text <> 'E'::text);
 
 create index jr_reitinlinkki_lnkalkusolmu_reitunnus_index
     on jr_reitinlinkki (lnkalkusolmu, reitunnus);
+
+create index jr_reitinlinkki_reitunnus_suusuunta_suuvoimast_index
+    on jr_reitinlinkki (reitunnus, suusuunta, suuvoimast);
+
+create index jr_reitinlinkki_reljarjnro_index
+    on jr_reitinlinkki (reljarjnro);
 
 create table jr_reitinsuunta
 (
