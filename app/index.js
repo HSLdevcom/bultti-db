@@ -2,8 +2,10 @@ import { getKnex } from './knex';
 import { server } from './server';
 import { reportInfo, reportError } from './monitor';
 import segfaultHandler from 'segfault-handler';
+import { scheduleSync, startScheduledSync } from './schedule';
+import { syncSourceToDestination } from './sync';
 
-segfaultHandler.registerHandler("segfault.log")
+segfaultHandler.registerHandler('segfault.log');
 
 const knex = getKnex();
 
@@ -12,8 +14,10 @@ const knex = getKnex();
   await knex.migrate.latest();
 
   server();
-
   await reportInfo('Server started.');
+
+  scheduleSync(syncSourceToDestination);
+  startScheduledSync();
 })();
 
 const onExit = async () => {
