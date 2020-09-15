@@ -287,8 +287,8 @@ async function createRowsProcessor(schemaName) {
   };
 }
 
-export async function createDepartures(schemaName) {
-  if (!startSync('departures')) {
+export async function createDepartures(schemaName, mainSync = false) {
+  if (!mainSync && !startSync('departures')) {
     console.log('[Warning]  Syncing already in progress.');
     return;
   }

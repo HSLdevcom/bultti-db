@@ -10,8 +10,8 @@ let createGroupKey = (row) => {
   return `${row.reitunnus}_${row.suusuunta}_${formatISO(row.suuvoimast)}`;
 };
 
-export async function createRouteGeometry(schemaName) {
-  if (!startSync('geometry')) {
+export async function createRouteGeometry(schemaName, mainSync = false) {
+  if (!mainSync && !startSync('geometry')) {
     console.log('[Warning]  Syncing already in progress.');
     return;
   }

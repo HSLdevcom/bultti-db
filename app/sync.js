@@ -121,8 +121,8 @@ export async function syncSourceToDestination() {
       });
   }
 
-  await Promise.all([syncQueue.onIdle(), createDepartures(schemaName)]);
-  await createRouteGeometry(schemaName);
+  await Promise.all([syncQueue.onIdle(), createDepartures(schemaName, true)]);
+  await createRouteGeometry(schemaName, true);
 
   await activateFreshSchema();
 
