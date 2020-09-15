@@ -44,7 +44,7 @@ export const MSSQL_CONNECTION = {
   password: secretsEnv.MSSQLPASSWORD,
   server: secretsEnv.MSSQLHOST,
   database: secretsEnv.MSSQLDATABASE,
-  port: secretsEnv.MSSQLPORT,
+  port: secretsEnv.MSSQLPORT ? parseInt(secretsEnv.MSSQLPORT, 10) : 1433,
 };
 
 export const DEBUG = secretsEnv.DEBUG || 'false';

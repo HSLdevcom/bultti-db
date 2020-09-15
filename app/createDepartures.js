@@ -41,7 +41,7 @@ async function departuresQuery() {
   // language=TSQL
   request.query(`
 WITH route_stop AS (
-    SELECT DISTINCT TRIM(dir.reitunnus) reitunnus,
+    SELECT DISTINCT LTRIM(dir.reitunnus) reitunnus,
                     dir.suusuunta,
                     link.lnkalkusolmu,
                     link.reljarjnro,
@@ -63,7 +63,7 @@ route_origin AS (
    FROM route_stop
    WHERE reljarjnro = 1
 )
-SELECT TRIM(lah.reitunnus) route_id,
+SELECT LTRIM(lah.reitunnus) route_id,
        CAST(lah.lhsuunta AS smallint) direction,
        lah.lhpaivat day_type,
        CAST(lah.lhlahaik AS varchar) origin_departure_time,
@@ -72,7 +72,7 @@ SELECT TRIM(lah.reitunnus) route_id,
            PARTITION BY lah.reitunnus, lah.lhsuunta, lah.lhpaivat, lah.lavoimast, departure.stop_id
            ORDER BY departure.departure_time
        ) AS int) departure_id,
-       COALESCE(NULLIF(TRIM(lah.lhajotyyppi), ''), 'N') extra_departure,
+       COALESCE(NULLIF(LTRIM(lah.lhajotyyppi), ''), 'N') extra_departure,
        COALESCE(lah.lhkaltyyppi, 'ET') equipment_type,
        lah.kohtunnus procurement_unit_id,
        CAST(lah.termaika AS smallint) terminal_time,
