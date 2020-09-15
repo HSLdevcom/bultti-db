@@ -13,18 +13,9 @@ import { getPool } from './mssql';
 import { createDepartures } from './createDepartures';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
+import { startSync, endSync } from './state';
 
 const knex = getKnex();
-
-let syncing = false;
-
-let startSync = () => {
-  syncing = true;
-};
-
-let endSync = () => {
-  syncing = false;
-};
 
 async function createInsertForTable(schemaName, tableName) {
   let columnSchema;
@@ -88,12 +79,11 @@ async function syncTable(schemaName, tableName) {
 }
 
 export async function syncSourceToDestination() {
-  if (syncing) {
+  if (!startSync('main')) {
     console.log('[Warning]  Syncing already in progress.');
     return;
   }
 
-  startSync();
   let syncTime = process.hrtime();
 
   let tables = await getTables();
@@ -132,5 +122,5 @@ export async function syncSourceToDestination() {
   await activateFreshSchema();
 
   logTime('[Status]   Sync complete', syncTime);
-  endSync();
+  endSync('main')
 }

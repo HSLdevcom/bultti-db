@@ -1,7 +1,8 @@
-import { getKnex, getSt } from './knex';
-import { groupBy, orderBy } from 'lodash';
+import { getKnex } from './knex';
+import { groupBy } from 'lodash';
 import { formatISO } from 'date-fns';
 import { logTime } from './utils/logTime';
+import { startSync, endSync } from './state';
 
 const knex = getKnex();
 
@@ -10,6 +11,11 @@ let createGroupKey = (row) => {
 };
 
 export async function createRouteGeometry(schemaName) {
+  if (!startSync('geometry')) {
+    console.log('[Warning]  Syncing already in progress.');
+    return;
+  }
+  
   let syncTime = process.hrtime();
   console.log('[Status]   Creating route_geometry table.');
 
@@ -75,4 +81,5 @@ export async function createRouteGeometry(schemaName) {
   await knex.batchInsert(`${schemaName}.route_geometry`, routeGeometries, 100);
 
   logTime('[Status]   Geometry table created', syncTime);
+  endSync('geometry')
 }

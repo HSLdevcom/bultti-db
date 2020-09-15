@@ -9,6 +9,7 @@ import { createNotNullFilter } from './utils/notNullFilter';
 import { averageTime } from './utils/averageTime';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
+import { startSync, endSync } from './state';
 
 const knex = getKnex();
 
@@ -287,6 +288,11 @@ async function createRowsProcessor(schemaName) {
 }
 
 export async function createDepartures(schemaName) {
+  if (!startSync('departures')) {
+    console.log('[Warning]  Syncing already in progress.');
+    return;
+  }
+  
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
@@ -305,4 +311,5 @@ export async function createDepartures(schemaName) {
 
   await enableIndices(schemaName);
   logTime('[Status]   Departures table created', syncTime);
+  endSync('departures')
 }

@@ -31,7 +31,7 @@ export const server = () => {
   });
 
   app.post('/run', (req, res) => {
-    console.log('Running import');
+    console.log('Manually running import');
     syncSourceToDestination();
     res.redirect(PATH_PREFIX);
   });
