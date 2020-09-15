@@ -5,10 +5,9 @@ set -e
 
 ORG=${ORG:-hsl}
 
-# dev stage production
-TAG="latest"
+for TAG in latest dev stage production; do
+  DOCKER_IMAGE="bulttiregistry.azurecr.io/${ORG}/bultti-db:${TAG}"
 
-DOCKER_IMAGE="bulttiregistry.azurecr.io/${ORG}/bultti-db:${TAG}"
-
-docker build -t "$DOCKER_IMAGE" .
-docker push "$DOCKER_IMAGE"
+  docker build -t "$DOCKER_IMAGE" .
+  docker push "$DOCKER_IMAGE"
+done
