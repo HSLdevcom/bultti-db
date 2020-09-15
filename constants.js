@@ -44,6 +44,7 @@ export const MSSQL_CONNECTION = {
   password: secretsEnv.MSSQLPASSWORD,
   server: secretsEnv.MSSQLHOST,
   database: secretsEnv.MSSQLDATABASE,
+  port: secretsEnv.MSSQLPORT,
 };
 
 export const DEBUG = secretsEnv.DEBUG || 'false';
@@ -56,5 +57,5 @@ export const ENVIRONMENT = secretsEnv.ENVIRONMENT || 'unknown';
 export const MONITORING_ENABLED = secretsEnv.MONITORING_ENABLED === 'true';
 export const BATCH_SIZE = 1000;
 export const NS_PER_SEC = 1e9; // For tracking performance
-export const WRITE_SCHEMA_NAME = '_jore_import'
-export const READ_SCHEMA_NAME = 'jore'
+export const WRITE_SCHEMA_NAME = '_jore_import';
+export const READ_SCHEMA_NAME = 'jore';
