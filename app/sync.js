@@ -14,6 +14,7 @@ import { createDepartures } from './createDepartures';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
+import { reportInfo, reportError } from './monitor';
 
 const knex = getKnex();
 
@@ -84,6 +85,8 @@ export async function syncSourceToDestination() {
     return;
   }
 
+  await reportInfo('[Status]   Syncing JORE database.');
+
   let syncTime = process.hrtime();
 
   let tables = await getTables();
@@ -112,7 +115,9 @@ export async function syncSourceToDestination() {
         console.log(`[Pending]  ${pendingTables.join(', ')}`);
       })
       .catch((err) => {
-        console.log(`[Error]    Sync error on table ${tableName}`, err);
+        let message = `[Error]    Sync error on table ${tableName}`;
+        console.log(message, err);
+        return reportError(message);
       });
   }
 
@@ -121,6 +126,7 @@ export async function syncSourceToDestination() {
 
   await activateFreshSchema();
 
-  logTime('[Status]   Sync complete', syncTime);
-  endSync('main')
+  let seconds = logTime('[Status]   Sync complete', syncTime);
+  await reportInfo(`[Status]   JORE synced in ${seconds} s`);
+  endSync('main');
 }
