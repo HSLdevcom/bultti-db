@@ -21,7 +21,7 @@ const knex = getKnex();
 
 // Define WHERE clauses for some large tables that would otherwise take forever.
 let minDateLimit = {
-  jr_valipisteaika: `lavoimast >= `,
+  jr_valipisteaika: `lavoimast >=`,
 };
 
 async function createInsertForTable(schemaName, tableName) {
@@ -69,11 +69,10 @@ async function tableSourceRequest(tableName) {
   let tableWhere = minDateLimit[tableName] || '';
 
   if (tableWhere) {
-    tableWhere += `'${minDate}'`;
+    tableWhere = `WHERE ${tableWhere} '${minDate}'`;
   }
 
   request.query(`SELECT * FROM dbo.${tableName} ${tableWhere}`);
-
   return request;
 }
 
