@@ -10,13 +10,19 @@ import { get } from 'lodash';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
 import { getPool } from './mssql';
-import { createDepartures } from './createDepartures';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
+import { format, subYears } from 'date-fns';
+import { createDeparturesFromPostgres } from './createDeparturesFromPostgres';
 
 const knex = getKnex();
+
+// Define WHERE clauses for some large tables that would otherwise take forever.
+let minDateLimit = {
+  jr_valipisteaika: `lavoimast >= `,
+};
 
 async function createInsertForTable(schemaName, tableName) {
   let columnSchema;
@@ -58,7 +64,15 @@ async function tableSourceRequest(tableName) {
 
   let request = pool.request();
   request.stream = true;
-  request.query(`SELECT * FROM dbo.${tableName}`);
+
+  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
+  let tableWhere = minDateLimit[tableName] || '';
+
+  if (tableWhere) {
+    tableWhere += `'${minDate}'`;
+  }
+
+  request.query(`SELECT * FROM dbo.${tableName} ${tableWhere}`);
 
   return request;
 }
@@ -121,8 +135,12 @@ export async function syncSourceToDestination() {
       });
   }
 
-  await Promise.all([syncQueue.onIdle(), createDepartures(schemaName, true)]);
-  await createRouteGeometry(schemaName, true);
+  await syncQueue.onIdle();
+
+  await Promise.all([
+    createDeparturesFromPostgres(schemaName, true),
+    createRouteGeometry(schemaName, true),
+  ]);
 
   await activateFreshSchema();
 

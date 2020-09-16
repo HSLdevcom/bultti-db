@@ -898,7 +898,7 @@ create index jr_linkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
 create table jr_lahto
 (
     reitunnus varchar not null,
-    lavoimast timestamp with time zone not null,
+    lavoimast date not null,
     lhpaivat char(2) not null,
     lhsuunta smallint not null,
     lhvrkvht char not null,
@@ -939,6 +939,51 @@ create index jr_lahto_lhpaivat_lhlahaik_index
 
 create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
     on jr_lahto (reitunnus, lhsuunta, lavoimast);
+
+create table jr_valipisteaika
+(
+    reitunnus varchar(6) not null,
+    lavoimast date not null,
+    lhpaivat char(2) not null,
+    lhsuunta char not null,
+    lhvrkvht char not null,
+    lhlahaik numeric(4,2) not null,
+    vastunnus char(7) not null,
+    vaslaika numeric(4,2) not null,
+    vaslvrkvht char,
+    vasjarjnro smallint,
+    vaskuka varchar(20),
+    vasviimpvm date,
+    vaslahde varchar(2),
+    vastaika numeric(4,2),
+    vastvrkvht char,
+    raide char(3),
+    constraint jr_valipisteaika_pk
+        primary key (reitunnus, lavoimast, lhpaivat, lhsuunta, lhvrkvht, lhlahaik, vastunnus, vaslaika)
+);
+
+alter table jr_valipisteaika owner to postgres;
+
+create index jr_valipisteaika_lavoimast_index
+    on jr_valipisteaika (lavoimast);
+
+create index jr_valipisteaika_lhlahaik_index
+    on jr_valipisteaika (lhlahaik);
+
+create index jr_valipisteaika_lhpaivat_index
+    on jr_valipisteaika (lhpaivat);
+
+create index jr_valipisteaika_lhsuunta_index
+    on jr_valipisteaika (lhsuunta);
+
+create index jr_valipisteaika_reitunnus_index
+    on jr_valipisteaika (reitunnus);
+
+create index jr_valipisteaika_vastunnus_index
+    on jr_valipisteaika (vastunnus);
+
+create index jr_valipisteaika_reitunnus_lhsuunta_lhlahaik_lhpaivat_lavoimast
+    on jr_valipisteaika (reitunnus, lhsuunta, lhlahaik, lhpaivat, lavoimast, lhvrkvht);
 
 create table jr_aikataulu
 (

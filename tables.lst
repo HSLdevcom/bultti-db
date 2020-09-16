@@ -27,7 +27,7 @@ jr_raidekalusto
 jr_korvpvkalent
 jr_eritpvkalent
 jr_piste
-#jr_aikataulu
-#jr_lahto
-#jr_valipisteaika
+jr_aikataulu
+jr_lahto
+jr_valipisteaika
 jr_liik_kilpa_suhde
