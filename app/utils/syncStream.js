@@ -13,6 +13,7 @@ export async function syncStream(
   });
 
   await new Promise((resolve, reject) => {
+    let totalRowsCount = 0;
     let rowsKey = { index: 0 };
     let rowsMap = new WeakMap();
 
@@ -26,6 +27,7 @@ export async function syncStream(
     }
 
     requestStream.on('row', async (row) => {
+      totalRowsCount++;
       let currentIndex = rowsKey.index;
 
       let rows = rowsMap.get(rowsKey) || [];
@@ -51,7 +53,7 @@ export async function syncStream(
 
       // Allow time for jobs to be added to the queue before resolving.
       setTimeout(() => {
-        resolve();
+        resolve(totalRowsCount);
       }, 5000);
     });
 
@@ -60,6 +62,6 @@ export async function syncStream(
       reject(err);
     });
   });
-  
-  return queue.onIdle()
+
+  return queue.onIdle();
 }

@@ -6,7 +6,7 @@ let mssqlConfig = (maxConn = 2) => ({
   requestTimeout: 7500000,
   connectionTimeout: 30000000,
   options: {
-    enableArithAbort: true,
+    enableArithAbort: false,
   },
   pool: {
     min: 0,

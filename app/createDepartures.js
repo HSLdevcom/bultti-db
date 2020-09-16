@@ -13,6 +13,8 @@ import { startSync, endSync } from './state';
 
 const knex = getKnex();
 
+const PAGE_SIZE = 10000;
+
 let createDepartureKey = (constraint) => {
   let primaryKeys = constraint.keys || [];
 
@@ -39,8 +41,11 @@ async function departuresQuery() {
   let maxDate = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
   let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
 
-  // language=TSQL
-  request.query(`
+  return (page = 0) => {
+    let offset = PAGE_SIZE * page;
+
+    // language=TSQL
+    request.query(`
 WITH route_stop AS (
     SELECT DISTINCT LTRIM(dir.reitunnus) reitunnus,
                     dir.suusuunta,
@@ -146,10 +151,13 @@ FROM route_origin route
     LEFT JOIN dbo.jr_linja_vaatimus lv on lah.reitunnus = lv.lintunnus
 WHERE lah.lavoimast >= '${minDate}'
   AND lah.lavoimast <= '${maxDate}'
-ORDER BY lah.lhlahaik
+ORDER BY lah.reitunnus, lah.lhsuunta, lah.lhpaivat, lah.lhlahaik, departure.stop_id
+OFFSET ${offset} ROWS
+FETCH NEXT ${PAGE_SIZE} ROWS ONLY;
   `);
 
-  return request;
+    return request;
+  };
 }
 
 async function enableIndices(schemaName) {
@@ -272,7 +280,7 @@ async function createRowsProcessor(schemaName) {
         is_next_day: is_next_day === 1,
         arrival_is_next_day: arrival_is_next_day === 1,
         equipment_required: equipment_required === 1,
-        is_timing_stop: is_timing_stop !== '0'
+        is_timing_stop: is_timing_stop !== '0',
       };
     });
 
@@ -292,24 +300,42 @@ export async function createDepartures(schemaName, mainSync = false) {
     console.log('[Warning]  Syncing already in progress.');
     return;
   }
-  
+
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
-  let request = await departuresQuery();
+  let requestPage = await departuresQuery();
   let rowsProcessor = await createRowsProcessor(schemaName);
 
   await disableIndices(schemaName);
 
   console.log(`[Status]   Querying JORE departures.`);
 
-  try {
-    await syncStream(request, rowsProcessor, 25, BATCH_SIZE);
-  } catch (err) {
-    console.log(`[Error]    Insert error on table departure`, err);
+  let hasData = true;
+  let page = 0
+
+  while (hasData) {
+    console.log(`[Status]   JORE departures page ${page}. Page size: ${PAGE_SIZE}`);
+    
+    let syncedRows = 0;
+    let request = requestPage(page)
+
+    try {
+      syncedRows = await syncStream(request, rowsProcessor, 30, BATCH_SIZE);
+    } catch (err) {
+      console.log(`[Error]    Insert error on table departure`, err);
+    }
+
+    // When the rows returned by the query is less than the page size, we know that was the last row.
+    // Time to end the loop.
+    if (syncedRows < PAGE_SIZE) {
+      hasData = false;
+    }
+    
+    page++
   }
 
   await enableIndices(schemaName);
   logTime('[Status]   Departures table created', syncTime);
-  endSync('departures')
+  endSync('departures');
 }
