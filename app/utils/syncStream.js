@@ -6,7 +6,8 @@ export async function syncStream(
   chunkProcessor,
   concurrency = 10,
   batchSize = BATCH_SIZE,
-  dataEvent = 'row'
+  dataEvent = 'row',
+  endEvent = 'done'
 ) {
   let queue = new PQueue({
     autoStart: true,
@@ -15,44 +16,39 @@ export async function syncStream(
 
   await new Promise((resolve, reject) => {
     let totalRowsCount = 0;
-    let rowsKey = { index: 0 };
-    let rowsMap = new WeakMap();
+    let rows = [];
 
-    function processRows(currentKey) {
+    function processRows() {
       queue
         .add(() => {
-          let rows = rowsMap.get(currentKey);
-          return chunkProcessor(rows || []);
+          let currentRows = [...rows];
+          return chunkProcessor(currentRows);
         })
         .catch(reject);
     }
 
     let onRow = async (row) => {
       totalRowsCount++;
-      let currentIndex = rowsKey.index;
-
-      let rows = rowsMap.get(rowsKey) || [];
       rows.push(row);
-      rowsMap.set(rowsKey, rows);
 
       if (rows.length >= batchSize) {
         requestStream.pause();
-        processRows(rowsKey);
+        processRows();
 
         // Wait if the queue is full
         if (queue.size > concurrency * 2) {
           await queue.onEmpty();
         }
 
-        rowsKey = { index: currentIndex + 1 };
+        rows = [];
         requestStream.resume();
       }
-    }
-    
-    requestStream.on(dataEvent, onRow)
+    };
 
-    requestStream.on('done', () => {
-      processRows(rowsKey);
+    requestStream.on(dataEvent, onRow);
+
+    requestStream.on(endEvent, () => {
+      processRows();
 
       // Allow time for jobs to be added to the queue before resolving.
       setTimeout(() => {

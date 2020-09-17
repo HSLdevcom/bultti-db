@@ -1,5 +1,5 @@
 import { getKnex } from './knex';
-import { format, subYears } from 'date-fns';
+import { format } from 'date-fns';
 import { logTime, currentSeconds } from './utils/logTime';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
@@ -9,25 +9,10 @@ import { createNotNullFilter } from './utils/notNullFilter';
 import { averageTime } from './utils/averageTime';
 import { uniqBy, toString } from 'lodash';
 import { upsert } from './upsert';
-import { departureTempTable } from './queryFragments/departureTempTable';
-import { departuresQuery as departuresQuerySql } from './queryFragments/departuresQuery';
+import { departuresUnionQuery } from './queryFragments/departuresUnionQuery';
+import { departuresQuery } from './queryFragments/departuresQuery';
 
 const knex = getKnex();
-
-async function departuresQuery() {
-  let minDate = format(subYears(new Date(), 2), 'yyyy-MM-dd');
-
-  // language=PostgreSQL
-  return knex
-    .raw(
-      `
-${departureTempTable}
-${departuresQuerySql}
-`,
-      { minDate }
-    )
-    .stream();
-}
 
 let createDepartureKey = (constraint) => {
   let primaryKeys = constraint.keys || [];
@@ -129,13 +114,13 @@ export async function createDepartures(schemaName, mainSync = false) {
   let syncTime = process.hrtime();
   console.log(`[Status]   Creating departures table.`);
 
-  let request = await departuresQuery();
+  let queryStream = knex.raw(departuresQuery).stream();
   let rowsProcessor = await createRowsProcessor(schemaName);
 
   console.log(`[Status]   Querying JORE departures.`);
 
   try {
-    await syncStream(request, rowsProcessor, 30, BATCH_SIZE, 'data');
+    await syncStream(queryStream, rowsProcessor, 30, BATCH_SIZE, 'data', 'end');
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
   }
