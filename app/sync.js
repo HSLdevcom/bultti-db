@@ -14,7 +14,7 @@ import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
-import { format, subYears } from 'date-fns';
+import { format, subYears, startOfYear } from 'date-fns';
 import { createDepartures } from './createDepartures';
 
 const knex = getKnex();
@@ -65,7 +65,7 @@ async function tableSourceRequest(tableName) {
   let request = pool.request();
   request.stream = true;
 
-  let minDate = format(subYears(new Date(), 2), 'yyyy-MM-dd');
+  let minDate = format(startOfYear(subYears(new Date(), 1)), 'yyyy-MM-dd');
   let tableWhere = minDateLimit[tableName] || '';
 
   if (tableWhere) {
