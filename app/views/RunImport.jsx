@@ -25,6 +25,13 @@ const RunImport = () => {
       <form action={`${PATH_PREFIX}departures/`} method="post">
         <input type="submit" value="Create departures table" />
       </form>
+      <h3>Switch write schema to read</h3>
+      <p>
+        Switch the write schema (_jore_import) to be the read schema (jore).
+      </p>
+      <form action={`${PATH_PREFIX}switch-write-to-read/`} method="post">
+        <input type="submit" value="Switch schemas" />
+      </form>
     </>
   );
 };
