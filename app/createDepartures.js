@@ -66,7 +66,6 @@ export async function createRowsProcessor(schemaName) {
   let logAverageTime = averageTime('Departure chunk');
 
   return async (rows = []) => {
-    console.log(rows);
     let chunkTime = process.hrtime();
 
     let departures = rows.map((depRow) => {
