@@ -84,7 +84,7 @@ async function syncTable(schemaName, tableName) {
   let rowsProcessor = await createInsertForTable(schemaName, tableName);
 
   try {
-    await syncStream(request, rowsProcessor, 10, BATCH_SIZE);
+    await syncStream(request, rowsProcessor, 10, BATCH_SIZE, 'row', 'done');
   } catch (err) {
     console.log(`[Error]    Insert error on table ${tableName}`, err);
   }
