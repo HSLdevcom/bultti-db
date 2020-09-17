@@ -5,8 +5,8 @@ import { createEngine } from 'express-react-views';
 import path from 'path';
 import { syncSourceToDestination } from './sync';
 import { createRouteGeometry } from './createRouteGeometry';
-import { createDepartures } from './createDepartures';
 import { activateFreshSchema } from './utils/schemaManager';
+import { createDepartures } from './createDepartures';
 
 export const server = () => {
   const app = express();
@@ -42,16 +42,16 @@ export const server = () => {
     createRouteGeometry(READ_SCHEMA_NAME);
     res.redirect(PATH_PREFIX);
   });
-  
+
   app.post('/departures', (req, res) => {
     console.log('Creating departures table');
     createDepartures(READ_SCHEMA_NAME);
     res.redirect(PATH_PREFIX);
   });
-  
+
   app.post('/switch-write-to-read', (req, res) => {
     console.log('Switching write schema to read schema');
-    activateFreshSchema()
+    activateFreshSchema();
     res.redirect(PATH_PREFIX);
   });
 

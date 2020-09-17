@@ -942,18 +942,18 @@ create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
 
 create table jr_valipisteaika
 (
-    reitunnus varchar(6) not null,
+    reitunnus varchar not null,
     lavoimast date not null,
     lhpaivat char(2) not null,
-    lhsuunta char not null,
+    lhsuunta smallint not null,
     lhvrkvht char not null,
     lhlahaik numeric(4,2) not null,
-    vastunnus char(7) not null,
+    vastunnus varchar not null,
     vaslaika numeric(4,2) not null,
     vaslvrkvht char not null,
     vasjarjnro smallint,
     vaskuka varchar(20),
-    vasviimpvm date,
+    vasviimpvm timestamp with time zone,
     vaslahde varchar(2),
     vastaika numeric(4,2),
     vastvrkvht char,
@@ -973,17 +973,18 @@ create index jr_valipisteaika_lhlahaik_index
 create index jr_valipisteaika_lhpaivat_index
     on jr_valipisteaika (lhpaivat);
 
-create index jr_valipisteaika_lhsuunta_index
-    on jr_valipisteaika (lhsuunta);
-
 create index jr_valipisteaika_reitunnus_index
     on jr_valipisteaika (reitunnus);
+
+create index jr_valipisteaika_reitunnus_lhsuunta_lhlahaik_lhpaivat_lavoimast
+    on jr_valipisteaika (reitunnus, lhsuunta, lhlahaik, lhpaivat, lavoimast, lhvrkvht);
+
+create index jr_valipisteaika_lhsuunta_index
+    on jr_valipisteaika (lhsuunta);
 
 create index jr_valipisteaika_vastunnus_index
     on jr_valipisteaika (vastunnus);
 
-create index jr_valipisteaika_reitunnus_lhsuunta_lhlahaik_lhpaivat_lavoimast
-    on jr_valipisteaika (reitunnus, lhsuunta, lhlahaik, lhpaivat, lavoimast, lhvrkvht);
 
 create table jr_aikataulu
 (

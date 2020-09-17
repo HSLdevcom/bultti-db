@@ -15,7 +15,7 @@ import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
 import { format, subYears } from 'date-fns';
-import { createDeparturesFromPostgres } from './createDeparturesFromPostgres';
+import { createDepartures } from './createDepartures';
 
 const knex = getKnex();
 
@@ -137,7 +137,7 @@ export async function syncSourceToDestination() {
   await syncQueue.onIdle();
 
   await Promise.all([
-    createDeparturesFromPostgres(schemaName, true),
+    createDepartures(schemaName, true),
     createRouteGeometry(schemaName, true),
   ]);
 
