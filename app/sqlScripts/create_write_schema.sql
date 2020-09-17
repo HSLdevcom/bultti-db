@@ -950,7 +950,7 @@ create table jr_valipisteaika
     lhlahaik numeric(4,2) not null,
     vastunnus char(7) not null,
     vaslaika numeric(4,2) not null,
-    vaslvrkvht char,
+    vaslvrkvht char not null,
     vasjarjnro smallint,
     vaskuka varchar(20),
     vasviimpvm date,
@@ -959,7 +959,7 @@ create table jr_valipisteaika
     vastvrkvht char,
     raide char(3),
     constraint jr_valipisteaika_pk
-        primary key (reitunnus, lavoimast, lhpaivat, lhsuunta, lhvrkvht, lhlahaik, vastunnus, vaslaika)
+        primary key (reitunnus, lavoimast, lhpaivat, lhsuunta, lhvrkvht, lhlahaik, vastunnus, vaslaika, vaslvrkvht)
 );
 
 alter table jr_valipisteaika owner to postgres;

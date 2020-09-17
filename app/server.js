@@ -6,6 +6,7 @@ import path from 'path';
 import { syncSourceToDestination } from './sync';
 import { createRouteGeometry } from './createRouteGeometry';
 import { createDepartures } from './createDepartures';
+import { activateFreshSchema } from './utils/schemaManager';
 
 export const server = () => {
   const app = express();
@@ -45,6 +46,12 @@ export const server = () => {
   app.post('/departures', (req, res) => {
     console.log('Creating departures table');
     createDepartures(READ_SCHEMA_NAME);
+    res.redirect(PATH_PREFIX);
+  });
+  
+  app.post('/switch-write-to-read', (req, res) => {
+    console.log('Switching write schema to read schema');
+    activateFreshSchema()
     res.redirect(PATH_PREFIX);
   });
 

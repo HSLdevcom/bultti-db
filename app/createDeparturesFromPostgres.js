@@ -4,34 +4,34 @@ import { logTime } from './utils/logTime';
 import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
+import { createRowsProcessor } from './utils/processJoreDepartureRows';
 
 const knex = getKnex();
 
 async function departuresQuery() {
-  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
+  let minDate = format(subYears(new Date(), 2), 'yyyy-MM-dd');
 
   // language=PostgreSQL
   return knex
     .raw(
       `
 WITH route_stop AS (
- SELECT TRIM(dir.reitunnus) reitunnus,
-        dir.suusuunta,
-        link.lnkalkusolmu,
-        link.reljarjnro,
-        dir.suuvoimast,
-        dir.suuvoimviimpvm,
-        link.ajantaspys,
-        (row_number() OVER (
-            PARTITION BY dir.reitunnus, dir.suusuunta, dir.suuvoimast, dir.suuvoimviimpvm
-            ORDER BY link.reljarjnro
-        ))::integer stop_index
-    FROM jore.jr_reitinsuunta dir
-        LEFT JOIN jore.jr_reitinlinkki link ON link.reitunnus = dir.reitunnus
-                                        AND link.suusuunta = dir.suusuunta
-                                        AND link.suuvoimast = dir.suuvoimast
+    SELECT TRIM(link.reitunnus) reitunnus,
+           link.suusuunta,
+           link.lnkalkusolmu,
+           link.reljarjnro,
+           link.suuvoimast,
+           dir.suuvoimviimpvm,
+           link.ajantaspys,
+           (row_number() OVER (
+               PARTITION BY link.reitunnus, link.suusuunta, link.suuvoimast
+               ORDER BY link.reljarjnro
+               ))::integer stop_index
+    FROM jore.jr_reitinlinkki link
+             LEFT JOIN jore.jr_reitinsuunta dir ON link.reitunnus = dir.reitunnus
+        AND link.suusuunta = dir.suusuunta
+        AND link.suuvoimast = dir.suuvoimast
     WHERE relpysakki != 'E'
-    AND link.suuvoimast >= :minDate
 ),
 route_origin AS (
    SELECT *
@@ -102,7 +102,6 @@ FROM route_origin route
                    vpa.vastvrkvht arrival_is_next_day,
                    vpa.vastaika arrival_time
             FROM jore.jr_valipisteaika vpa
-            WHERE vpa.lavoimast >= :minDate
         )
     ) departure ON lah.reitunnus = departure.route_id
             AND lah.lhsuunta = departure.direction
@@ -119,7 +118,6 @@ FROM route_origin route
                                   and lah.reitunnus = aik.reitunnus
     LEFT JOIN jore.jr_kilpailukohd kk on lah.kohtunnus = kk.kohtunnus
     LEFT JOIN jore.jr_linja_vaatimus lv on lah.reitunnus = lv.lintunnus
-WHERE lah.lavoimast >= :minDate
   `,
       { minDate }
     )

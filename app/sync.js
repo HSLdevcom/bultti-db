@@ -65,7 +65,7 @@ async function tableSourceRequest(tableName) {
   let request = pool.request();
   request.stream = true;
 
-  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
+  let minDate = format(subYears(new Date(), 2), 'yyyy-MM-dd');
   let tableWhere = minDateLimit[tableName] || '';
 
   if (tableWhere) {
