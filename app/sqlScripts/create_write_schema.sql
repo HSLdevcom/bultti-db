@@ -902,7 +902,7 @@ create table jr_lahto
     lhpaivat char(2) not null,
     lhsuunta smallint not null,
     lhvrkvht char not null,
-    lhlahaik varchar not null,
+    lhlahaik numeric(4,2) not null,
     lhjarjnro smallint,
     lhajotyyppi varchar(2),
     lhmatlatt varchar(1),
