@@ -5,7 +5,8 @@ export async function syncStream(
   requestStream,
   chunkProcessor,
   concurrency = 10,
-  batchSize = BATCH_SIZE
+  batchSize = BATCH_SIZE,
+  dataEvent = 'row'
 ) {
   let queue = new PQueue({
     autoStart: true,
@@ -26,7 +27,7 @@ export async function syncStream(
         .catch(reject);
     }
 
-    requestStream.on('row', async (row) => {
+    let onRow = async (row) => {
       totalRowsCount++;
       let currentIndex = rowsKey.index;
 
@@ -46,7 +47,9 @@ export async function syncStream(
         rowsKey = { index: currentIndex + 1 };
         requestStream.resume();
       }
-    });
+    }
+    
+    requestStream.on(dataEvent, onRow)
 
     requestStream.on('done', () => {
       processRows(rowsKey);
