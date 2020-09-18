@@ -107,7 +107,7 @@ export async function syncSourceToDestination() {
   let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
-    concurrency: 5,
+    concurrency: 10,
     autoStart: true,
   });
 
