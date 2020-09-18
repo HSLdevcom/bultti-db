@@ -9,7 +9,6 @@ import { createNotNullFilter } from './utils/notNullFilter';
 import { averageTime } from './utils/averageTime';
 import { uniqBy, toString } from 'lodash';
 import { upsert } from './upsert';
-import { departuresUnionQuery } from './queryFragments/departuresUnionQuery';
 import { departuresQuery } from './queryFragments/departuresQuery';
 
 const knex = getKnex();

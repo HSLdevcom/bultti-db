@@ -4,6 +4,10 @@ import { TASK_SCHEDULE } from '../constants';
 let scheduledImport = null;
 
 export function scheduleSync(task) {
+  if (!TASK_SCHEDULE) {
+    return;
+  }
+
   if (scheduledImport) {
     scheduledImport.stop();
   }
