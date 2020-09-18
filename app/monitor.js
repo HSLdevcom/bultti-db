@@ -34,7 +34,7 @@ export async function onMonitorEvent(
 
   const fullMessage = `${
     mentionUser ? `Hey <@${mentionUser}>, ` : ''
-  }${type} message from JORE history importer [${ENVIRONMENT.toUpperCase()}]:\n
+  }${type} message from Bultti DB sync [${ENVIRONMENT.toUpperCase()}]:\n
 \`\`\`${message}\`\`\``;
 
   const body = {

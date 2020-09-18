@@ -14,12 +14,13 @@ import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
-import { format, subYears, startOfYear } from 'date-fns';
+import { format, subYears } from 'date-fns';
 import { createDepartures } from './createDepartures';
 
 const knex = getKnex();
 
 // Define WHERE clauses for some large tables that would otherwise take forever.
+// The minDate will be appended after the operator.
 let minDateLimit = {
   jr_valipisteaika: `lavoimast >=`,
 };
@@ -65,7 +66,7 @@ async function tableSourceRequest(tableName) {
   let request = pool.request();
   request.stream = true;
 
-  let minDate = format(startOfYear(subYears(new Date(), 1)), 'yyyy-MM-dd');
+  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
   let tableWhere = minDateLimit[tableName] || '';
 
   if (tableWhere) {
