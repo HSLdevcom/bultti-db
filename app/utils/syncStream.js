@@ -16,45 +16,53 @@ export async function syncStream(
 
   await new Promise((resolve, reject) => {
     let totalRowsCount = 0;
-    let rows = [];
+    let rowsKey = { index: 0 };
+    let rowsMap = new WeakMap();
 
-    function processRows() {
+    function processRows(currentKey) {
       queue
         .add(() => {
-          let currentRows = [...rows];
-          return chunkProcessor(currentRows);
+          let rows = rowsMap.get(currentKey);
+          return chunkProcessor(rows || []);
         })
         .catch(reject);
     }
 
     let onRow = async (row) => {
       totalRowsCount++;
+      let currentIndex = rowsKey.index;
+
+      let rows = rowsMap.get(rowsKey) || [];
       rows.push(row);
+      rowsMap.set(rowsKey, rows);
 
       if (rows.length >= batchSize) {
         requestStream.pause();
-        processRows();
+        processRows(rowsKey);
 
         // Wait if the queue is full
         if (queue.size > concurrency * 2) {
           await queue.onEmpty();
         }
 
-        rows = [];
+        rowsKey = { index: currentIndex + 1 };
         requestStream.resume();
       }
     };
 
-    requestStream.on(dataEvent, onRow);
+    let onEnd = () => {
+      processRows(rowsKey);
 
-    requestStream.on(endEvent, () => {
-      processRows();
+      console.log(totalRowsCount);
 
       // Allow time for jobs to be added to the queue before resolving.
       setTimeout(() => {
         resolve(totalRowsCount);
       }, 5000);
-    });
+    };
+
+    requestStream.on(dataEvent, onRow);
+    requestStream.on(endEvent, onEnd);
 
     requestStream.on('error', (err) => {
       console.log(`[Error]   MSSQL query error`, err);

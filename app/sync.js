@@ -138,7 +138,7 @@ export async function syncSourceToDestination() {
   await syncQueue.onIdle();
 
   await Promise.all([
-    createDepartures(schemaName, true),
+    // createDepartures(schemaName, true),
     createRouteGeometry(schemaName, true),
   ]);
 
