@@ -162,19 +162,5 @@ SELECT
                    on departure.route_id = lv.lintunnus
   ON CONFLICT DO NOTHING;
 
-  create index concurrently if not exists departure_stop_id_index on :schema:.departure (stop_id);
-  create index concurrently if not exists departure_route_id_index on :schema:.departure (route_id);
-  create index concurrently if not exists departure_day_type_index on :schema:.departure (day_type);
-  create index concurrently if not exists departure_date_begin_index on :schema:.departure (date_begin);
-  create index concurrently if not exists departure_route_id_direction_stop_id_idx on :schema:.departure (route_id, direction, stop_id);
-  create index concurrently if not exists departure_stop_id_day_type on :schema:.departure (stop_id, day_type);
-  create index concurrently if not exists departure_origin_time_index on :schema:.departure (origin_hours, origin_minutes);
-  create index concurrently if not exists departure_departure_id_index on :schema:.departure (departure_id);
-  create index concurrently if not exists departure_origin_index on :schema:.departure (stop_id,
-                                                                                    route_id,
-                                                                                    direction,
-                                                                                    date_begin,
-                                                                                    date_end,
-                                                                                    departure_id,
-                                                                                    day_type);
+-- Enable indices separately!
 `;
