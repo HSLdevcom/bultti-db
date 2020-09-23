@@ -6,8 +6,6 @@ import { departuresInsertQuery } from './queryFragments/departuresInsertQuery';
 const knex = getKnex();
 
 async function enableIndices(schemaName) {
-  console.log('[Status]   Enabling departure indices.');
-
   await knex.raw(
     `create index concurrently if not exists departure_stop_id_index on ${schemaName}.departure (stop_id)`
   );
@@ -48,6 +46,7 @@ export async function createDepartures(schemaName, mainSync = false) {
 
   try {
     await knex.raw(departuresInsertQuery, { schema: schemaName });
+    logTime('[Status]   Enabling departure indices', syncTime);
     await enableIndices(schemaName);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
