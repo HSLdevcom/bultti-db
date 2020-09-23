@@ -22,23 +22,75 @@ INSERT INTO :schema:.departure (stop_id, origin_stop_id, route_id, direction,
                             is_timing_stop, stop_index)
 WITH route_stop AS (
     SELECT
-        TRIM(link.reitunnus) reitunnus,
-        link.suusuunta,
-        link.lnkalkusolmu,
+        TRIM(dir.reitunnus) reitunnus,
+        dir.suusuunta,
+        link.link_stop_id,
         link.reljarjnro,
-        link.suuvoimast,
+        dir.suuvoimast,
         dir.suuvoimviimpvm,
         link.ajantaspys,
         (row_number() OVER (
             PARTITION BY link.reitunnus, link.suusuunta, link.suuvoimast
             ORDER BY link.reljarjnro
             ))::integer      stop_index
-        FROM :schema:.jr_reitinlinkki link
-             LEFT JOIN :schema:.jr_reitinsuunta dir
-                       ON link.reitunnus = dir.reitunnus
-                           AND link.suusuunta = dir.suusuunta
-                           AND link.suuvoimast = dir.suuvoimast
-        WHERE relpysakki != 'E'
+        FROM jore.jr_reitinsuunta dir
+             LEFT JOIN LATERAL (
+            SELECT DISTINCT ON (inner_link.reitunnus, inner_link.suusuunta, inner_link.suuvoimast)
+                lnkloppusolmu
+                FROM jore.jr_reitinlinkki inner_link
+                WHERE inner_link.relpysakki != 'E'
+                  AND dir.reitunnus = reitunnus
+                  AND dir.suusuunta = suusuunta
+                  AND dir.suuvoimast = suuvoimast
+                ORDER BY inner_link.reitunnus, inner_link.suusuunta, inner_link.suuvoimast, inner_link.reljarjnro DESC
+                LIMIT 1
+            ) dest_link ON true
+             LEFT JOIN LATERAL (
+            (
+                SELECT
+                    route_link.reitunnus,
+                    route_link.suusuunta,
+                    route_link.suuvoimast,
+                    route_link.reljarjnro,
+                    route_link.ajantaspys,
+                    FALSE                   is_last,
+                    route_link.lnkalkusolmu link_stop_id
+                    FROM jore.jr_reitinlinkki route_link
+                    WHERE route_link.relpysakki != 'E'
+                      AND dir.reitunnus = route_link.reitunnus
+                      AND dir.suusuunta = route_link.suusuunta
+                      AND dir.suuvoimast = route_link.suuvoimast
+            )
+            UNION
+            (
+                SELECT
+                    last_link.reitunnus,
+                    last_link.suusuunta,
+                    last_link.suuvoimast,
+                    CASE
+                        WHEN last_link.lnkloppusolmu = dest_link.lnkloppusolmu
+                            THEN (last_link.reljarjnro + 1)
+                        ELSE last_link.reljarjnro
+                        END reljarjnro,
+                    0       ajantaspys,
+                    CASE
+                        WHEN last_link.lnkloppusolmu = dest_link.lnkloppusolmu
+                            THEN TRUE
+                        ELSE FALSE
+                        END is_last,
+                    CASE
+                        WHEN last_link.lnkloppusolmu = dest_link.lnkloppusolmu
+                            THEN last_link.lnkloppusolmu
+                        ELSE last_link.lnkalkusolmu
+                        END link_stop_id
+                    FROM jore.jr_reitinlinkki last_link
+                    WHERE last_link.relpysakki != 'E'
+                      AND dir.reitunnus = last_link.reitunnus
+                      AND dir.suusuunta = last_link.suusuunta
+                      AND dir.suuvoimast = last_link.suuvoimast
+                      AND last_link.lnkloppusolmu = dest_link.lnkloppusolmu
+            )
+            ) link ON true
 ),
      route_origin AS (
          SELECT *
@@ -50,8 +102,8 @@ WITH route_stop AS (
              SELECT
                  r.reitunnus      route_id,
                  r.suusuunta      direction,
-                 r.lnkalkusolmu   stop_id,
-                 r.lnkalkusolmu   origin_stop_id,
+                 r.link_stop_id   stop_id,
+                 r.link_stop_id   origin_stop_id,
                  r.stop_index     stop_index,
                  '0'              is_timing_stop,
                  l.lhlahaik       origin_departure_time,
@@ -75,7 +127,7 @@ WITH route_stop AS (
                  vpa.reitunnus               route_id,
                  vpa.lhsuunta                direction,
                  vpa.vastunnus               stop_id,
-                 o.lnkalkusolmu              origin_stop_id,
+                 o.link_stop_id              origin_stop_id,
                  r.stop_index                stop_index,
                  COALESCE(r.ajantaspys, '0') is_timing_stop,
                  vpa.lhlahaik                origin_departure_time,
@@ -90,7 +142,7 @@ WITH route_stop AS (
                       INNER JOIN route_stop r
                                  ON vpa.reitunnus = r.reitunnus
                                      AND vpa.lhsuunta = r.suusuunta
-                                     AND vpa.vastunnus = r.lnkalkusolmu
+                                     AND vpa.vastunnus = r.link_stop_id
                                      AND vpa.lavoimast >= r.suuvoimast
                                      AND vpa.lavoimast <= r.suuvoimviimpvm
                       INNER JOIN route_origin o
