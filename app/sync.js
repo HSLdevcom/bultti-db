@@ -93,7 +93,7 @@ async function syncTable(schemaName, tableName) {
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
 
-export async function syncSourceToDestination() {
+export async function syncSourceToDestination(includeDepartures = true) {
   if (!startSync('main')) {
     console.log('[Warning]  Syncing already in progress.');
     return;
@@ -138,7 +138,7 @@ export async function syncSourceToDestination() {
   await syncQueue.onIdle();
 
   await Promise.all([
-    createDepartures(schemaName, true),
+    includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
     createRouteGeometry(schemaName, true),
   ]);
 

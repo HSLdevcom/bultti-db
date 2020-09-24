@@ -1,70 +1,77 @@
 # Bultti DB
 
-Scripts and queries for instantiating and hydrating the Bultti database with a schema and JORE data.
+This is the database for the Bultti project. It replicates select tables from HSL's main JORE database for usage in Bultti and Reittiloki.
 
-## Prerequirements
+The actual database is a PostgreSQL database which can be spun up with Docker, so this repo does not actually include a "database" per se. This project is about *syncing* the required data from JORE to the Bultti database.
 
-On the machine where you are creating the database, you need to have the following installed:
+## Setup and start
 
-- csvkit
-- postgresql (>= 11)
-- node (>= 10)
-- scp
+### The Postgres database
 
-## Find the data
+You need to have a database running to sync data into. The Bultti project has one running in the cloud for each environment, but for local development setting one up with Docker is the easiest. 
 
-Look for the data you need in the JORE database with the following commands:
+The database requires a data directory if you want the data to be persisted. Create an empty directory somewhere convenient for you, then give that path to the command below.
 
-### List tables
+Start a Postgres (with Postgis) database with Docker:
 
 ```shell script
-sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+docker run -p 5432:5432 -v /path/to/postgres/data/directory:/var/lib/postgresql/data --env POSTGRES_PASSWORD=password --name bultti-db postgis/postgis:12-master 
 ```
 
-### List columns
+### The JORE connection
+
+The JORE database is the source, so the app needs access to it. It is heavily firewalled, but the Bultti vnet has access to it. For local development, the best solution is to open an SSH tunnel and connecting through that.
+
+Ensure that your SSH key signed by the Bultti CA before running SSH commands. Also set up your SSH config to connect directly to private IP's through Bultti's Bastion server.
+
+Open an SSH tunnel to the JORE test environment:
 
 ```shell script
-sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT column_name, data_type, character_maximum_length, table_name,ordinal_position, is_nullable FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE 'jr_kinf_reitti' ORDER BY ordinal_position"
+ssh -L 1433:10.218.6.14:56239 10.223.27.5
 ```
 
-### Get the first 30 rows
+When the tunnel is open, the JORE database will be available at port 1433. JORE is a Microsoft SQL Server 2012 database.
 
-```shell script
-sqlcmd -S 10.218.6.14,56239 -U jorep -P 'tuotanto' -s',' -W -Q "SELECT * FROM ( SELECT TOP 30 *, ROW_NUMBER() OVER (ORDER BY (SELECT 1)) AS rnum FROM [TABLE NAME]) a WHERE rnum > 10"
-```
+### Configure environment
 
-## Get the data
+Copy the `.env.production` file into `.env` for your own usage and modify as needed. The default Postgres connection parameters should work with a local Postgres server, but you need to configure the MSSQL connection. The Bultti team can provide these details.
 
-Go on a server with JORE access and copy over into a subdirectory (for example ~/exports):
+Change the `ENVIRONMENT` env var to `local`.
 
-- The `export/export_tables.sh` script
-- The `tables.lst` file
+Note that the sync runs on a schedule, every day at midnight by default, which can be disabled by setting the `TASK_SCHEDULE` env var to an empty value.
 
-Then run export_tables. It will take a while. The required data is then available in the directory you ran the script in as CSV files.
+### Run the app
 
-Download the CSV files:
+Now you're all set to run the app!
 
-```shell script
-scp '[SERVER IP OR URL]:/home/hsladmin/exports/*.csv' ./data/
-```
+First install the dependencies (`yarn`), then run `yarn start` to start the app.
 
-That command downloads all .csv files in the ~/exports directory on the server into the data directory of this repo.
+## Usage
 
-Run a sanity check on the data files with `validate.sh`. It will tell you if there are errors in the CSV files, but you can ignore messages about joining/reducing tables. The script will not write anything.
+The app has a simple control interface available at `localhost:8001` when the server is running. The functions are described below.
 
-Then, clean the data files with `sanitize.sh`.
+### Run import
 
-## Init the database
+The main function of this app is to sync data from JORE to the Bultti DB. The `Run import` function does exactly that, and activating it will start the full sync process.
 
-Start a postgres instance. Then you have two options, use EITHER, not both:
+The sync has a few distinct phases, the main being syncing the required tables from JORE to Bultti. It also creates special `departures` and `route_geometry` tables for the Reittiloki project. The departures table is very time-consuming to create and is not needed for Bultti, so use the `Run import (without departures)` whenever possible.
 
-1. Generate a new schema based on the data with `generate_schema.sh` (if you only need to add a new table, use the csvsql command from this file and run it manually on the new file) OR
-2. Apply the existing schema at sql/schema_ddl.sql with `init_db`. This only works if the database is empty.
+The sync process (without departures) usually takes about 2 hours depending on your hardware. The main sync always creates a separate Postgres schema where the data is imported, and switches the schema to be read from when done. This allows all clients to keep using the database while a sync is in progress. Read more about how the sync works below.
 
-Both will create a schema in the database. If the files have changes since the schema_ddl was created, just generate a new one and update schema_ddl.sql with the new one. You may need to fix column types after creating the automated schema. You WILL need to add keys and indices.
+Note that a new sync cannot be started when a sync is in progress.
 
-At this point, move the csv files you DON'T want to import into the `data-done` directory (create it in this repo if it doesn't exist). It may be a good idea to move large files so the data import doesn't take forever if these are already in the database.
+### Create geometry table
 
-## Hydrate the database
+Create the route geometry table for Reittiloki separately from the main sync with this function. This process doesn't take a very long time. The route geometry rows are created from tables in Postgres, NOT JORE, and thus does not require an MSSQL connection. It does require the Postgres database to be populated.
 
-Run `hydrate.sh` to import the JORE data.
+Note that running this function creates the `route_geometry` table directly in the read schema. The table should exist and be empty in the target schema.
+
+### Create departures table
+
+Create the `departures` table for Reittiloki separately from the main sync with this function. The departure rows are created from tables in Postgres, NOT JORE, and thus does not require an MSSQL connection. It does require the Postgres database to be populated.
+
+Creating the departures table can take a very long time, usually around 4 hours. Running this function creates the `departures` table directly in the read schema. The table should exist in the target schema, but it is not required to be empty.
+
+### Switch write schema to read
+
+The main sync creates a new Postgres schema, the "Write schema", prior to importing data. The main schema that clients read from is the "Read Schema". When the import completes successfully, the Read Schema is dropped and the Write Schema is renamed to the Read Schema name. If the import fails or is cancelled, the switch can be done with this function if you deem the already imported data to be enough.
