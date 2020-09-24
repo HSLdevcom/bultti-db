@@ -4,7 +4,7 @@ BEGIN;
 
 alter table :schema:.departure set unlogged;
 
-alter table :schema:.departure drop constraint departure_pkey;
+-- alter table :schema:.departure drop constraint departure_pkey;
 
 drop index if exists :schema:.departure_stop_id_index;
 drop index if exists :schema:.departure_route_id_index;
@@ -220,7 +220,7 @@ SELECT
                    on departure.route_id = lv.lintunnus
   ON CONFLICT DO NOTHING;
 
-alter table :schema:.departure add constraint departure_pkey primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure);
+-- alter table :schema:.departure add constraint departure_pkey primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure);
 
 alter table :schema:.departure set logged;
 
