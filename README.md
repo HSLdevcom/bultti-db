@@ -100,4 +100,12 @@ Before starting the sync, it checks that a sync is not already in progress. If n
 
 ### Departures
 
-The departures table is created wholly with Postgres statements, as opposed to the sync which uses Javascript for some parts of the process. The departures 
+The departures table is created wholly with Postgres statements, as opposed to the sync which uses Javascript for some parts of the process. The departures are queried from a few of the imported tables in Postgres, and inserted into the `departures` table. That means that an MSSQL connection is not needed, but the schema should already contain fully imported tables from the main sync. This solution as chosen as reading the departures rows from JORE proved to be too heavy for that database, and blocked other users.
+
+Bultti itself does not use the departures table at the moment, so it exists only for Reittiloki which also uses this database as its JORE backend.
+
+### Route geometry
+
+The route geometry import process also queries imported Postgres tables and not MSSQL tables. The route geometry table contains route lines which are composed from points. The main query fetches the points from the imported JORE data and the rest of the function groups it into route geometry rows. The Line geometry itself is created with Postgis from the points in the group.
+
+Bultti itself does not use the route_geometry table, so it exists only for Reittiloki which also uses this database as its JORE backend.
