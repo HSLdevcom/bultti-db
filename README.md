@@ -75,3 +75,17 @@ Creating the departures table can take a very long time, usually around 4 hours.
 ### Switch write schema to read
 
 The main sync creates a new Postgres schema, the "Write schema", prior to importing data. The main schema that clients read from is the "Read Schema". When the import completes successfully, the Read Schema is dropped and the Write Schema is renamed to the Read Schema name. If the import fails or is cancelled, the switch can be done with this function if you deem the already imported data to be enough.
+
+## How it works
+
+### The main sync
+
+"The main sync" is the process of copying the listed tabled from MSSQL (Jore) to Postgres (Bultti). The tables are listed in the `tables.lst` file in the root of this project.
+
+The tables list is a simple text file, with the name of one table per row. Rows that start with whitespace or the `#` character are skipped. The biggest tables are listed first so that they can get a head start in the import.
+
+Before importing, a Write Schema is created. This is where everything is imported, which allows the Read Schema to continue serving clients while the sync is in progress. The Write Schema is called `_jore_import` and the Read Schema is called simply `jore`.
+
+The import itself is started from the `syncSourceToDestination()` function in `sync.js`. It uses a queue with concurrency, so many tables can be imported simultaneously. It reads each row of the tables list and starts the import process.
+
+When all the listed tables are imported, the departures and route geometry tables are created based on the imported data, also written into the Write Schema. Then, if it all went well, the Read Schema is dropped and the Write Schema is renamed to the name of the Read Schema, ie `jore`.
