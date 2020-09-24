@@ -33,7 +33,13 @@ export const server = () => {
 
   app.post('/run', (req, res) => {
     console.log('Manually running import');
-    syncSourceToDestination();
+    syncSourceToDestination(true);
+    res.redirect(PATH_PREFIX);
+  });
+  
+  app.post('/run-without-departures', (req, res) => {
+    console.log('Manually running import without departures');
+    syncSourceToDestination(false);
     res.redirect(PATH_PREFIX);
   });
 
