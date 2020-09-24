@@ -33,11 +33,11 @@ WITH route_stop AS (
             PARTITION BY link.reitunnus, link.suusuunta, link.suuvoimast
             ORDER BY link.reljarjnro
             ))::integer      stop_index
-        FROM jore.jr_reitinsuunta dir
+        FROM :schema:.jr_reitinsuunta dir
              LEFT JOIN LATERAL (
             SELECT DISTINCT ON (inner_link.reitunnus, inner_link.suusuunta, inner_link.suuvoimast)
                 lnkloppusolmu
-                FROM jore.jr_reitinlinkki inner_link
+                FROM :schema:.jr_reitinlinkki inner_link
                 WHERE inner_link.relpysakki != 'E'
                   AND dir.reitunnus = reitunnus
                   AND dir.suusuunta = suusuunta
@@ -55,7 +55,7 @@ WITH route_stop AS (
                     route_link.ajantaspys,
                     FALSE                   is_last,
                     route_link.lnkalkusolmu link_stop_id
-                    FROM jore.jr_reitinlinkki route_link
+                    FROM :schema:.jr_reitinlinkki route_link
                     WHERE route_link.relpysakki != 'E'
                       AND dir.reitunnus = route_link.reitunnus
                       AND dir.suusuunta = route_link.suusuunta
@@ -83,7 +83,7 @@ WITH route_stop AS (
                             THEN last_link.lnkloppusolmu
                         ELSE last_link.lnkalkusolmu
                         END link_stop_id
-                    FROM jore.jr_reitinlinkki last_link
+                    FROM :schema:.jr_reitinlinkki last_link
                     WHERE last_link.relpysakki != 'E'
                       AND dir.reitunnus = last_link.reitunnus
                       AND dir.suusuunta = last_link.suusuunta
