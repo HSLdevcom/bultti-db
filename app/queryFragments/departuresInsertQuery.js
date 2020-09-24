@@ -1,5 +1,7 @@
 // language=PostgreSQL
 export const departuresInsertQuery = `
+BEGIN;
+
 drop index if exists :schema:.departure_stop_id_index;
 drop index if exists :schema:.departure_route_id_index;
 drop index if exists :schema:.departure_day_type_index;
@@ -9,6 +11,7 @@ drop index if exists :schema:.departure_stop_id_day_type;
 drop index if exists :schema:.departure_origin_time_index;
 drop index if exists :schema:.departure_departure_id_index;
 drop index if exists :schema:.departure_origin_index;
+
 
 INSERT INTO :schema:.departure (stop_id, origin_stop_id, route_id, direction,
                             day_type, departure_id, is_next_day, hours,
@@ -213,6 +216,6 @@ SELECT
          LEFT JOIN :schema:.jr_linja_vaatimus lv
                    on departure.route_id = lv.lintunnus
   ON CONFLICT DO NOTHING;
-
+COMMIT;
 -- Enable indices separately!
 `;

@@ -89,3 +89,15 @@ Before importing, a Write Schema is created. This is where everything is importe
 The import itself is started from the `syncSourceToDestination()` function in `sync.js`. It uses a queue with concurrency, so many tables can be imported simultaneously. It reads each row of the tables list and starts the import process.
 
 When all the listed tables are imported, the departures and route geometry tables are created based on the imported data, also written into the Write Schema. Then, if it all went well, the Read Schema is dropped and the Write Schema is renamed to the name of the Read Schema, ie `jore`.
+
+Syncing a table from JORE (MSSQL) is just a matter of doing a `SELECT` query for all rows against the table. The results are then returned as a stream and collected into batches. Once a batch is full, the stream is paused while the batch of rows are written into the matching Postgres table.
+
+Reading the stream is done in `utils/syncStream.js` and each chunk insert is also queued with concurrency. The rows from the stream are collected in a `WeakMap` which helps with memory consumption and prevents memory leaks.
+
+Writing into Postgres is performed using an "upsert", which inserts the row if the row (identified with the primary key) does not already exist, and updates the row if it does. The module that does this is `utils/upsert.js`, but most of that is about formulating the insert query and making sure that the number of bindings does not exceed the limit. The upsert functionality itself is a Postgres thing.
+
+Before starting the sync, it checks that a sync is not already in progress. If not, the sync is started.
+
+### Departures
+
+The departures table is created wholly with Postgres statements, as opposed to the sync which uses Javascript for some parts of the process. The departures 
