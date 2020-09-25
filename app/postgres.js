@@ -4,14 +4,14 @@ import { JORE_PG_CONNECTION, DEBUG, WRITE_SCHEMA_NAME, READ_SCHEMA_NAME } from '
 import prexit from 'prexit';
 
 let st = null;
-let knex = null;
+let postgres = null;
 
 export function getKnex() {
-  if (knex) {
-    return knex;
+  if (postgres) {
+    return postgres;
   }
 
-  knex = Knex({
+  postgres = Knex({
     dialect: 'postgres',
     client: 'pg',
     connection: JORE_PG_CONNECTION,
@@ -27,13 +27,13 @@ export function getKnex() {
     },
   });
 
-  st = KnexPostgis(knex);
+  st = KnexPostgis(postgres);
 
-  return knex;
+  return postgres;
 }
 
 prexit(async () => {
-  if (knex) {
-    await knex.destroy();
+  if (postgres) {
+    await postgres.destroy();
   }
 });

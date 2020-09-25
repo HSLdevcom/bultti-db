@@ -1,4 +1,4 @@
-import { getKnex } from './knex';
+import { getKnex } from './postgres';
 import { groupBy } from 'lodash';
 import { formatISO } from 'date-fns';
 import { logTime } from './utils/logTime';

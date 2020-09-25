@@ -1,5 +1,5 @@
 import { upsert } from './upsert';
-import { getKnex } from './knex';
+import { getKnex } from './postgres';
 import { transformRow } from './dataTransform';
 import { getTables } from './utils/fetchTables';
 import { logTime } from './utils/logTime';
