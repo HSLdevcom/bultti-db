@@ -1,6 +1,7 @@
 import Knex from 'knex';
 import KnexPostgis from 'knex-postgis';
 import { JORE_PG_CONNECTION, DEBUG, WRITE_SCHEMA_NAME, READ_SCHEMA_NAME } from '../constants';
+import prexit from 'prexit';
 
 let st = null;
 let knex = null;
@@ -31,14 +32,8 @@ export function getKnex() {
   return knex;
 }
 
-export function getSt() {
-  if (st) {
-    return st;
-  }
-
+prexit(async () => {
   if (knex) {
-    st = KnexPostgis(knex);
+    await knex.destroy();
   }
-
-  return st;
-}
+});
