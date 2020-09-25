@@ -50,6 +50,10 @@ export async function createDepartures(schemaName, mainSync = false) {
     await enableIndices(schemaName);
   } catch (err) {
     console.log(`[Error]    Insert error on table departure`, err);
+    
+    if(mainSync) {
+      throw err
+    }
   }
 
   logTime('[Status]   Departures table created', syncTime);

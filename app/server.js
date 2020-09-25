@@ -7,6 +7,8 @@ import { syncSourceToDestination } from './sync';
 import { createRouteGeometry } from './createRouteGeometry';
 import { activateFreshSchema } from './utils/schemaManager';
 import { createDepartures } from './createDepartures';
+import prexit from 'prexit';
+import { createHttpTerminator } from 'http-terminator';
 
 export const server = () => {
   const app = express();
@@ -36,7 +38,7 @@ export const server = () => {
     syncSourceToDestination(true);
     res.redirect(PATH_PREFIX);
   });
-  
+
   app.post('/run-without-departures', (req, res) => {
     console.log('Manually running import without departures');
     syncSourceToDestination(false);
@@ -61,8 +63,15 @@ export const server = () => {
     res.redirect(PATH_PREFIX);
   });
 
-  app.listen(SERVER_PORT, () => {
+  let server = app.listen(SERVER_PORT, () => {
     console.log(`Server is listening on port ${SERVER_PORT}`);
-    // reportInfo("Server started.")
+  });
+
+  const httpTerminator = createHttpTerminator({
+    server,
+  });
+
+  prexit(async () => {
+    await httpTerminator.terminate();
   });
 };

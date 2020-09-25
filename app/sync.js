@@ -83,13 +83,23 @@ async function syncTable(schemaName, tableName) {
 
   let request = await tableSourceRequest(tableName);
   let rowsProcessor = await createInsertForTable(schemaName, tableName);
+  
+  await knex.raw(`alter table :schema:.:tableName: set unlogged;`, {
+    schema: schemaName,
+    tableName,
+  });
 
   try {
     await syncStream(request, rowsProcessor, 10, BATCH_SIZE, 'row', 'done');
   } catch (err) {
     console.log(`[Error]    Insert error on table ${tableName}`, err);
   }
-
+  
+  await knex.raw(`alter table :schema:.:tableName: set logged;`, {
+    schema: schemaName,
+    tableName,
+  });
+  
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
 
@@ -101,6 +111,7 @@ export async function syncSourceToDestination(includeDepartures = true) {
 
   await reportInfo('[Status]   Syncing JORE database.');
 
+  let successful = true;
   let syncTime = process.hrtime();
 
   let tables = await getTables();
@@ -131,20 +142,39 @@ export async function syncSourceToDestination(includeDepartures = true) {
       .catch((err) => {
         let message = `[Error]    Sync error on table ${tableName}`;
         console.log(message, err);
+        successful = false;
+        syncQueue.clear();
         return reportError(message);
       });
+
+    if (!successful) {
+      break;
+    }
+  }
+
+  if (!successful) {
+    syncQueue.clear();
   }
 
   await syncQueue.onIdle();
 
-  await Promise.all([
-    includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
-    createRouteGeometry(schemaName, true),
-  ]);
+  if (successful) {
+    await Promise.all([
+      includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
+      createRouteGeometry(schemaName, true),
+    ]).catch(() => {
+      successful = false;
+    });
+  }
 
-  await activateFreshSchema();
+  if (!successful) {
+    let seconds = logTime('[Error]   Sync failed', syncTime);
+    await reportError(`[Error]   JORE sync faield in ${seconds} s`);
+  } else {
+    let seconds = logTime('[Status]   Sync complete', syncTime);
+    await reportInfo(`[Status]   JORE synced in ${seconds} s`);
+    await activateFreshSchema();
+  }
 
-  let seconds = logTime('[Status]   Sync complete', syncTime);
-  await reportInfo(`[Status]   JORE synced in ${seconds} s`);
   endSync('main');
 }
