@@ -1,4 +1,4 @@
-import { getKnex } from './knex';
+import { getKnex } from './postgres';
 import { chunk, uniqBy } from 'lodash';
 import { createPrimaryKey } from './utils/createPrimaryKey';
 

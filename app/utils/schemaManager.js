@@ -1,4 +1,4 @@
-import { getKnex } from '../knex';
+import { getKnex } from '../postgres';
 import { READ_SCHEMA_NAME, WRITE_SCHEMA_NAME } from '../../constants';
 import fs from 'fs-extra';
 import path from 'path';

@@ -1,4 +1,4 @@
-import { getKnex } from './knex';
+import { getKnex } from './postgres';
 import { logTime } from './utils/logTime';
 import { startSync, endSync } from './state';
 import { departuresInsertQuery } from './queryFragments/departuresInsertQuery';
