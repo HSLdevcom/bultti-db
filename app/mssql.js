@@ -1,5 +1,6 @@
 import * as mssql from 'mssql';
 import { MSSQL_CONNECTION } from '../constants';
+import prexit from 'prexit';
 
 let mssqlConfig = (maxConn = 2) => ({
   ...MSSQL_CONNECTION,
@@ -16,11 +17,16 @@ let mssqlConfig = (maxConn = 2) => ({
 
 export async function getPool(maxConn = 2) {
   let pool = new mssql.ConnectionPool(mssqlConfig(maxConn));
-  
+
   pool.on('error', (err) => {
     console.log('[Error]    Pool error', err);
   });
-  
-  await pool.connect()
-  return pool
+
+  await pool.connect();
+
+  prexit(async () => {
+    await pool.close();
+  });
+
+  return pool;
 }
