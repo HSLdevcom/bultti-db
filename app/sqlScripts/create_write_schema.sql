@@ -147,7 +147,7 @@ create index ak_kalusto_katyyppi_index
 
 create table jr_ajoneuvo
 (
-    id varchar not null,
+    id integer,
     status varchar,
     liitunnus varchar not null,
     varikko varchar,
@@ -157,7 +157,7 @@ create table jr_ajoneuvo
     kalluokka numeric,
     lattiakorkeus numeric,
     alkutark boolean,
-    tarkpvm timestamp with time zone,
+    tarkpvm date,
     kohtunnus1 varchar,
     kohtunnus2 varchar,
     ulkoilme numeric,
@@ -217,11 +217,11 @@ create table jr_ajoneuvo
     ajoneuvoid numeric,
     ilmentymanjnro numeric,
     vartunnus numeric,
-    kontunnus numeric,
+    kontunnus numeric not null,
     lijlaitteet boolean,
     yliikaisyys numeric,
     constraint jr_ajoneuvo_pk
-        primary key (id, reknro, kylkinro, liitunnus)
+        primary key (reknro, rekpvm, kylkinro, liitunnus, kontunnus)
 );
 
 alter table jr_ajoneuvo owner to CURRENT_USER;
@@ -231,6 +231,12 @@ create index ajoneuvo_reknro
 
 create index ajoneuvo_kylkinro
     on jr_ajoneuvo (kylkinro);
+
+create index jr_ajoneuvo_kontunnus_index
+    on jr_ajoneuvo (kontunnus);
+
+create index jr_ajoneuvo_liitunnus_index
+    on jr_ajoneuvo (liitunnus);
 
 create index ajoneuvo_rekpvm
     on jr_ajoneuvo (rekpvm);
@@ -417,7 +423,7 @@ create table jr_reitinlinkki
         primary key (reitunnus, suusuunta, suuvoimast, reljarjnro, relid, relpysakki, lnkverkko, lnkalkusolmu, lnkloppusolmu)
 );
 
-alter table jr_reitinlinkki owner to postgres;
+alter table jr_reitinlinkki owner to CURRENT_USER;
 
 create index jr_reitinlinkki_reitunnus_index
     on jr_reitinlinkki (reitunnus);
@@ -962,7 +968,7 @@ create table jr_valipisteaika
         primary key (reitunnus, lavoimast, lhpaivat, lhsuunta, lhvrkvht, lhlahaik, vastunnus, vaslaika, vaslvrkvht)
 );
 
-alter table jr_valipisteaika owner to postgres;
+alter table jr_valipisteaika owner to CURRENT_USER;
 
 create index jr_valipisteaika_lavoimast_index
     on jr_valipisteaika (lavoimast);
@@ -1059,7 +1065,7 @@ create table departure
         primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
 
-alter table departure owner to postgres;
+alter table departure owner to CURRENT_USER;
 
 create index departure_stop_id_index
     on departure (stop_id);

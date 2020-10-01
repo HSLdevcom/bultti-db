@@ -3,12 +3,12 @@ import express from 'express';
 import { SERVER_PORT, PATH_PREFIX, READ_SCHEMA_NAME } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
-import { syncSourceToDestination } from './sync';
 import { createRouteGeometry } from './createRouteGeometry';
 import { activateFreshSchema } from './utils/schemaManager';
 import { createDepartures } from './createDepartures';
 import prexit from 'prexit';
 import { createHttpTerminator } from 'http-terminator';
+import { syncTable } from './sync';
 
 export const server = () => {
   const app = express();
@@ -35,13 +35,13 @@ export const server = () => {
 
   app.post('/run', (req, res) => {
     console.log('Manually running import');
-    syncSourceToDestination(true);
+    syncJore(true);
     res.redirect(PATH_PREFIX);
   });
 
   app.post('/run-without-departures', (req, res) => {
     console.log('Manually running import without departures');
-    syncSourceToDestination(false);
+    syncJore(false);
     res.redirect(PATH_PREFIX);
   });
 
@@ -60,6 +60,13 @@ export const server = () => {
   app.post('/switch-write-to-read', (req, res) => {
     console.log('Switching write schema to read schema');
     activateFreshSchema();
+    res.redirect(PATH_PREFIX);
+  });
+
+  app.post('/import-table', (req, res) => {
+    let { table_name } = req.body;
+    console.log(table_name);
+    syncTable(table_name, READ_SCHEMA_NAME);
     res.redirect(PATH_PREFIX);
   });
 

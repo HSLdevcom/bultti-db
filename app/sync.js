@@ -25,7 +25,7 @@ let minDateLimit = {
   jr_valipisteaika: `lavoimast >=`,
 };
 
-async function createInsertForTable(schemaName, tableName) {
+async function createInsertForTable(tableName, schemaName) {
   let columnSchema;
   let constraint;
 
@@ -77,44 +77,30 @@ async function tableSourceRequest(tableName) {
   return request;
 }
 
-async function syncTable(schemaName, tableName) {
+export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
   console.log(`[Status]   Importing ${tableName}`);
 
   let request = await tableSourceRequest(tableName);
-  let rowsProcessor = await createInsertForTable(schemaName, tableName);
-  
+  let rowsProcessor = await createInsertForTable(tableName, schemaName);
+
   await knex.raw(`alter table :schema:.:tableName: set unlogged;`, {
     schema: schemaName,
     tableName,
   });
 
-  try {
-    await syncStream(request, rowsProcessor, 10, BATCH_SIZE, 'row', 'done');
-  } catch (err) {
-    console.log(`[Error]    Insert error on table ${tableName}`, err);
-  }
-  
+  await syncStream(request, rowsProcessor, 10, BATCH_SIZE, 'row', 'done');
+
   await knex.raw(`alter table :schema:.:tableName: set logged;`, {
     schema: schemaName,
     tableName,
   });
-  
+
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
 
-export async function syncSourceToDestination(includeDepartures = true) {
-  if (!startSync('main')) {
-    console.log('[Warning]  Syncing already in progress.');
-    return;
-  }
-
-  await reportInfo('[Status]   Syncing JORE database.');
-
+export async function syncJoreTables(tables, schemaName) {
   let successful = true;
-  let syncTime = process.hrtime();
-
-  let tables = await getTables();
   let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
@@ -122,15 +108,12 @@ export async function syncSourceToDestination(includeDepartures = true) {
     autoStart: true,
   });
 
-  let schemaName = await createImportSchema();
-
   for (let tableName of tables) {
     syncQueue
       .add(async () => {
         console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
 
-        await syncTable(schemaName, tableName);
-
+        await syncTable(tableName, schemaName);
         let pendingIdx = pendingTables.indexOf(tableName);
 
         if (pendingIdx !== -1) {
@@ -157,6 +140,22 @@ export async function syncSourceToDestination(includeDepartures = true) {
   }
 
   await syncQueue.onIdle();
+  return successful;
+}
+
+export async function syncJore(includeDepartures = true) {
+  if (!startSync('main')) {
+    console.log('[Warning]  Syncing already in progress.');
+    return;
+  }
+
+  let syncTime = process.hrtime();
+  await reportInfo('[Status]   Syncing JORE database.');
+
+  let tables = await getTables();
+  let schemaName = await createImportSchema();
+
+  let successful = await syncJoreTables(tables, schemaName, includeDepartures);
 
   if (successful) {
     await Promise.all([
@@ -169,7 +168,7 @@ export async function syncSourceToDestination(includeDepartures = true) {
 
   if (!successful) {
     let seconds = logTime('[Error]   Sync failed', syncTime);
-    await reportError(`[Error]   JORE sync faield in ${seconds} s`);
+    await reportError(`[Error]   JORE sync failed in ${seconds} s`);
   } else {
     let seconds = logTime('[Status]   Sync complete', syncTime);
     await reportInfo(`[Status]   JORE synced in ${seconds} s`);
