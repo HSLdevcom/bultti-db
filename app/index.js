@@ -2,7 +2,7 @@ import { server } from './server';
 import { reportInfo, reportError } from './monitor';
 import segfaultHandler from 'segfault-handler';
 import { scheduleSync, startScheduledSync } from './schedule';
-import { syncSourceToDestination } from './sync';
+import { syncJore } from './sync';
 import prexit from 'prexit';
 
 segfaultHandler.registerHandler('segfault.log');
@@ -13,7 +13,7 @@ segfaultHandler.registerHandler('segfault.log');
   server();
   await reportInfo('Server started.');
 
-  scheduleSync(syncSourceToDestination);
+  scheduleSync(() => syncJore());
   startScheduledSync();
 })();
 

@@ -27,21 +27,6 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   const keysLength = itemKeys.length;
   let placeholderRow = `(${itemKeys.map(() => '?').join(',')})`;
 
-  // Create the string of update values for the conflict case
-  const updateKeys = itemKeys
-    .filter((key) => !primaryKeys.includes(key)) // Don't update primary indices
-    .map((key) => knex.raw('?? = EXCLUDED.??', [key, key]).toString())
-    .join(',');
-
-  // Get the keys that the ON CONFLICT should check for.
-  const onConflictKeys =
-    primaryKeys.length !== 0 ? `(${primaryKeys.map(() => '??').join(',')})` : '';
-
-  let upsertQueryFragment =
-    primaryKeys.length !== 0
-      ? `ON CONFLICT ${onConflictKeys} DO UPDATE SET ${updateKeys}`
-      : 'ON CONFLICT DO NOTHING';
-
   // 30k bindings is a conservative estimate of what the node-pg library can handle per query.
   let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
   // Split the items up into chunks
@@ -82,10 +67,10 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
     const upsertQuery = `
 INSERT INTO ?? (${itemKeys.map(() => '??').join(',')})
 VALUES ${valuesPlaceholders.join(',')}
-${upsertQueryFragment};
+ON CONFLICT DO NOTHING;
 `;
 
-    const upsertBindings = [tableId, ...itemKeys, ...insertValues, ...primaryKeys];
+    const upsertBindings = [tableId, ...itemKeys, ...insertValues];
     await knex.raw(upsertQuery, upsertBindings);
   }
 }

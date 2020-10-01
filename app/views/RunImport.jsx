@@ -35,6 +35,14 @@ const RunImport = () => {
       <form action={`${PATH_PREFIX}switch-write-to-read/`} method="post">
         <input type="submit" value="Switch schemas" />
       </form>
+      <h3>Import specific table</h3>
+      <p>
+        Import a specific table from JORE.
+      </p>
+      <form action={`${PATH_PREFIX}import-table/`} method="post">
+        <input type="text" name="table_name"/>
+        <input type="submit" value="Import table" />
+      </form>
     </>
   );
 };
