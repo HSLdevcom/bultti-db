@@ -145,7 +145,7 @@ export async function syncJoreTables(tables, schemaName) {
 
 export async function syncJore(includeDepartures = true) {
   if (!startSync('main')) {
-    console.log('[Warning]  Syncing already in progress.');
+    console.log('[Warning]  Sync already in progress.');
     return;
   }
 
