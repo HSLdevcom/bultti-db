@@ -155,9 +155,15 @@ export async function syncJore(includeDepartures = true) {
   let tables = await getTables();
   let schemaName = await createImportSchema();
 
-  let successful = await syncJoreTables(tables, schemaName, includeDepartures);
+  let successful = await syncJoreTables(tables, schemaName);
 
   if (successful) {
+    if (includeDepartures) {
+      await reportInfo('[Status]   Syncing JORE departures and route geometry tables.');
+    } else {
+      await reportInfo('[Status]   Syncing JORE route geometry table.');
+    }
+
     await Promise.all([
       includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
       createRouteGeometry(schemaName, true),
