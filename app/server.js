@@ -8,7 +8,7 @@ import { activateFreshSchema } from './utils/schemaManager';
 import { createDepartures } from './createDepartures';
 import prexit from 'prexit';
 import { createHttpTerminator } from 'http-terminator';
-import { syncTable } from './sync';
+import { syncTable, syncJore } from './sync';
 
 export const server = () => {
   const app = express();
