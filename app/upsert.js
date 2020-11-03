@@ -71,6 +71,21 @@ ON CONFLICT DO NOTHING;
 `;
 
     const upsertBindings = [tableId, ...itemKeys, ...insertValues];
-    await knex.raw(upsertQuery, upsertBindings);
+
+    let retries = 0;
+    let success = false;
+
+    while (retries < 10 && success === false) {
+      try {
+        await knex.raw(upsertQuery, upsertBindings);
+        success = true;
+      } catch (err) {
+        success = false;
+        console.log(`Query on ${tableId} failed, retrying in 5 sec.`);
+        await new Promise((resolve) => setTimeout(() => resolve, 5000));
+      } finally {
+        retries++;
+      }
+    }
   }
 }
