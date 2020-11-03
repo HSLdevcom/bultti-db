@@ -39,7 +39,7 @@
     "prettier": "^1.19.1"
   },
   "scripts": {
-    "start": "node --inspect=9229 --unhandled-rejections=strict --max-old-space-size=16384 -r esm -r dotenv/config app/index.js",
+    "start": "node --inspect=9227 --unhandled-rejections=strict --max-old-space-size=16384 -r esm -r dotenv/config app/index.js",
     "start:production": "forever start -c \"node --max-old-space-size=16384 --unhandled-rejections=strict -r esm -r dotenv/config\" app/index.js && forever -f logs 0",
     "prettier": "prettier */**.{js,json} --write",
     "logs": "forever logs 0 -f",
