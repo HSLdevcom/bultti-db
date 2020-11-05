@@ -82,7 +82,7 @@ ON CONFLICT DO NOTHING;
       } catch (err) {
         success = false;
         console.log(`Query on ${tableId} failed, retrying in 5 sec.`);
-        await new Promise((resolve) => setTimeout(() => resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       } finally {
         retries++;
       }
