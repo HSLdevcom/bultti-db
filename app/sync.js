@@ -77,6 +77,9 @@ async function tableSourceRequest(tableName) {
   return request;
 }
 
+// Tables which should not have many queries running concurrently.
+let noConcurrencyTables = ['jr_ajoneuvo'];
+
 export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
   console.log(`[Status]   Importing ${tableName}`);
@@ -89,7 +92,14 @@ export async function syncTable(tableName, schemaName) {
     tableName,
   });
 
-  await syncStream(request, rowsProcessor, 10, BATCH_SIZE, 'row', 'done');
+  await syncStream(
+    request,
+    rowsProcessor,
+    noConcurrencyTables.includes(tableName) ? 1 : 10,
+    BATCH_SIZE,
+    'row',
+    'done'
+  );
 
   await knex.raw(`alter table :schema:.:tableName: set logged;`, {
     schema: schemaName,
