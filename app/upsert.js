@@ -75,7 +75,7 @@ ON CONFLICT DO NOTHING;
     let retries = 0;
     let success = false;
 
-    while (retries < 10 && success === false) {
+    while (retries++ < 10 && success === false) {
       try {
         await knex.raw(upsertQuery, upsertBindings);
         success = true;
@@ -83,8 +83,6 @@ ON CONFLICT DO NOTHING;
         success = false;
         console.log(`Query on ${tableId} failed, retrying in 5 sec.`);
         await new Promise((resolve) => setTimeout(resolve, 5000));
-      } finally {
-        retries++;
       }
     }
   }
