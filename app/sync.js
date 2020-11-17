@@ -87,11 +87,6 @@ export async function syncTable(tableName, schemaName) {
   let request = await tableSourceRequest(tableName);
   let rowsProcessor = await createInsertForTable(tableName, schemaName);
 
-  await knex.raw(`alter table :schema:.:tableName: set unlogged;`, {
-    schema: schemaName,
-    tableName,
-  });
-
   await syncStream(
     request,
     rowsProcessor,
@@ -100,11 +95,6 @@ export async function syncTable(tableName, schemaName) {
     'row',
     'done'
   );
-
-  await knex.raw(`alter table :schema:.:tableName: set logged;`, {
-    schema: schemaName,
-    tableName,
-  });
 
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
