@@ -9,12 +9,12 @@ export async function syncStream(
   dataEvent = 'row',
   endEvent = 'done'
 ) {
-  let queue = new PQueue({
-    autoStart: true,
-    concurrency: concurrency,
-  });
+  return new Promise((resolve, reject) => {
+    let queue = new PQueue({
+      autoStart: true,
+      concurrency: concurrency,
+    });
 
-  await new Promise((resolve, reject) => {
     let totalRowsCount = 0;
     let rowsKey = { index: 0 };
     let rowsMap = new WeakMap();
@@ -41,7 +41,7 @@ export async function syncStream(
         processRows(rowsKey);
 
         // Wait if the queue is full
-        if (queue.size > concurrency * 2) {
+        if (queue.size >= concurrency) {
           await queue.onEmpty();
         }
 
@@ -52,13 +52,10 @@ export async function syncStream(
 
     let onEnd = () => {
       processRows(rowsKey);
-
-      console.log(totalRowsCount);
-
       // Allow time for jobs to be added to the queue before resolving.
       setTimeout(() => {
-        resolve(totalRowsCount);
-      }, 5000);
+        queue.onIdle().then(() => resolve(totalRowsCount));
+      }, 1000);
     };
 
     requestStream.on(dataEvent, onRow);
@@ -69,6 +66,4 @@ export async function syncStream(
       reject(err);
     });
   });
-
-  return queue.onIdle();
 }
