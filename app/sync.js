@@ -116,37 +116,26 @@ export async function syncJoreTables(tables, schemaName) {
   let syncQueue = new PQueue({
     concurrency: 10,
     autoStart: true,
+    timeout: 7000 * 1000,
+  });
+
+  syncQueue.on('next', () => {
+    console.log(`[Pending]  ${pendingTables.join(', ')}`);
+    console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
   });
 
   for (let tableName of tables) {
     syncQueue
-      .add(async () => {
-        console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
-
-        await syncTable(tableName, schemaName);
-        let pendingIdx = pendingTables.indexOf(tableName);
-
-        if (pendingIdx !== -1) {
-          pendingTables.splice(pendingIdx, 1);
-        }
-
-        console.log(`[Pending]  ${pendingTables.join(', ')}`);
+      .add(async () => syncTable(tableName, schemaName))
+      .then(() => {
+        pendingTables = pendingTables.filter((t) => t !== tableName);
       })
       .catch((err) => {
         let message = `[Error]    Sync error on table ${tableName}`;
         console.log(message, err);
         successful = false;
-        syncQueue.clear();
         return reportError(message);
       });
-
-    if (!successful) {
-      break;
-    }
-  }
-
-  if (!successful) {
-    syncQueue.clear();
   }
 
   await syncQueue.onIdle();
@@ -164,6 +153,11 @@ export async function syncJore(includeDepartures = true) {
 
   let tables = await getTables();
   let schemaName = await createImportSchema();
+
+  if (!includeDepartures) {
+    // Unnecessary to include this huge table if we are not importing departures.
+    tables = tables.filter((t) => t !== 'jr_valipisteaika');
+  }
 
   let successful = await syncJoreTables(tables, schemaName);
 
