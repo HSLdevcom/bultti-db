@@ -149,11 +149,11 @@ create table jr_ajoneuvo
 (
     id integer,
     status varchar,
-    liitunnus varchar not null,
+    liitunnus varchar,
     varikko varchar,
     reknro varchar not null,
     kylkinro varchar not null,
-    kaltyyppi varchar not null,
+    kaltyyppi varchar,
     kalluokka numeric,
     lattiakorkeus numeric,
     alkutark boolean,
@@ -221,7 +221,7 @@ create table jr_ajoneuvo
     lijlaitteet boolean,
     yliikaisyys numeric,
     constraint jr_ajoneuvo_pk
-        primary key (reknro, rekpvm, kylkinro, liitunnus, kontunnus)
+        primary key (reknro, rekpvm, kontunnus, kylkinro)
 );
 
 alter table jr_ajoneuvo owner to CURRENT_USER;
