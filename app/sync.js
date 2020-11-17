@@ -110,7 +110,6 @@ export async function syncJoreTables(tables, schemaName) {
   });
 
   syncQueue.on('next', () => {
-    console.log(`[Pending]  ${pendingTables.join(', ')}`);
     console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
   });
 
@@ -119,6 +118,7 @@ export async function syncJoreTables(tables, schemaName) {
       .add(async () => syncTable(tableName, schemaName))
       .then(() => {
         pendingTables = pendingTables.filter((t) => t !== tableName);
+        console.log(`[Pending]  ${pendingTables.join(', ')}`);
       })
       .catch((err) => {
         let message = `[Error]    Sync error on table ${tableName}`;

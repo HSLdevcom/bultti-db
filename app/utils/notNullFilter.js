@@ -19,7 +19,7 @@ export function createNotNullFilter(constraint, columnSchema) {
       if (typeof val === 'string') {
         val = trim(val);
       }
-      
+
       if (typeof val === 'number') {
         return !isNaN(val);
       }
