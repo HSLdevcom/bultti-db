@@ -77,8 +77,15 @@ async function tableSourceRequest(tableName) {
   return request;
 }
 
-// Tables which should not have many queries running concurrently.
-let noConcurrencyTables = ['jr_ajoneuvo'];
+// Set concurrency per table. Tables not listed will get the default concurrency.
+let tableConcurrency = {
+  jr_ajoneuvo: 1,
+  jr_valipisteaika: 10,
+  ak_kaavio: 10,
+  ak_kaavion_suoritteet: 15,
+  ak_kaavion_lahto: 15,
+  jr_reitinlinkki: 15,
+};
 
 export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
@@ -87,14 +94,8 @@ export async function syncTable(tableName, schemaName) {
   let request = await tableSourceRequest(tableName);
   let rowsProcessor = await createInsertForTable(tableName, schemaName);
 
-  await syncStream(
-    request,
-    rowsProcessor,
-    noConcurrencyTables.includes(tableName) ? 1 : 10,
-    BATCH_SIZE,
-    'row',
-    'done'
-  );
+  let concurrency = tableConcurrency[tableName] || 25;
+  await syncStream(request, rowsProcessor, concurrency, BATCH_SIZE, 'row', 'done');
 
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
