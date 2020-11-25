@@ -84,7 +84,7 @@ let tableConcurrency = {
   ak_kaavio: 10,
   ak_kaavion_suoritteet: 15,
   ak_kaavion_lahto: 15,
-  jr_reitinlinkki: 15,
+  jr_reitinlinkki: 10,
 };
 
 export async function syncTable(tableName, schemaName) {
