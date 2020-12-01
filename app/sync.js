@@ -80,11 +80,8 @@ async function tableSourceRequest(tableName) {
 // Set concurrency per table. Tables not listed will get the default concurrency.
 let tableConcurrency = {
   jr_ajoneuvo: 1,
-  jr_valipisteaika: 10,
-  ak_kaavio: 10,
   ak_kaavion_suoritteet: 15,
   ak_kaavion_lahto: 15,
-  jr_reitinlinkki: 10,
 };
 
 export async function syncTable(tableName, schemaName) {
@@ -94,7 +91,7 @@ export async function syncTable(tableName, schemaName) {
   let request = await tableSourceRequest(tableName);
   let rowsProcessor = await createInsertForTable(tableName, schemaName);
 
-  let concurrency = tableConcurrency[tableName] || 25;
+  let concurrency = tableConcurrency[tableName] || 10;
   await syncStream(request, rowsProcessor, concurrency, BATCH_SIZE, 'row', 'done');
 
   logTime(`[Status]   ${tableName} imported`, tableTime);

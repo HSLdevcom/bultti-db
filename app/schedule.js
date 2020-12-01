@@ -5,6 +5,7 @@ let scheduledImport = null;
 
 export function scheduleSync(task) {
   if (!TASK_SCHEDULE) {
+    console.log('No schedule. Task not scheduled.')
     return;
   }
 
