@@ -101,7 +101,7 @@ create table ak_kaavion_lahto
     elpymisaika numeric,
     pakollkaltyyppi boolean,
     liitunnus numeric,
-    saapaika varchar,
+    saapaika numeric(4,2),
     constraint ak_kaavion_lahto_pk
         primary key (kaaid, reitunnus, suunta, lahaika)
 );
