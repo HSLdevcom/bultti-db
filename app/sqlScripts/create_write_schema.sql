@@ -83,7 +83,7 @@ create table ak_kaavion_lahto
     kaaid numeric not null,
     reitunnus varchar not null,
     suunta smallint not null,
-    lahaika varchar not null,
+    lahaika numeric(4,2) not null,
     ajoaika numeric,
     kaltyyppi varchar,
     ajotyyppi numeric,
@@ -502,6 +502,12 @@ create index reitinsuunta_suunta
 create index jr_reitinsuunta_reitunnus_suusuunta_suuvoimast_suuvoimviimpvm_i
     on jr_reitinsuunta (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm);
 
+create index jr_reitinsuunta_suuvoimast_i
+    on jr_reitinsuunta (suuvoimast);
+
+create index jr_reitinsuunta_suuvoimviimpvm_i
+    on jr_reitinsuunta (suuvoimviimpvm);
+
 create table jr_linja_vaatimus
 (
     lintunnus varchar not null,
@@ -521,7 +527,7 @@ create table ak_kaavion_suoritteet
     kaaid numeric not null,
     reitunnus varchar not null,
     suunta smallint not null,
-    lahaika varchar not null,
+    lahaika numeric(4,2) not null,
     vrkvht boolean,
     autokierto numeric not null,
     kaltyyppi varchar not null,
