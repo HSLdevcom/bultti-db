@@ -141,12 +141,6 @@ export async function syncJore(includeDepartures = true) {
 
   let tables = await getTables();
   let schemaName = await createImportSchema();
-
-  if (!includeDepartures) {
-    // Unnecessary to include this huge table if we are not importing departures.
-    tables = tables.filter((t) => t !== 'jr_valipisteaika');
-  }
-
   let successful = await syncJoreTables(tables, schemaName);
 
   if (successful) {
