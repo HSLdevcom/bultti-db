@@ -16,14 +16,9 @@ import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
 import { format, subYears } from 'date-fns';
 import { createDepartures } from './createDepartures';
+import { createTableQuery } from './queryFragments/joreTableQuery';
 
 const knex = getKnex();
-
-// Define WHERE clauses for some large tables that would otherwise take forever.
-// The minDate will be appended after the operator.
-let minDateLimit = {
-  jr_valipisteaika: `lavoimast >=`,
-};
 
 async function createInsertForTable(tableName, schemaName) {
   let columnSchema;
@@ -66,14 +61,9 @@ async function tableSourceRequest(tableName) {
   let request = pool.request();
   request.stream = true;
 
-  let minDate = format(subYears(new Date(), 1), 'yyyy-MM-dd');
-  let tableWhere = minDateLimit[tableName] || '';
+  let query = createTableQuery(tableName);
+  request.query(query);
 
-  if (tableWhere) {
-    tableWhere = `WHERE ${tableWhere} '${minDate}'`;
-  }
-
-  request.query(`SELECT * FROM dbo.${tableName} ${tableWhere}`);
   return request;
 }
 
@@ -113,7 +103,7 @@ export async function syncJoreTables(tables, schemaName) {
 
   for (let tableName of tables) {
     syncQueue
-      .add(async () => syncTable(tableName, schemaName))
+      .add(() => syncTable(tableName, schemaName))
       .then(() => {
         pendingTables = pendingTables.filter((t) => t !== tableName);
         console.log(`[Pending]  ${pendingTables.join(', ')}`);
