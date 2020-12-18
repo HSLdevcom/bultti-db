@@ -24,7 +24,6 @@ kayttpvm,
 voimast,
 viimvoi,
 istumapaikat,
-paastoluokka,
 noxpaastot,
 pmpaastot,
 co2paastot,
@@ -40,7 +39,8 @@ let ajoneuvoQuery = `
   WITH distinct_kylkinro AS
    (
        SELECT ${ajoneuvoCols},
-              replace(ltrim(replace(kylkinro,'0',' ')),' ','0') kylkinro,
+              REPLACE(LTRIM(REPLACE(kylkinro,'0',' ')),' ','0') kylkinro,
+              NULLIF(LTRIM(RTRIM(paastoluokka)), '') paastoluokka,
               -- This imitates DISTINCT ON from postgres.
               ROW_NUMBER() OVER(
                   PARTITION BY a.kylkinro, a.kontunnus
@@ -50,15 +50,20 @@ let ajoneuvoQuery = `
        WHERE a.kylkinro IS NOT NULL
          AND a.reknro IS NOT NULL
          AND a.reknro NOT LIKE '%+%'
-         AND a.reknro != ' '
+         -- Trim down to an empty string if only whitespace and skip if so
+         AND NULLIF(LTRIM(RTRIM(a.reknro)), '') IS NOT NULL
          AND a.rekpvm IS NOT NULL
+         AND a.paastoluokka IS NOT NULL
+         -- Trim down to an empty string if only whitespace and skip if so
+         AND NULLIF(LTRIM(RTRIM(a.paastoluokka)), '') IS NOT NULL
          AND a.kontunnus IS NOT NULL
          AND a.kaltyyppi IS NOT NULL
          AND a.kaltyyppi != 'KP'
          AND a.status IN ('1','2')
    )
   SELECT ${ajoneuvoCols},
-         kylkinro
+         kylkinro,
+         paastoluokka
   FROM distinct_kylkinro a
   WHERE a.idx = 1
 `;
