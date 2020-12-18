@@ -2,11 +2,45 @@
 // The minDate will be appended after the operator.
 import { format, subYears } from 'date-fns';
 
+let ajoneuvoCols = `
+id,
+status,
+liitunnus,
+reknro,
+kaltyyppi,
+kalluokka,
+ulkoilme,
+alustavalmist,
+alustamalli,
+korivalmist,
+korimalli,
+pituus,
+korkeus,
+polttoaine,
+hybridi,
+oviratkaisu,
+rekpvm,
+kayttpvm,
+voimast,
+viimvoi,
+istumapaikat,
+paastoluokka,
+noxpaastot,
+pmpaastot,
+co2paastot,
+turvateli,
+niiaustoiminto,
+kontunnus,
+lijlaitteet,
+yliikaisyys
+`;
+
 // language=TSQL
 let ajoneuvoQuery = `
   WITH distinct_kylkinro AS
    (
-       SELECT *,
+       SELECT ${ajoneuvoCols},
+              replace(ltrim(replace(kylkinro,'0',' ')),' ','0') kylkinro,
               -- This imitates DISTINCT ON from postgres.
               ROW_NUMBER() OVER(
                   PARTITION BY a.kylkinro, a.kontunnus
@@ -23,7 +57,9 @@ let ajoneuvoQuery = `
          AND a.kaltyyppi != 'KP'
          AND a.status IN ('1','2')
    )
-  SELECT * FROM distinct_kylkinro a
+  SELECT ${ajoneuvoCols},
+         kylkinro
+  FROM distinct_kylkinro a
   WHERE a.idx = 1
 `;
 

@@ -87,11 +87,6 @@ export function transformRow(row, table, columnSchema) {
     case 'jr_inf_kohde':
       transformed = transformInfKohde(row);
       break;
-    case 'jr_ajoneuvo':
-      // Need to remove idx field...
-      let { idx, ...validAjoneuvo } = row;
-      transformed = validAjoneuvo;
-      break;
     default:
       transformed = row;
       break;
