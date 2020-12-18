@@ -78,14 +78,19 @@ function defaultRowTransform(row, columnSchema) {
 // Some tables need special handling. If the table has a transform defined,
 // run the transform on the row. Then run default transform on all rows.
 export function transformRow(row, table, columnSchema) {
-  let transformed
-  
+  let transformed;
+
   switch (table) {
     case 'jr_inf_aikataulu_vp':
       transformed = transformAikatauluVp(row);
       break;
     case 'jr_inf_kohde':
-      transformed = transformInfKohde(row)
+      transformed = transformInfKohde(row);
+      break;
+    case 'jr_ajoneuvo':
+      // Need to remove idx field...
+      let { idx, ...validAjoneuvo } = row;
+      transformed = validAjoneuvo;
       break;
     default:
       transformed = row;

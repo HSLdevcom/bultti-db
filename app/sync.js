@@ -14,7 +14,6 @@ import { syncStream } from './utils/syncStream';
 import { BATCH_SIZE } from '../constants';
 import { startSync, endSync } from './state';
 import { reportInfo, reportError } from './monitor';
-import { format, subYears } from 'date-fns';
 import { createDepartures } from './createDepartures';
 import { createTableQuery } from './queryFragments/joreTableQuery';
 
