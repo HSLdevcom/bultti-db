@@ -173,6 +173,7 @@ create table jr_ajoneuvo
     noxpaastot numeric,
     pmpaastot numeric,
     co2paastot numeric,
+    pakokaasupuhd numeric,
     turvateli boolean,
     niiaustoiminto boolean,
     kontunnus numeric not null,
