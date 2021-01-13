@@ -16,42 +16,32 @@ export async function syncStream(
     });
 
     let totalRowsCount = 0;
-    let rowsKey = { index: 0 };
-    let rowsMap = new WeakMap();
+    let rows = [];
 
-    function processRows(currentKey) {
-      queue
-        .add(() => {
-          let rows = rowsMap.get(currentKey);
-          return chunkProcessor(rows || []);
-        })
-        .catch(reject);
+    function processRows(addRows) {
+      queue.add(() => chunkProcessor(addRows || [])).catch(reject);
     }
 
     let onRow = async (row) => {
       totalRowsCount++;
-      let currentIndex = rowsKey.index;
-
-      let rows = rowsMap.get(rowsKey) || [];
       rows.push(row);
-      rowsMap.set(rowsKey, rows);
 
       if (rows.length >= batchSize) {
         requestStream.pause();
-        processRows(rowsKey);
+        processRows(rows);
 
         // Wait if the queue is full
-        if (queue.size >= concurrency) {
+        if (queue.size >= concurrency * 2) {
           await queue.onEmpty();
         }
 
-        rowsKey = { index: currentIndex + 1 };
+        rows = [];
         requestStream.resume();
       }
     };
 
     let onEnd = () => {
-      processRows(rowsKey);
+      processRows(rows);
       // Allow time for jobs to be added to the queue before resolving.
       setTimeout(() => {
         queue.onIdle().then(() => resolve(totalRowsCount));
