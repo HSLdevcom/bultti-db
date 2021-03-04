@@ -19,3 +19,4 @@ test
 node_modules
 test_dsn
 docker-compose.yml
+README_OLD.md
