@@ -109,3 +109,25 @@ Bultti itself does not use the departures table at the moment, so it exists only
 The route geometry import process also queries imported Postgres tables and not MSSQL tables. The route geometry table contains route lines which are composed from points. The main query fetches the points from the imported JORE data and the rest of the function groups it into route geometry rows. The Line geometry itself is created with Postgis from the points in the group.
 
 Bultti itself does not use the route_geometry table, so it exists only for Reittiloki which also uses this database as its JORE backend.
+
+## Find the data
+
+Look for the data you need in the JORE database with the following commands:
+
+### List tables
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 [LOGIN] -s',' -W -Q "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+```
+
+### List columns
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 [LOGIN] -s',' -W -Q "SELECT column_name, data_type, character_maximum_length, table_name,ordinal_position, is_nullable FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name LIKE 'jr_kinf_reitti' ORDER BY ordinal_position"
+```
+
+### Get the first 30 rows
+
+```shell script
+sqlcmd -S 10.218.6.14,56239 [LOGIN] -s',' -W -Q "SELECT * FROM ( SELECT TOP 30 *, ROW_NUMBER() OVER (ORDER BY (SELECT 1)) AS rnum FROM [TABLE NAME]) a WHERE rnum > 10"
+```
