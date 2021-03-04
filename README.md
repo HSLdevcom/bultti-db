@@ -114,7 +114,7 @@ Bultti itself does not use the route_geometry table, so it exists only for Reitt
 
 If you need to add tables from JORE, these commands may be useful.
 
-Look for the data you need in the JORE database with the following commands:
+Look for the data you need in the JORE database with the following commands. Get the login from the team and tunne though a server with ports open to the internal IP.
 
 ### List tables
 
