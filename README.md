@@ -2,20 +2,20 @@
 
 This is the database for the Bultti project. It replicates select tables from HSL's main JORE database for usage in Bultti and Reittiloki.
 
-The actual database is a PostgreSQL database which can be spun up with Docker, so this repo does not actually include a "database" per se. This project is about *syncing* the required data from JORE to the Bultti database.
+The actual database is a PostgreSQL database which can be spun up with Docker, so this repo does not actually include a "database" per se. This project is about _syncing_ the required data from JORE to the Bultti database.
 
 ## Setup and start
 
 ### The Postgres database
 
-You need to have a database running to sync data into. The Bultti project has one running in the cloud for each environment, but for local development setting one up with Docker is the easiest. 
+You need to have a database running to sync data into. The Bultti project has one running in the cloud for each environment, but for local development setting one up with Docker is the easiest.
 
 The database requires a data directory if you want the data to be persisted. Create an empty directory somewhere convenient for you, then give that path to the command below.
 
 Start a Postgres (with Postgis) database with Docker:
 
 ```shell script
-docker run -p 5432:5432 -v /path/to/postgres/data/directory:/var/lib/postgresql/data --env POSTGRES_PASSWORD=password --name bultti-db postgis/postgis:12-master 
+docker run -p 5432:5432 -v /path/to/postgres/data/directory:/var/lib/postgresql/data --env POSTGRES_PASSWORD=password --name bultti-db postgis/postgis:12-master
 ```
 
 ### The JORE connection
@@ -111,6 +111,8 @@ The route geometry import process also queries imported Postgres tables and not 
 Bultti itself does not use the route_geometry table, so it exists only for Reittiloki which also uses this database as its JORE backend.
 
 ## Find the data
+
+If you need to add tables from JORE, these commands may be useful.
 
 Look for the data you need in the JORE database with the following commands:
 
