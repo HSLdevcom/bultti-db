@@ -22,21 +22,25 @@ export async function syncStream(
       queue.add(() => chunkProcessor(addRows || [])).catch(reject);
     }
 
-    let onRow = async (row) => {
+    let onRow = (row) => {
       totalRowsCount++;
       rows.push(row);
 
       if (rows.length >= batchSize) {
         requestStream.pause();
         processRows(rows);
+        rows = [];
 
-        // Wait if the queue is full
+        let whenQueueIsReady = Promise.resolve();
+
+        // Wait if the queue is too full
         if (queue.size >= concurrency * 2) {
-          await queue.onEmpty();
+          whenQueueIsReady = queue.onEmpty();
         }
 
-        rows = [];
-        requestStream.resume();
+        whenQueueIsReady.then(() => {
+          requestStream.resume();
+        });
       }
     };
 

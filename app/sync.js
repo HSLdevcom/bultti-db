@@ -86,7 +86,7 @@ export async function syncTable(tableName, schemaName) {
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
 
-export async function syncJoreTables(tables, schemaName) {
+export function syncJoreTables(tables, schemaName) {
   let successful = true;
   let pendingTables = [...tables];
 
@@ -115,46 +115,61 @@ export async function syncJoreTables(tables, schemaName) {
       });
   }
 
-  await syncQueue.onIdle();
-  return successful;
+  return syncQueue.onIdle().then(() => successful);
 }
 
-export async function syncJore(includeDepartures = true) {
+export function syncJore(includeDepartures = true) {
   if (!startSync('main')) {
     console.log('[Warning]  Sync already in progress.');
     return;
   }
 
   let syncTime = process.hrtime();
-  await reportInfo('[Status]   Syncing JORE database.');
+  reportInfo('[Status]   Syncing JORE database.');
 
-  let tables = await getTables();
-  let schemaName = await createImportSchema();
-  let successful = await syncJoreTables(tables, schemaName);
+  return (
+    getTables() // 1. Get the tables to sync
+      // 2. Create the import schema, returning both the schemaName and the tables from this promise.
+      .then((tables) => createImportSchema().then((schemaName) => ({ tables, schemaName })))
+      .then(({ tables, schemaName }) =>
+        // 3. Sync the JORE tables, returning schemaName, tables and successful status to the next `then`
+        syncJoreTables(tables, schemaName).then((successful) => ({
+          tables,
+          schemaName,
+          successful,
+        }))
+      )
+      .then(({ table, schemaName, successful }) => {
+        // 4. Log current status. Then, if successful, continue with the derived data sync.
+        if (successful) {
+          if (includeDepartures) {
+            reportInfo('[Status]   Syncing JORE departures and route geometry tables.');
+          } else {
+            reportInfo('[Status]   Syncing JORE route geometry table.');
+          }
 
-  if (successful) {
-    if (includeDepartures) {
-      await reportInfo('[Status]   Syncing JORE departures and route geometry tables.');
-    } else {
-      await reportInfo('[Status]   Syncing JORE route geometry table.');
-    }
+          // Sync derived data that requires the base JORE sync to be completed.
+          return Promise.all([
+            includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
+            createRouteGeometry(schemaName, true),
+          ])
+            .then(() => true)
+            .catch(() => false);
+        }
 
-    await Promise.all([
-      includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
-      createRouteGeometry(schemaName, true),
-    ]).catch(() => {
-      successful = false;
-    });
-  }
+        return Promise.resolve(false);
+      })
+      .then((successful) => {
+        // 5. Log the success or failure of the sync.
+        if (!successful) {
+          let seconds = logTime('[Error]   Sync failed', syncTime);
+          return reportError(`[Error]   JORE sync failed in ${seconds} s`);
+        }
 
-  if (!successful) {
-    let seconds = logTime('[Error]   Sync failed', syncTime);
-    await reportError(`[Error]   JORE sync failed in ${seconds} s`);
-  } else {
-    let seconds = logTime('[Status]   Sync complete', syncTime);
-    await reportInfo(`[Status]   JORE synced in ${seconds} s`);
-    await activateFreshSchema();
-  }
-
-  endSync('main');
+        let seconds = logTime('[Status]   Sync complete', syncTime);
+        reportInfo(`[Status]   JORE synced in ${seconds} s`);
+        return activateFreshSchema();
+      })
+      .then(() => endSync('main'))
+  );
 }
