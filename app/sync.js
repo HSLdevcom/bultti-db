@@ -71,7 +71,7 @@ let tableConcurrency = {
   jr_ajoneuvo: 1,
 };
 
-const DEFAULT_CONCURRENCY = 10;
+const DEFAULT_CONCURRENCY = 50;
 
 export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
