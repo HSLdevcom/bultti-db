@@ -22,8 +22,10 @@ export function getKnex() {
     pool: {
       log: (message, logLevel) =>
         DEBUG ? console.log(`Pool ${logLevel}: ${message}`) : undefined,
-      min: 2,
-      max: 100,
+      min: 0,
+      max: 200,
+      acquireTimeoutMillis: 1000000,
+      idleTimeoutMillis: 1000000,
     },
   });
 
