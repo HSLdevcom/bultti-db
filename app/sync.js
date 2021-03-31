@@ -81,7 +81,7 @@ export async function syncTable(tableName, schemaName) {
   let rowsProcessor = await createInsertForTable(tableName, schemaName);
 
   let concurrency = tableConcurrency[tableName] || DEFAULT_CONCURRENCY;
-  await syncStream(request, rowsProcessor, concurrency, BATCH_SIZE, 'row', 'done');
+  await syncStream(request, rowsProcessor, concurrency, BATCH_SIZE, 'row');
 
   logTime(`[Status]   ${tableName} imported`, tableTime);
 }
@@ -96,16 +96,16 @@ export function syncJoreTables(tables, schemaName) {
     timeout: 7000 * 1000,
   });
 
-  syncQueue.on('next', () => {
+  let statusInterval = setInterval(() => {
     console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
-  });
+    console.log(`[Pending]  ${pendingTables.join(', ')}`);
+  }, 10000)
 
   for (let tableName of tables) {
     syncQueue
       .add(() => syncTable(tableName, schemaName))
       .then(() => {
         pendingTables = pendingTables.filter((t) => t !== tableName);
-        console.log(`[Pending]  ${pendingTables.join(', ')}`);
       })
       .catch((err) => {
         let message = `[Error]    Sync error on table ${tableName}`;

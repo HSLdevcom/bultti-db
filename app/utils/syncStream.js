@@ -1,13 +1,13 @@
 import PQueue from 'p-queue';
 import { BATCH_SIZE } from '../../constants';
+import { finished } from 'stream';
 
 export async function syncStream(
   requestStream,
   chunkProcessor,
   concurrency = 10,
   batchSize = BATCH_SIZE,
-  dataEvent = 'row',
-  endEvent = 'done'
+  dataEvent = 'row'
 ) {
   return new Promise((resolve, reject) => {
     let queue = new PQueue({
@@ -15,14 +15,14 @@ export async function syncStream(
       concurrency: concurrency,
     });
 
+    function processRows(addRows) {
+      return queue.add(() => chunkProcessor(addRows || [])).catch(reject);
+    }
+
     let totalRowsCount = 0;
     let rows = [];
 
-    function processRows(addRows) {
-      queue.add(() => chunkProcessor(addRows || [])).catch(reject);
-    }
-
-    let onRow = (row) => {
+    function onRow(row) {
       totalRowsCount++;
       rows.push(row);
 
@@ -42,22 +42,20 @@ export async function syncStream(
           requestStream.resume();
         });
       }
-    };
-
-    let onEnd = () => {
-      processRows(rows);
-      // Allow time for jobs to be added to the queue before resolving.
-      setTimeout(() => {
-        queue.onIdle().then(() => resolve(totalRowsCount));
-      }, 1000);
-    };
+    }
 
     requestStream.on(dataEvent, onRow);
-    requestStream.on(endEvent, onEnd);
 
-    requestStream.on('error', (err) => {
-      console.log(`[Error]   MSSQL query error`, err);
-      reject(err);
+    finished(requestStream, (err) => {
+      if (err) {
+        console.log(`[Error]   MSSQL query error`, err);
+        queue.clear();
+        reject(err);
+      } else {
+        processRows(rows)
+          .then(() => queue.onIdle())
+          .then(() => resolve(totalRowsCount));
+      }
     });
   });
 }
