@@ -63,7 +63,7 @@ async function tableSourceRequest(tableName) {
   let query = createTableQuery(tableName);
   request.query(query);
 
-  return request;
+  return { stream: request, closePool: pool.close.bind(pool) };
 }
 
 // Set concurrency per table. Tables not listed will get the default concurrency.
@@ -77,13 +77,18 @@ export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
   console.log(`[Status]   Importing ${tableName}`);
 
-  let request = await tableSourceRequest(tableName);
+  let { stream, closePool } = await tableSourceRequest(tableName);
   let rowsProcessor = await createInsertForTable(tableName, schemaName);
 
   let concurrency = tableConcurrency[tableName] || DEFAULT_CONCURRENCY;
-  await syncStream(request, rowsProcessor, concurrency, BATCH_SIZE, 'row');
 
-  logTime(`[Status]   ${tableName} imported`, tableTime);
+  return syncStream(stream, rowsProcessor, concurrency, BATCH_SIZE, 'row')
+    .then(() => {
+      logTime(`[Status]   ${tableName} imported`, tableTime);
+    })
+    .finally(() => {
+      closePool();
+    });
 }
 
 export function syncJoreTables(tables, schemaName) {
@@ -99,7 +104,7 @@ export function syncJoreTables(tables, schemaName) {
   let statusInterval = setInterval(() => {
     console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
     console.log(`[Pending]  ${pendingTables.join(', ')}`);
-  }, 10000)
+  }, 10000);
 
   for (let tableName of tables) {
     syncQueue
@@ -115,7 +120,10 @@ export function syncJoreTables(tables, schemaName) {
       });
   }
 
-  return syncQueue.onIdle().then(() => successful);
+  return syncQueue.onIdle().then(() => {
+    clearInterval(statusInterval);
+    return successful;
+  });
 }
 
 export function syncJore(includeDepartures = true) {

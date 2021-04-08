@@ -32,6 +32,8 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   // Split the items up into chunks
   let queryChunks = chunk(items, itemsPerQuery);
 
+  let insertPromise = Promise.resolve();
+
   // Create upsert queries for each chunk of items.
   for (let itemsChunk of queryChunks) {
     let uniqItems =
@@ -71,19 +73,8 @@ ON CONFLICT DO NOTHING;
 `;
 
     const upsertBindings = [tableId, ...itemKeys, ...insertValues];
-
-    let retries = 0;
-    let success = false;
-
-    while (retries++ < 10 && success === false) {
-      try {
-        await knex.raw(upsertQuery, upsertBindings);
-        success = true;
-      } catch (err) {
-        success = false;
-        console.log(`Query on ${tableId} failed, retrying in 5 sec.`);
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
-    }
+    insertPromise = insertPromise.then(() => knex.raw(upsertQuery, upsertBindings));
   }
+
+  return insertPromise;
 }
