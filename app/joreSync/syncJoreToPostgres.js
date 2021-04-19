@@ -3,18 +3,17 @@ import { getKnex } from '../db/postgres';
 import { transformRow } from './dataTransform';
 import { getTables } from './getTablesFromFile';
 import { logTime } from '../utils/logTime';
-import PQueue from 'p-queue';
 import { getPrimaryConstraint } from '../utils/getPrimaryConstraint';
 import { createNotNullFilter } from '../utils/notNullFilter';
 import { get } from 'lodash';
 import { createImportSchema, activateFreshSchema } from './schemaManager';
 import { getPool } from '../db/mssql';
 import { processStream } from '../utils/processStream';
-import { BATCH_SIZE } from '../../constants';
 import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
 import { createDepartures } from '../derivedTables/createDepartures';
 import { createTableQuery } from '../queryFragments/joreTableQuery';
+import PQueue from 'p-queue';
 
 const knex = getKnex();
 
@@ -65,23 +64,14 @@ async function tableSourceRequest(tableName) {
   return { stream: request, closePool: pool.close.bind(pool) };
 }
 
-// Set concurrency per table. Tables not listed will get the default concurrency.
-let tableConcurrency = {
-  jr_ajoneuvo: 1,
-};
-
-const DEFAULT_CONCURRENCY = 10;
-
 export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
   console.log(`[Status]   Importing ${tableName}`);
 
   let { stream, closePool } = await tableSourceRequest(tableName);
-  let rowsProcessor = await createInsertForTable(tableName, schemaName);
+  let processRow = await createInsertForTable(tableName, schemaName);
 
-  let concurrency = tableConcurrency[tableName] || DEFAULT_CONCURRENCY;
-
-  return processStream(stream, rowsProcessor, concurrency, BATCH_SIZE, 'row')
+  return processStream(stream, processRow)
     .then(() => {
       logTime(`[Status]   ${tableName} imported`, tableTime);
     })
@@ -95,9 +85,7 @@ export function syncJoreTables(tables, schemaName) {
   let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
-    concurrency: 10,
-    autoStart: true,
-    timeout: 7000 * 1000,
+    concurrency: 5,
   });
 
   let statusInterval = setInterval(() => {

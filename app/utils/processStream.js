@@ -1,16 +1,11 @@
-import PQueue from 'p-queue';
 import { BATCH_SIZE } from '../../constants';
+import PQueue from 'p-queue';
 
-export async function processStream(
-  requestStream,
-  chunkProcessor,
-  concurrency = 10,
-  batchSize = BATCH_SIZE
-) {
+export async function processStream(requestStream, chunkProcessor, batchSize = BATCH_SIZE) {
   return new Promise((resolve, reject) => {
     let queue = new PQueue({
       autoStart: true,
-      concurrency: concurrency,
+      concurrency: 25,
     });
 
     function onError(err) {
@@ -38,7 +33,7 @@ export async function processStream(
         let whenQueueIsReady = Promise.resolve();
 
         // Wait if the queue is too full
-        if (queue.size >= concurrency * 2) {
+        if (queue.size >= 25) {
           whenQueueIsReady = queue.onEmpty();
         }
 
