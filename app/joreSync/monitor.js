@@ -3,7 +3,7 @@ import {
   ENVIRONMENT,
   SLACK_MONITOR_MENTION,
   MONITORING_ENABLED,
-} from '../constants';
+} from '../../constants';
 import got from 'got';
 
 export const messageTypes = {

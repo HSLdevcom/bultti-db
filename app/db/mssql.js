@@ -1,5 +1,5 @@
 import * as mssql from 'mssql';
-import { MSSQL_CONNECTION } from '../constants';
+import { MSSQL_CONNECTION } from '../../constants';
 import prexit from 'prexit';
 
 let mssqlConfig = (maxConn = 2) => ({

@@ -1,8 +1,8 @@
-import { getKnex } from './postgres';
+import { getKnex } from '../db/postgres';
 import { groupBy } from 'lodash';
 import { formatISO } from 'date-fns';
-import { logTime } from './utils/logTime';
-import { startSync, endSync } from './state';
+import { logTime } from '../utils/logTime';
+import { startSync, endSync } from '../state';
 
 const knex = getKnex();
 

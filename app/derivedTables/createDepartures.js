@@ -1,7 +1,7 @@
-import { getKnex } from './postgres';
-import { logTime } from './utils/logTime';
-import { startSync, endSync } from './state';
-import { departuresInsertQuery } from './queryFragments/departuresInsertQuery';
+import { getKnex } from '../db/postgres';
+import { logTime } from '../utils/logTime';
+import { startSync, endSync } from '../state';
+import { departuresInsertQuery } from '../queryFragments/departuresInsertQuery';
 
 const knex = getKnex();
 

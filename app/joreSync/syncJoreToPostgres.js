@@ -1,21 +1,20 @@
-import { upsert } from './upsert';
-import { getKnex } from './postgres';
+import { upsert } from '../db/upsert';
+import { getKnex } from '../db/postgres';
 import { transformRow } from './dataTransform';
-import { getTables } from './utils/fetchTables';
-import { logTime } from './utils/logTime';
+import { getTables } from './getTablesFromFile';
+import { logTime } from '../utils/logTime';
 import PQueue from 'p-queue';
-import { getPrimaryConstraint } from './getPrimaryConstraint';
-import { createNotNullFilter } from './utils/notNullFilter';
+import { getPrimaryConstraint } from '../utils/getPrimaryConstraint';
+import { createNotNullFilter } from '../utils/notNullFilter';
 import { get } from 'lodash';
-import { createRouteGeometry } from './createRouteGeometry';
-import { createImportSchema, activateFreshSchema } from './utils/schemaManager';
-import { getPool } from './mssql';
-import { syncStream } from './utils/syncStream';
-import { BATCH_SIZE } from '../constants';
-import { startSync, endSync } from './state';
+import { createImportSchema, activateFreshSchema } from './schemaManager';
+import { getPool } from '../db/mssql';
+import { processStream } from '../utils/processStream';
+import { BATCH_SIZE } from '../../constants';
+import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
-import { createDepartures } from './createDepartures';
-import { createTableQuery } from './queryFragments/joreTableQuery';
+import { createDepartures } from '../derivedTables/createDepartures';
+import { createTableQuery } from '../queryFragments/joreTableQuery';
 
 const knex = getKnex();
 
@@ -82,7 +81,7 @@ export async function syncTable(tableName, schemaName) {
 
   let concurrency = tableConcurrency[tableName] || DEFAULT_CONCURRENCY;
 
-  return syncStream(stream, rowsProcessor, concurrency, BATCH_SIZE, 'row')
+  return processStream(stream, rowsProcessor, concurrency, BATCH_SIZE, 'row')
     .then(() => {
       logTime(`[Status]   ${tableName} imported`, tableTime);
     })
@@ -126,7 +125,7 @@ export function syncJoreTables(tables, schemaName) {
   });
 }
 
-export function syncJore(includeDepartures = true) {
+export function syncJoreToPostgres(includeDepartures = true) {
   if (!startSync('main')) {
     console.log('[Warning]  Sync already in progress.');
     return;
@@ -159,7 +158,7 @@ export function syncJore(includeDepartures = true) {
           // Sync derived data that requires the base JORE sync to be completed.
           return Promise.all([
             includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
-            createRouteGeometry(schemaName, true),
+            // createRouteGeometry(schemaName, true),
           ])
             .then(() => true)
             .catch(() => false);

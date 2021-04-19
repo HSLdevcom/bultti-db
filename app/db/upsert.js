@@ -1,6 +1,6 @@
 import { getKnex } from './postgres';
 import { chunk, uniqBy } from 'lodash';
-import { createPrimaryKey } from './utils/createPrimaryKey';
+import { createPrimaryKey } from '../utils/createPrimaryKey';
 
 const knex = getKnex();
 
@@ -28,7 +28,7 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   let placeholderRow = `(${itemKeys.map(() => '?').join(',')})`;
 
   // 30k bindings is a conservative estimate of what the node-pg library can handle per query.
-  let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
+  let itemsPerQuery = 1; //Math.ceil(30000 / Math.max(1, keysLength));
   // Split the items up into chunks
   let queryChunks = chunk(items, itemsPerQuery);
 
@@ -73,7 +73,12 @@ ON CONFLICT DO NOTHING;
 `;
 
     const upsertBindings = [tableId, ...itemKeys, ...insertValues];
-    insertPromise = insertPromise.then(() => knex.raw(upsertQuery, upsertBindings));
+    insertPromise = insertPromise
+      .then(() => knex.raw(upsertQuery, upsertBindings))
+      .catch((err) => {
+        console.log(err, uniqItems);
+        process.exit(1);
+      });
   }
 
   return insertPromise;

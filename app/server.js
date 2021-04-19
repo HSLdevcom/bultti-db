@@ -3,12 +3,12 @@ import express from 'express';
 import { SERVER_PORT, PATH_PREFIX, READ_SCHEMA_NAME } from '../constants';
 import { createEngine } from 'express-react-views';
 import path from 'path';
-import { createRouteGeometry } from './createRouteGeometry';
-import { activateFreshSchema } from './utils/schemaManager';
-import { createDepartures } from './createDepartures';
+import { createRouteGeometry } from './derivedTables/createRouteGeometry';
+import { activateFreshSchema } from './joreSync/schemaManager';
+import { createDepartures } from './derivedTables/createDepartures';
 import prexit from 'prexit';
 import { createHttpTerminator } from 'http-terminator';
-import { syncTable, syncJore } from './sync';
+import { syncTable, syncJoreToPostgres } from './joreSync/syncJoreToPostgres';
 
 export const server = () => {
   const app = express();
@@ -35,13 +35,13 @@ export const server = () => {
 
   app.post('/run', (req, res) => {
     console.log('Manually running import');
-    syncJore(true);
+    syncJoreToPostgres(true);
     res.redirect(PATH_PREFIX);
   });
 
   app.post('/run-without-departures', (req, res) => {
     console.log('Manually running import without departures');
-    syncJore(false);
+    syncJoreToPostgres(false);
     res.redirect(PATH_PREFIX);
   });
 

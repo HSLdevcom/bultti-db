@@ -1,5 +1,5 @@
 import { CronJob } from 'cron';
-import { TASK_SCHEDULE } from '../constants';
+import { TASK_SCHEDULE } from '../../constants';
 
 let scheduledImport = null;
 

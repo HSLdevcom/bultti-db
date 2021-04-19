@@ -1,7 +1,7 @@
 import PQueue from 'p-queue';
 import { BATCH_SIZE } from '../../constants';
 
-export async function syncStream(
+export async function processStream(
   requestStream,
   chunkProcessor,
   concurrency = 10,

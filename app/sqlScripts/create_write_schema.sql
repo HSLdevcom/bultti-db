@@ -1,10 +1,4 @@
-create schema if not exists :schema:;
-alter schema :schema: owner to CURRENT_USER;
-GRANT ALL ON SCHEMA :schema: TO CURRENT_USER;
-
-CREATE EXTENSION IF NOT EXISTS postgis;
-
-create table ak_aikataulukausi
+create table _jore_import.ak_aikataulukausi
 (
     aktunnus varchar not null
         constraint ak_aikataulukausi_pkey
@@ -20,15 +14,15 @@ create table ak_aikataulukausi
     muutospvm timestamp with time zone
 );
 
-alter table ak_aikataulukausi owner to CURRENT_USER;
+alter table _jore_import.ak_aikataulukausi owner to CURRENT_USER;
 
 create index ak_aikataulukausi_akalkpvm_akpaattpvm_index
-    on ak_aikataulukausi (akalkpvm, akpaattpvm);
+    on _jore_import.ak_aikataulukausi (akalkpvm, akpaattpvm);
 
 create index ak_aikataulukausi_aktunnus_index
-    on ak_aikataulukausi (aktunnus);
+    on _jore_import.ak_aikataulukausi (aktunnus);
 
-create table ak_kaavio
+create table _jore_import.ak_kaavio
 (
     aktunnus varchar not null,
     kaatunnus varchar not null,
@@ -51,36 +45,36 @@ create table ak_kaavio
         primary key (aktunnus, kaaversio, kaatunnus, kaaid)
 );
 
-alter table ak_kaavio owner to CURRENT_USER;
+alter table _jore_import.ak_kaavio owner to CURRENT_USER;
 
 create index ak_kaavio_kaaid_index
-    on ak_kaavio (kaaid);
+    on _jore_import.ak_kaavio (kaaid);
 
 create index ak_kaavio_kaatunnus_index
-    on ak_kaavio (kaatunnus);
+    on _jore_import.ak_kaavio (kaatunnus);
 
 create index ak_kaavio_kaatunnus_kaaversio_index
-    on ak_kaavio (kaatunnus, kaaversio);
+    on _jore_import.ak_kaavio (kaatunnus, kaaversio);
 
 create index ak_kaavio_kaaversio_index
-    on ak_kaavio (kaaversio);
+    on _jore_import.ak_kaavio (kaaversio);
 
 create index ak_kaavio_kohtunnus_index
-    on ak_kaavio (kohtunnus);
+    on _jore_import.ak_kaavio (kohtunnus);
 
 create index ak_kaavio_pvtyyppi_index
-    on ak_kaavio (pvtyyppi);
+    on _jore_import.ak_kaavio (pvtyyppi);
 
 create index ak_kaavio_kaavoimast_index
-    on ak_kaavio (kaavoimast);
+    on _jore_import.ak_kaavio (kaavoimast);
 
 create index ak_kaavio_kaaviimvoi_index
-    on ak_kaavio (kaaviimvoi);
+    on _jore_import.ak_kaavio (kaaviimvoi);
 
 create index ak_kaavio_validity_period_index
-    on ak_kaavio (kaavoimast, kaaviimvoi);
+    on _jore_import.ak_kaavio (kaavoimast, kaaviimvoi);
 
-create table ak_kaavion_lahto
+create table _jore_import.ak_kaavion_lahto
 (
     kaaid numeric not null,
     reitunnus varchar not null,
@@ -108,27 +102,27 @@ create table ak_kaavion_lahto
         primary key (kaaid, reitunnus, suunta, lahaika)
 );
 
-alter table ak_kaavion_lahto owner to CURRENT_USER;
+alter table _jore_import.ak_kaavion_lahto owner to CURRENT_USER;
 
 create index reitunnus
-    on ak_kaavion_lahto (reitunnus);
+    on _jore_import.ak_kaavion_lahto (reitunnus);
 
 create index kaaid
-    on ak_kaavion_lahto (kaaid);
+    on _jore_import.ak_kaavion_lahto (kaaid);
 
 create index kaltyyppi
-    on ak_kaavion_lahto (kaltyyppi);
+    on _jore_import.ak_kaavion_lahto (kaltyyppi);
 
 create index liitunnus
-    on ak_kaavion_lahto (liitunnus);
+    on _jore_import.ak_kaavion_lahto (liitunnus);
 
 create index lahto_lahtoaika
-    on ak_kaavion_lahto (lahaika);
+    on _jore_import.ak_kaavion_lahto (lahaika);
 
 create index suunta
-    on ak_kaavion_lahto (suunta);
+    on _jore_import.ak_kaavion_lahto (suunta);
 
-create table ak_kalusto
+create table _jore_import.ak_kalusto
 (
     katyyppi varchar(2) not null
         constraint ak_kalusto_pk
@@ -142,12 +136,12 @@ create table ak_kalusto
     muutospvm timestamp with time zone
 );
 
-alter table ak_kalusto owner to CURRENT_USER;
+alter table _jore_import.ak_kalusto owner to CURRENT_USER;
 
 create index ak_kalusto_katyyppi_index
-    on ak_kalusto (katyyppi);
+    on _jore_import.ak_kalusto (katyyppi);
 
-create table jr_ajoneuvo
+create table _jore_import.jr_ajoneuvo
 (
     id integer,
     status varchar,
@@ -185,24 +179,24 @@ create table jr_ajoneuvo
         primary key (reknro, rekpvm, kontunnus, kylkinro)
 );
 
-alter table jr_ajoneuvo owner to CURRENT_USER;
+alter table _jore_import.jr_ajoneuvo owner to CURRENT_USER;
 
 create index ajoneuvo_reknro
-    on jr_ajoneuvo (reknro);
+    on _jore_import.jr_ajoneuvo (reknro);
 
 create index ajoneuvo_kylkinro
-    on jr_ajoneuvo (kylkinro);
+    on _jore_import.jr_ajoneuvo (kylkinro);
 
 create index jr_ajoneuvo_kontunnus_index
-    on jr_ajoneuvo (kontunnus);
+    on _jore_import.jr_ajoneuvo (kontunnus);
 
 create index jr_ajoneuvo_liitunnus_index
-    on jr_ajoneuvo (liitunnus);
+    on _jore_import.jr_ajoneuvo (liitunnus);
 
 create index ajoneuvo_rekpvm
-    on jr_ajoneuvo (rekpvm);
+    on _jore_import.jr_ajoneuvo (rekpvm);
 
-create table jr_eritpvkalent
+create table _jore_import.jr_eritpvkalent
 (
     eritpoikpvm date not null,
     eritpaiva varchar not null,
@@ -215,15 +209,15 @@ create table jr_eritpvkalent
         primary key (eritpoikpvm, eritpaiva)
 );
 
-alter table jr_eritpvkalent owner to CURRENT_USER;
+alter table _jore_import.jr_eritpvkalent owner to CURRENT_USER;
 
 create index jr_eritpvkalent_eritpoikpvm_eritpaiva_eritviikpaiva_index
-    on jr_eritpvkalent (eritpoikpvm, eritpaiva, eritviikpaiva);
+    on _jore_import.jr_eritpvkalent (eritpoikpvm, eritpaiva, eritviikpaiva);
 
 create index jr_eritpvkalent_eritpoikpvm_index
-    on jr_eritpvkalent (eritpoikpvm);
+    on _jore_import.jr_eritpvkalent (eritpoikpvm);
 
-create table jr_kilpailukohd
+create table _jore_import.jr_kilpailukohd
 (
     kohtunnus varchar not null,
     kohtilorg varchar,
@@ -275,22 +269,22 @@ create table jr_kilpailukohd
         primary key (kohtunnus, liitunnus, kohalkpvm, kohpaattpvm)
 );
 
-alter table jr_kilpailukohd owner to CURRENT_USER;
+alter table _jore_import.jr_kilpailukohd owner to CURRENT_USER;
 
 create index kohtunnus
-    on jr_kilpailukohd (kohtunnus);
+    on _jore_import.jr_kilpailukohd (kohtunnus);
 
 create index seuranta
-    on jr_kilpailukohd (seuranta);
+    on _jore_import.jr_kilpailukohd (seuranta);
 
 create index kohtunnus_seuranta_not_null
-    on jr_kilpailukohd (kohtunnus)
+    on _jore_import.jr_kilpailukohd (kohtunnus)
     where (seuranta IS NOT NULL);
 
 create index kohde_liitunnus
-    on jr_kilpailukohd (liitunnus);
+    on _jore_import.jr_kilpailukohd (liitunnus);
 
-create table jr_konserni
+create table _jore_import.jr_konserni
 (
     kontunnus numeric not null,
     konlyhenne varchar,
@@ -303,9 +297,9 @@ create table jr_konserni
         primary key (kontunnus, konnimi)
 );
 
-alter table jr_konserni owner to CURRENT_USER;
+alter table _jore_import.jr_konserni owner to CURRENT_USER;
 
-create table jr_koodisto
+create table _jore_import.jr_koodisto
 (
     koolista varchar not null,
     koojarjestys numeric,
@@ -320,12 +314,12 @@ create table jr_koodisto
         primary key (kookoodi, koolista)
 );
 
-alter table jr_koodisto owner to CURRENT_USER;
+alter table _jore_import.jr_koodisto owner to CURRENT_USER;
 
 create index jr_koodisto_kookoodi_index
-    on jr_koodisto (kookoodi);
+    on _jore_import.jr_koodisto (kookoodi);
 
-create table jr_liikennoitsija
+create table _jore_import.jr_liikennoitsija
 (
     liitunnus numeric not null
         constraint jr_liikennoitsija_pk
@@ -351,12 +345,12 @@ create table jr_liikennoitsija
     lijliikennoitsija boolean
 );
 
-alter table jr_liikennoitsija owner to CURRENT_USER;
+alter table _jore_import.jr_liikennoitsija owner to CURRENT_USER;
 
 create index jr_liikennoitsija_liitunnus_index
-    on jr_liikennoitsija (liitunnus);
+    on _jore_import.jr_liikennoitsija (liitunnus);
 
-create table jr_reitinlinkki
+create table _jore_import.jr_reitinlinkki
 (
     reitunnus varchar not null,
     suusuunta smallint not null,
@@ -384,43 +378,43 @@ create table jr_reitinlinkki
         primary key (reitunnus, suusuunta, suuvoimast, reljarjnro, relid, relpysakki, lnkverkko, lnkalkusolmu, lnkloppusolmu)
 );
 
-alter table jr_reitinlinkki owner to CURRENT_USER;
+alter table _jore_import.jr_reitinlinkki owner to CURRENT_USER;
 
 create index jr_reitinlinkki_reitunnus_index
-    on jr_reitinlinkki (reitunnus);
+    on _jore_import.jr_reitinlinkki (reitunnus);
 
 create index jr_reitinlinkki_relpysakki_index
-    on jr_reitinlinkki (relpysakki);
+    on _jore_import.jr_reitinlinkki (relpysakki);
 
 create index jr_reitinlinkki_lnkalkusolmu_index
-    on jr_reitinlinkki (lnkalkusolmu);
+    on _jore_import.jr_reitinlinkki (lnkalkusolmu);
 
 create index jr_reitinlinkki_lnkloppusolmu_index
-    on jr_reitinlinkki (lnkloppusolmu);
+    on _jore_import.jr_reitinlinkki (lnkloppusolmu);
 
 create index jr_reitinlinkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
-    on jr_reitinlinkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
+    on _jore_import.jr_reitinlinkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
 
 create index jr_reitinlinkki_lnkalkusolmu_relpysakki_index
-    on jr_reitinlinkki (lnkalkusolmu, relpysakki);
+    on _jore_import.jr_reitinlinkki (lnkalkusolmu, relpysakki);
 
 create index jr_reitinlinkki_suusuunta_index
-    on jr_reitinlinkki (suusuunta);
+    on _jore_import.jr_reitinlinkki (suusuunta);
 
 create index jr_reitinlinkki_relpysakki_active
-    on jr_reitinlinkki (relpysakki)
+    on _jore_import.jr_reitinlinkki (relpysakki)
     where ((relpysakki)::text <> 'E'::text);
 
 create index jr_reitinlinkki_lnkalkusolmu_reitunnus_index
-    on jr_reitinlinkki (lnkalkusolmu, reitunnus);
+    on _jore_import.jr_reitinlinkki (lnkalkusolmu, reitunnus);
 
 create index jr_reitinlinkki_reitunnus_suusuunta_suuvoimast_index
-    on jr_reitinlinkki (reitunnus, suusuunta, suuvoimast);
+    on _jore_import.jr_reitinlinkki (reitunnus, suusuunta, suuvoimast);
 
 create index jr_reitinlinkki_reljarjnro_index
-    on jr_reitinlinkki (reljarjnro);
+    on _jore_import.jr_reitinlinkki (reljarjnro);
 
-create table jr_reitinsuunta
+create table _jore_import.jr_reitinsuunta
 (
     reitunnus varchar not null,
     suusuunta smallint not null,
@@ -449,27 +443,27 @@ create table jr_reitinsuunta
         primary key (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm)
 );
 
-alter table jr_reitinsuunta owner to CURRENT_USER;
+alter table _jore_import.jr_reitinsuunta owner to CURRENT_USER;
 
 create index reitinsuunta_reitunnus
-    on jr_reitinsuunta (reitunnus);
+    on _jore_import.jr_reitinsuunta (reitunnus);
 
 create index reitinsuunta_suupituus
-    on jr_reitinsuunta (suupituus);
+    on _jore_import.jr_reitinsuunta (suupituus);
 
 create index reitinsuunta_suunta
-    on jr_reitinsuunta (suusuunta);
+    on _jore_import.jr_reitinsuunta (suusuunta);
 
 create index jr_reitinsuunta_reitunnus_suusuunta_suuvoimast_suuvoimviimpvm_i
-    on jr_reitinsuunta (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm);
+    on _jore_import.jr_reitinsuunta (reitunnus, suusuunta, suuvoimast, suuvoimviimpvm);
 
 create index jr_reitinsuunta_suuvoimast_i
-    on jr_reitinsuunta (suuvoimast);
+    on _jore_import.jr_reitinsuunta (suuvoimast);
 
 create index jr_reitinsuunta_suuvoimviimpvm_i
-    on jr_reitinsuunta (suuvoimviimpvm);
+    on _jore_import.jr_reitinsuunta (suuvoimviimpvm);
 
-create table jr_linja_vaatimus
+create table _jore_import.jr_linja_vaatimus
 (
     lintunnus varchar not null,
     kookoodi numeric not null,
@@ -478,12 +472,12 @@ create table jr_linja_vaatimus
         primary key (lintunnus, kookoodi)
 );
 
-alter table jr_linja_vaatimus owner to CURRENT_USER;
+alter table _jore_import.jr_linja_vaatimus owner to CURRENT_USER;
 
 create index linja_vaatimus_lintunnus
-    on jr_linja_vaatimus (lintunnus);
+    on _jore_import.jr_linja_vaatimus (lintunnus);
 
-create table ak_kaavion_suoritteet
+create table _jore_import.ak_kaavion_suoritteet
 (
     kaaid numeric not null,
     reitunnus varchar not null,
@@ -505,27 +499,27 @@ create table ak_kaavion_suoritteet
         primary key (kaaid, reitunnus, suunta, lahaika, autokierto, kaltyyppi)
 );
 
-alter table ak_kaavion_suoritteet owner to CURRENT_USER;
+alter table _jore_import.ak_kaavion_suoritteet owner to CURRENT_USER;
 
 create index ak_kaavion_suoritteet_metrit_index
-    on ak_kaavion_suoritteet (metrit);
+    on _jore_import.ak_kaavion_suoritteet (metrit);
 
 create index ak_kaavion_suoritteet_reitunnus_index
-    on ak_kaavion_suoritteet (reitunnus);
+    on _jore_import.ak_kaavion_suoritteet (reitunnus);
 
 create index ak_kaavion_suoritteet_kaaid_index
-    on ak_kaavion_suoritteet (kaaid);
+    on _jore_import.ak_kaavion_suoritteet (kaaid);
 
 create index ak_kaavion_suoritteet_reitunnus_suunta_metrit_index
-    on ak_kaavion_suoritteet (reitunnus, suunta, metrit);
+    on _jore_import.ak_kaavion_suoritteet (reitunnus, suunta, metrit);
 
 create index ak_kaavion_suoritteet_suunta_index
-    on ak_kaavion_suoritteet (suunta);
+    on _jore_import.ak_kaavion_suoritteet (suunta);
 
 create index suorite_kaaid_reitti_aika
-    on ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
+    on _jore_import.ak_kaavion_suoritteet (reitunnus, suunta, lahaika, kaaid);
 
-create table jr_solmu
+create table _jore_import.jr_solmu
 (
     soltunnus char(7) not null
         constraint jr_solmu_pk
@@ -559,24 +553,24 @@ create table jr_solmu
     mkjmy numeric(8,6)
 );
 
-alter table jr_solmu owner to CURRENT_USER;
+alter table _jore_import.jr_solmu owner to CURRENT_USER;
 
 create index jr_solmu_solsty_solstx_index
-    on jr_solmu (solsty, solstx);
+    on _jore_import.jr_solmu (solsty, solstx);
 
 create index jr_solmu_soltunnus_index
-    on jr_solmu (soltunnus);
+    on _jore_import.jr_solmu (soltunnus);
 
 create index jr_solmu_soltunnus_solsty_solstx_index
-    on jr_solmu (soltunnus, solsty, solstx);
+    on _jore_import.jr_solmu (soltunnus, solsty, solstx);
 
 create index jr_solmu_soltunnus_soly_solx_index
-    on jr_solmu (soltunnus, soly, solx);
+    on _jore_import.jr_solmu (soltunnus, soly, solx);
 
 create index jr_solmu_soly_solx_index
-    on jr_solmu (soly, solx);
+    on _jore_import.jr_solmu (soly, solx);
 
-create table jr_reitti
+create table _jore_import.jr_reitti
 (
     reitunnus varchar(6) not null
         constraint jr_reitti_pk
@@ -590,12 +584,12 @@ create table jr_reitti
     reiviimpvm timestamp with time zone
 );
 
-alter table jr_reitti owner to CURRENT_USER;
+alter table _jore_import.jr_reitti owner to CURRENT_USER;
 
 create index jr_reitti_reitunnus_index
-    on jr_reitti (reitunnus);
+    on _jore_import.jr_reitti (reitunnus);
 
-create table jr_pysakki
+create table _jore_import.jr_pysakki
 (
     soltunnus char(7) not null
         constraint jr_pysakki_pk
@@ -632,15 +626,15 @@ create table jr_pysakki
     postinro varchar(5)
 );
 
-alter table jr_pysakki owner to CURRENT_USER;
+alter table _jore_import.jr_pysakki owner to CURRENT_USER;
 
 create index jr_pysakki_soltunnus_index
-    on jr_pysakki (soltunnus);
+    on _jore_import.jr_pysakki (soltunnus);
 
 create index jr_pysakki_terminaali_index
-    on jr_pysakki (terminaali);
+    on _jore_import.jr_pysakki (terminaali);
 
-create table jr_pysakkivali
+create table _jore_import.jr_pysakkivali
 (
     id integer not null,
     pystunnus1 char(7) not null,
@@ -655,12 +649,12 @@ create table jr_pysakkivali
         primary key (id, pystunnus1, pystunnus2)
 );
 
-alter table jr_pysakkivali owner to CURRENT_USER;
+alter table _jore_import.jr_pysakkivali owner to CURRENT_USER;
 
 create index jr_pysakkivali_pystunnus1_pystunnus2_index
-    on jr_pysakkivali (pystunnus1, pystunnus2);
+    on _jore_import.jr_pysakkivali (pystunnus1, pystunnus2);
 
-create table jr_linja
+create table _jore_import.jr_linja
 (
     lintunnus varchar(6) not null
         constraint jr_linja_pk
@@ -681,18 +675,18 @@ create table jr_linja
     puhelinnumero varchar(20)
 );
 
-alter table jr_linja owner to CURRENT_USER;
+alter table _jore_import.jr_linja owner to CURRENT_USER;
 
 create index jr_linja_linjoukkollaji_index
-    on jr_linja (linjoukkollaji);
+    on _jore_import.jr_linja (linjoukkollaji);
 
 create index jr_linja_lintunnus_index
-    on jr_linja (lintunnus);
+    on _jore_import.jr_linja (lintunnus);
 
 create index jr_linja_lintunnus_linvoimast_linvoimviimpvm_index
-    on jr_linja (lintunnus, linvoimast, linvoimviimpvm);
+    on _jore_import.jr_linja (lintunnus, linvoimast, linvoimviimpvm);
 
-create table jr_lij_terminaalialue
+create table _jore_import.jr_lij_terminaalialue
 (
     termid varchar(10) not null
         constraint jr_lij_terminaalialue_pk
@@ -712,12 +706,12 @@ create table jr_lij_terminaalialue
     kaytossa varchar(1)
 );
 
-alter table jr_lij_terminaalialue owner to CURRENT_USER;
+alter table _jore_import.jr_lij_terminaalialue owner to CURRENT_USER;
 
 create index jr_lij_terminaalialue_termid_index
-    on jr_lij_terminaalialue (termid);
+    on _jore_import.jr_lij_terminaalialue (termid);
 
-create table jr_raidekalusto
+create table _jore_import.jr_raidekalusto
 (
     id integer not null,
     tyyppi char,
@@ -750,21 +744,21 @@ create table jr_raidekalusto
         primary key (id, kylkinro, reknro, liitunnus)
 );
 
-alter table jr_raidekalusto owner to CURRENT_USER;
+alter table _jore_import.jr_raidekalusto owner to CURRENT_USER;
 
 create index jr_raidekalusto_kylkinro_index
-    on jr_raidekalusto (kylkinro);
+    on _jore_import.jr_raidekalusto (kylkinro);
 
 create index jr_raidekalusto_kylkinro_liitunnus_index
-    on jr_raidekalusto (kylkinro, liitunnus);
+    on _jore_import.jr_raidekalusto (kylkinro, liitunnus);
 
 create index jr_raidekalusto_reknro_index
-    on jr_raidekalusto (reknro);
+    on _jore_import.jr_raidekalusto (reknro);
 
 create index jr_raidekalusto_reknro_kayttpvm_index
-    on jr_raidekalusto (reknro, kayttpvm);
+    on _jore_import.jr_raidekalusto (reknro, kayttpvm);
 
-create table jr_korvpvkalent
+create table _jore_import.jr_korvpvkalent
 (
     korvpoikpvm date not null,
     korvpaiva char(2) not null,
@@ -778,18 +772,18 @@ create table jr_korvpvkalent
         primary key (korvpoikpvm, korvpaiva, korvjoukkollaji, korvviikpaiva)
 );
 
-alter table jr_korvpvkalent owner to CURRENT_USER;
+alter table _jore_import.jr_korvpvkalent owner to CURRENT_USER;
 
 create index jr_korvpvkalent_korvjoukkollaji_index
-    on jr_korvpvkalent (korvjoukkollaji);
+    on _jore_import.jr_korvpvkalent (korvjoukkollaji);
 
 create index jr_korvpvkalent_korvpaiva_index
-    on jr_korvpvkalent (korvpaiva);
+    on _jore_import.jr_korvpvkalent (korvpaiva);
 
 create index jr_korvpvkalent_korvpoikpvm_index
-    on jr_korvpvkalent (korvpoikpvm);
+    on _jore_import.jr_korvpvkalent (korvpoikpvm);
 
-create table jr_piste
+create table _jore_import.jr_piste
 (
     lnkverkko varchar not null,
     lnkalkusolmu varchar not null,
@@ -806,18 +800,18 @@ create table jr_piste
         primary key (lnkverkko, lnkalkusolmu, lnkloppusolmu, pisjarjnro, pisid, pisx, pisy)
 );
 
-alter table jr_piste owner to CURRENT_USER;
+alter table _jore_import.jr_piste owner to CURRENT_USER;
 
 create index jr_piste_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
-    on jr_piste (lnkverkko, lnkalkusolmu, lnkloppusolmu);
+    on _jore_import.jr_piste (lnkverkko, lnkalkusolmu, lnkloppusolmu);
 
 create index jr_piste_pisjarjnro_index
-    on jr_piste (pisjarjnro);
+    on _jore_import.jr_piste (pisjarjnro);
 
 create index jr_piste_pisx_pisy_index
-    on jr_piste (pisx, pisy);
+    on _jore_import.jr_piste (pisx, pisy);
 
-create table route_geometry
+create table _jore_import.route_geometry
 (
     route_id varchar not null,
     direction numeric not null,
@@ -827,18 +821,18 @@ create table route_geometry
         primary key (route_id, direction, date_begin)
 );
 
-alter table route_geometry owner to CURRENT_USER;
+alter table _jore_import.route_geometry owner to CURRENT_USER;
 
 create index route_geometry_route_id_index
-    on route_geometry (route_id);
+    on _jore_import.route_geometry (route_id);
 
 create index route_geometry_route_id_direction_date_begin_index
-    on route_geometry (route_id, direction, date_begin);
+    on _jore_import.route_geometry (route_id, direction, date_begin);
 
 create index route_geometry_route_id_direction_index
-    on route_geometry (route_id, direction);
+    on _jore_import.route_geometry (route_id, direction);
 
-create table jr_linkki
+create table _jore_import.jr_linkki
 (
     lnkverkko varchar not null,
     lnkalkusolmu varchar not null,
@@ -857,18 +851,18 @@ create table jr_linkki
     lnkhis boolean
 );
 
-alter table jr_linkki owner to CURRENT_USER;
+alter table _jore_import.jr_linkki owner to CURRENT_USER;
 
 create index jr_linkki_lnkalkusolmu_index
-    on jr_linkki (lnkalkusolmu);
+    on _jore_import.jr_linkki (lnkalkusolmu);
 
 create index jr_linkki_lnkloppusolmu_index
-    on jr_linkki (lnkloppusolmu);
+    on _jore_import.jr_linkki (lnkloppusolmu);
 
 create index jr_linkki_lnkverkko_lnkalkusolmu_lnkloppusolmu_index
-    on jr_linkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
+    on _jore_import.jr_linkki (lnkverkko, lnkalkusolmu, lnkloppusolmu);
 
-create table jr_lahto
+create table _jore_import.jr_lahto
 (
     reitunnus varchar not null,
     lavoimast date not null,
@@ -896,24 +890,24 @@ create table jr_lahto
         primary key (reitunnus, lhsuunta, lavoimast, lhpaivat, lhvrkvht, lhlahaik)
 );
 
-alter table jr_lahto owner to CURRENT_USER;
+alter table _jore_import.jr_lahto owner to CURRENT_USER;
 
 create index jr_lahto_lhpaivat_index
-    on jr_lahto (lhpaivat);
+    on _jore_import.jr_lahto (lhpaivat);
 
 create index jr_lahto_reitunnus_index
-    on jr_lahto (reitunnus);
+    on _jore_import.jr_lahto (reitunnus);
 
 create index jr_lahto_lhlahaik_index
-    on jr_lahto (lhlahaik);
+    on _jore_import.jr_lahto (lhlahaik);
 
 create index jr_lahto_lhpaivat_lhlahaik_index
-    on jr_lahto (lhpaivat, lhlahaik);
+    on _jore_import.jr_lahto (lhpaivat, lhlahaik);
 
 create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
-    on jr_lahto (reitunnus, lhsuunta, lavoimast);
+    on _jore_import.jr_lahto (reitunnus, lhsuunta, lavoimast);
 
-create table jr_valipisteaika
+create table _jore_import.jr_valipisteaika
 (
     reitunnus varchar not null,
     lavoimast date not null,
@@ -935,31 +929,31 @@ create table jr_valipisteaika
         primary key (reitunnus, lavoimast, lhpaivat, lhsuunta, lhvrkvht, lhlahaik, vastunnus, vaslaika, vaslvrkvht)
 );
 
-alter table jr_valipisteaika owner to CURRENT_USER;
+alter table _jore_import.jr_valipisteaika owner to CURRENT_USER;
 
 create index jr_valipisteaika_lavoimast_index
-    on jr_valipisteaika (lavoimast);
+    on _jore_import.jr_valipisteaika (lavoimast);
 
 create index jr_valipisteaika_lhlahaik_index
-    on jr_valipisteaika (lhlahaik);
+    on _jore_import.jr_valipisteaika (lhlahaik);
 
 create index jr_valipisteaika_lhpaivat_index
-    on jr_valipisteaika (lhpaivat);
+    on _jore_import.jr_valipisteaika (lhpaivat);
 
 create index jr_valipisteaika_reitunnus_index
-    on jr_valipisteaika (reitunnus);
+    on _jore_import.jr_valipisteaika (reitunnus);
 
 create index jr_valipisteaika_reitunnus_lhsuunta_lhlahaik_lhpaivat_lavoimast
-    on jr_valipisteaika (reitunnus, lhsuunta, lhlahaik, lhpaivat, lavoimast, lhvrkvht);
+    on _jore_import.jr_valipisteaika (reitunnus, lhsuunta, lhlahaik, lhpaivat, lavoimast, lhvrkvht);
 
 create index jr_valipisteaika_lhsuunta_index
-    on jr_valipisteaika (lhsuunta);
+    on _jore_import.jr_valipisteaika (lhsuunta);
 
 create index jr_valipisteaika_vastunnus_index
-    on jr_valipisteaika (vastunnus);
+    on _jore_import.jr_valipisteaika (vastunnus);
 
 
-create table jr_aikataulu
+create table _jore_import.jr_aikataulu
 (
     reitunnus varchar not null,
     lavoimast timestamp with time zone not null,
@@ -970,15 +964,15 @@ create table jr_aikataulu
         primary key (reitunnus, lavoimast, laviimvoi)
 );
 
-alter table jr_aikataulu owner to CURRENT_USER;
+alter table _jore_import.jr_aikataulu owner to CURRENT_USER;
 
 create index jr_aikataulu_lavoimast_laviimvoi_index
-    on jr_aikataulu (lavoimast, laviimvoi);
+    on _jore_import.jr_aikataulu (lavoimast, laviimvoi);
 
 create index jr_aikataulu_reitunnus_index
-    on jr_aikataulu (reitunnus);
+    on _jore_import.jr_aikataulu (reitunnus);
 
-create table jr_liik_kilpa_suhde
+create table _jore_import.jr_liik_kilpa_suhde
 (
     liitunnus varchar(6) not null,
     kohtunnus varchar(12) not null,
@@ -989,15 +983,15 @@ create table jr_liik_kilpa_suhde
         primary key (liitunnus, kohtunnus)
 );
 
-alter table jr_liik_kilpa_suhde owner to CURRENT_USER;
+alter table _jore_import.jr_liik_kilpa_suhde owner to CURRENT_USER;
 
 create index jr_liik_kilpa_suhde_kohtunnus_index
-    on jr_liik_kilpa_suhde (kohtunnus);
+    on _jore_import.jr_liik_kilpa_suhde (kohtunnus);
 
 create index jr_liik_kilpa_suhde_liitunnus_index
-    on jr_liik_kilpa_suhde (liitunnus);
+    on _jore_import.jr_liik_kilpa_suhde (liitunnus);
 
-create table departure
+create table _jore_import.departure
 (
     stop_id varchar(7) not null,
     origin_stop_id varchar(7) not null,
@@ -1032,32 +1026,32 @@ create table departure
         primary key (stop_id, origin_stop_id, route_id, direction, date_begin, date_end, hours, minutes, is_next_day, day_type, origin_hours, origin_minutes, extra_departure)
 );
 
-alter table departure owner to CURRENT_USER;
+alter table _jore_import.departure owner to CURRENT_USER;
 
 create index departure_stop_id_index
-    on departure (stop_id);
+    on _jore_import.departure (stop_id);
 
 create index departure_route_id_index
-    on departure (route_id);
+    on _jore_import.departure (route_id);
 
 create index departure_day_type_index
-    on departure (day_type);
+    on _jore_import.departure (day_type);
 
 create index departure_date_begin_index
-    on departure (date_begin);
+    on _jore_import.departure (date_begin);
 
 create index departure_route_id_direction_stop_id_idx
-    on departure (route_id, direction, stop_id);
+    on _jore_import.departure (route_id, direction, stop_id);
 
 create index departure_stop_id_day_type
-    on departure (stop_id, day_type);
+    on _jore_import.departure (stop_id, day_type);
 
 create index departure_origin_time_index
-    on departure (origin_hours, origin_minutes);
+    on _jore_import.departure (origin_hours, origin_minutes);
 
 create index departure_departure_id_index
-    on departure (departure_id);
+    on _jore_import.departure (departure_id);
 
 create index departure_origin_index
-    on departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
+    on _jore_import.departure (stop_id, route_id, direction, date_begin, date_end, departure_id, day_type);
 

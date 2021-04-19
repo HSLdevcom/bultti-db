@@ -1,8 +1,8 @@
 import { server } from './server';
-import { reportInfo, reportError } from './monitor';
+import { reportInfo, reportError } from './joreSync/monitor';
 import segfaultHandler from 'segfault-handler';
-import { scheduleSync, startScheduledSync } from './schedule';
-import { syncJore } from './sync';
+import { scheduleSync, startScheduledSync } from './joreSync/schedule';
+import { syncJoreToPostgres } from './joreSync/syncJoreToPostgres';
 import prexit from 'prexit';
 
 segfaultHandler.registerHandler('segfault.log');
@@ -13,7 +13,7 @@ segfaultHandler.registerHandler('segfault.log');
   server();
   await reportInfo('Server started.');
 
-  scheduleSync(() => syncJore());
+  scheduleSync(() => syncJoreToPostgres());
   startScheduledSync();
 })();
 
