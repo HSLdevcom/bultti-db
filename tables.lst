@@ -5,7 +5,6 @@ jr_kilpailukohd
 jr_konserni
 jr_koodisto
 jr_liikennoitsija
-jr_linkki
 jr_linja_vaatimus
 jr_reitti
 jr_solmu
@@ -13,13 +12,10 @@ jr_pysakki
 jr_pysakkivali
 jr_linja
 jr_liik_kilpa_suhde
-jr_lij_terminaalialue
-jr_raidekalusto
 jr_korvpvkalent
 jr_eritpvkalent
 jr_reitinlinkki
 jr_reitinsuunta
-jr_piste
 jr_aikataulu
 ak_kaavio
 jr_lahto
