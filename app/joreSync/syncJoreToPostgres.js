@@ -78,12 +78,12 @@ export async function syncTable(tableName, schemaName) {
     });
 }
 
-export function syncJoreTables(tables, schemaName) {
+export function syncJoreTables(tables, schemaName, syncTime) {
   let successful = true;
   let pendingTables = [...tables];
 
   let statusInterval = setInterval(() => {
-    console.log(`[Pending]  ${pendingTables.join(', ')}`);
+    logTime(`[Pending]  ${pendingTables.join(', ')}`, syncTime);
   }, 10000);
 
   let syncPromise = Promise.resolve();
@@ -121,7 +121,7 @@ export function syncJoreToPostgres() {
       .then((tables) => createImportSchema().then((schemaName) => ({ tables, schemaName })))
       .then(({ tables, schemaName }) =>
         // 3. Sync the JORE tables, returning schemaName, tables and successful status to the next `then`
-        syncJoreTables(tables, schemaName).then((successful) => ({
+        syncJoreTables(tables, schemaName, syncTime).then((successful) => ({
           tables,
           schemaName,
           successful,
