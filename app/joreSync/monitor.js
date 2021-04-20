@@ -15,7 +15,7 @@ export async function reportError(err = null) {
   const message =
     typeof err === 'string' ? err : typeof err.message === 'string' ? err.message : '';
 
-  return onMonitorEvent(message, messageTypes.ERROR);
+  return onMonitorEvent(message, messageTypes.ERROR).then(() => err);
 }
 
 export async function reportInfo(message = '') {

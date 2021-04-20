@@ -11,9 +11,7 @@ import { getPool } from '../db/mssql';
 import { processStream } from '../utils/processStream';
 import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
-import { createDepartures } from '../derivedTables/createDepartures';
 import { createTableQuery } from '../queryFragments/joreTableQuery';
-import PQueue from 'p-queue';
 
 const knex = getKnex();
 
@@ -84,21 +82,16 @@ export function syncJoreTables(tables, schemaName) {
   let successful = true;
   let pendingTables = [...tables];
 
-  let syncQueue = new PQueue({
-    concurrency: 10,
-  });
-
   let statusInterval = setInterval(() => {
-    console.log(`[Queue]    Size: ${syncQueue.size}   Pending: ${syncQueue.pending}`);
     console.log(`[Pending]  ${pendingTables.join(', ')}`);
   }, 10000);
 
+  let syncPromise = Promise.resolve();
+
   for (let tableName of tables) {
-    syncQueue
-      .add(() => syncTable(tableName, schemaName))
-      .then(() => {
-        pendingTables = pendingTables.filter((t) => t !== tableName);
-      })
+    syncPromise = syncPromise
+      .then(() => syncTable(tableName, schemaName))
+      .then(() => (pendingTables = pendingTables.filter((t) => t !== tableName)))
       .catch((err) => {
         let message = `[Error]    Sync error on table ${tableName}`;
         console.log(message, err);
@@ -107,13 +100,13 @@ export function syncJoreTables(tables, schemaName) {
       });
   }
 
-  return syncQueue.onIdle().then(() => {
+  return syncPromise.finally(() => {
     clearInterval(statusInterval);
     return successful;
   });
 }
 
-export function syncJoreToPostgres(includeDepartures = true) {
+export function syncJoreToPostgres() {
   if (!startSync('main')) {
     console.log('[Warning]  Sync already in progress.');
     return;
@@ -134,22 +127,12 @@ export function syncJoreToPostgres(includeDepartures = true) {
           successful,
         }))
       )
-      .then(({ table, schemaName, successful }) => {
+      .then(({ successful }) => {
         // 4. Log current status. Then, if successful, continue with the derived data sync.
         if (successful) {
-          if (includeDepartures) {
-            reportInfo('[Status]   Syncing JORE departures and route geometry tables.');
-          } else {
-            reportInfo('[Status]   Syncing JORE route geometry table.');
-          }
-
+          reportInfo('[Status]   JORE sync successful!');
           // Sync derived data that requires the base JORE sync to be completed.
-          return Promise.all([
-            includeDepartures ? createDepartures(schemaName, true) : Promise.resolve(),
-            // createRouteGeometry(schemaName, true),
-          ])
-            .then(() => true)
-            .catch(() => false);
+          return Promise.resolve(true);
         }
 
         return Promise.resolve(false);
@@ -165,6 +148,6 @@ export function syncJoreToPostgres(includeDepartures = true) {
         reportInfo(`[Status]   JORE synced in ${seconds} s`);
         return activateFreshSchema();
       })
-      .then(() => endSync('main'))
+      .finally(() => endSync('main'))
   );
 }

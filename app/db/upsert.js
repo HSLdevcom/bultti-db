@@ -73,12 +73,7 @@ ON CONFLICT DO NOTHING;
 `;
 
     const upsertBindings = [tableId, ...itemKeys, ...insertValues];
-    insertPromise = insertPromise
-      .then(() => knex.raw(upsertQuery, upsertBindings))
-      .catch((err) => {
-        console.log(err, uniqItems);
-        process.exit(1);
-      });
+    insertPromise = insertPromise.then(() => knex.raw(upsertQuery, upsertBindings));
   }
 
   return insertPromise;
