@@ -85,7 +85,7 @@ export function syncJoreTables(tables, schemaName) {
   let pendingTables = [...tables];
 
   let syncQueue = new PQueue({
-    concurrency: 5,
+    concurrency: 10,
   });
 
   let statusInterval = setInterval(() => {

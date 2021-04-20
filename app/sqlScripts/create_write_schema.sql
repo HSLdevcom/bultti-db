@@ -711,51 +711,6 @@ create index jr_korvpvkalent_korvpaiva_index
 create index jr_korvpvkalent_korvpoikpvm_index
     on _jore_import.jr_korvpvkalent (korvpoikpvm);
 
-create table _jore_import.jr_lahto
-(
-    reitunnus varchar not null,
-    lavoimast date not null,
-    lhpaivat char(2) not null,
-    lhsuunta smallint not null,
-    lhvrkvht char not null,
-    lhlahaik numeric(4,2) not null,
-    lhjarjnro smallint,
-    lhajotyyppi varchar(2),
-    lhmatlatt varchar(1),
-    lhviitem varchar(4),
-    lhvoimok varchar(2),
-    lhkuka varchar(20),
-    lhviimpvm timestamp with time zone,
-    lhkaltyyppi varchar(2),
-    kohtunnus varchar(12),
-    termaika integer,
-    elpymisaika integer,
-    pakollkaltyyppi varchar(2),
-    maksviivaika integer,
-    junanumero integer,
-    yksikkolkm integer,
-    "LIJid" integer,
-    constraint jr_lahto_pk
-        primary key (reitunnus, lhsuunta, lavoimast, lhpaivat, lhvrkvht, lhlahaik)
-);
-
-alter table _jore_import.jr_lahto owner to CURRENT_USER;
-
-create index jr_lahto_lhpaivat_index
-    on _jore_import.jr_lahto (lhpaivat);
-
-create index jr_lahto_reitunnus_index
-    on _jore_import.jr_lahto (reitunnus);
-
-create index jr_lahto_lhlahaik_index
-    on _jore_import.jr_lahto (lhlahaik);
-
-create index jr_lahto_lhpaivat_lhlahaik_index
-    on _jore_import.jr_lahto (lhpaivat, lhlahaik);
-
-create index jr_lahto_reitunnus_lhsuunta_lavoimast_index
-    on _jore_import.jr_lahto (reitunnus, lhsuunta, lavoimast);
-
 create table _jore_import.jr_valipisteaika
 (
     reitunnus varchar not null,
