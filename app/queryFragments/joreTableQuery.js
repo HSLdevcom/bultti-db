@@ -77,8 +77,9 @@ let operatorCheckQuery = `
 SELECT jr_liikennoitsija.liitunnus
 FROM dbo.jr_liikennoitsija
 WHERE status = '1'
-  AND lijliikennoitsija = '1'
+  AND liityyppi = '1'
   AND liiptilinro IS NOT NULL
+  AND lijliikennoitsija IS NOT NULL
 `;
 
 // language=TSQL
@@ -168,8 +169,9 @@ let liikennoitsijaQuery =
 SELECT *
 FROM dbo.jr_liikennoitsija
 WHERE status = '1'
-  AND lijliikennoitsija = '1'
+  AND liityyppi = '1'
   AND liiptilinro IS NOT NULL
+  AND lijliikennoitsija IS NOT NULL
 `;
 
 // Collect custom queries in a map

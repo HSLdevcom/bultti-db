@@ -7,11 +7,10 @@ import { getPrimaryConstraint } from '../utils/getPrimaryConstraint';
 import { createNotNullFilter } from '../utils/notNullFilter';
 import { get } from 'lodash';
 import { createImportSchema, activateFreshSchema } from './schemaManager';
-import { getPool } from '../db/mssql';
+import { fetchTableStream } from '../db/mssql';
 import { processStream } from '../utils/processStream';
 import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
-import { createTableQuery } from '../queryFragments/joreTableQuery';
 
 const knex = getKnex();
 
@@ -42,31 +41,11 @@ async function createInsertForTable(tableName, schemaName) {
   };
 }
 
-async function tableSourceRequest(tableName) {
-  /*
-   * There is a problem with the Mssql library that results in the connection
-   * just stalling after a few tables in the table loop. No amount of adjusting
-   * the pool size or anything else solved it, except creating a new pool for
-   * each table. This is less than optimal, but it doesn't add THAT much overhead
-   * for our use and it's the only thing that has worked. If you find yourself up
-   * to the task of fixing this, know that I've spent a lot of time here already.
-   */
-  let pool = await getPool();
-
-  let request = pool.request();
-  request.stream = true;
-
-  let query = createTableQuery(tableName);
-  request.query(query);
-
-  return { stream: request, closePool: pool.close.bind(pool) };
-}
-
 export async function syncTable(tableName, schemaName) {
   let tableTime = process.hrtime();
   console.log(`[Status]   Importing ${tableName}`);
 
-  let { stream, closePool } = await tableSourceRequest(tableName);
+  let { stream, closePool } = await fetchTableStream(tableName);
   let processRow = await createInsertForTable(tableName, schemaName);
 
   return processStream(stream, processRow)

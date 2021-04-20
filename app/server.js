@@ -9,6 +9,7 @@ import { createDepartures } from './derivedTables/createDepartures';
 import prexit from 'prexit';
 import { createHttpTerminator } from 'http-terminator';
 import { syncTable, syncJoreToPostgres } from './joreSync/syncJoreToPostgres';
+import { downloadTable } from './db/downloadTable';
 
 export const server = () => {
   const app = express();
@@ -67,6 +68,13 @@ export const server = () => {
     let { table_name } = req.body;
     console.log(table_name);
     syncTable(table_name, READ_SCHEMA_NAME);
+    res.redirect(PATH_PREFIX);
+  });
+
+  app.post('/download-table', (req, res) => {
+    let { table_name } = req.body;
+    console.log(table_name);
+    downloadTable(table_name);
     res.redirect(PATH_PREFIX);
   });
 

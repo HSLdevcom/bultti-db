@@ -21,3 +21,4 @@ test_dsn
 docker-compose.yml
 README_OLD.md
 legacy_scripts/export_tables.sh
+downloads
