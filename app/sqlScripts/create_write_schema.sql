@@ -1,3 +1,20 @@
+create table _jore_import.ak_bultti_summa
+(
+    kohde varchar not null,
+    kuukausi date not null,
+    summa numeric,
+    constraint ak_bultti_summa_pk
+        primary key (kohde, kuukausi)
+);
+
+alter table _jore_import.ak_bultti_summa owner to postgres;
+
+create index ak_bultti_summa_kohde_index
+	on _jore_import.ak_bultti_summa (kohde);
+
+create index ak_bultti_summa_kuukausi_index
+	on _jore_import.ak_bultti_summa (kuukausi desc);
+
 create table _jore_import.ak_aikataulukausi
 (
     aktunnus varchar not null
