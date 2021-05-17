@@ -11,6 +11,7 @@ import { fetchTableStream } from '../db/mssql';
 import { processStream } from '../utils/processStream';
 import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
+import { logSyncStart, logSyncEnd, logSyncError } from '../utils/syncStatus';
 
 const knex = getKnex();
 
@@ -96,6 +97,7 @@ export function syncJoreToPostgres() {
 
   return (
     getTables() // 1. Get the tables to sync
+      .then((tables) => logSyncStart(tables.join(', '))) // 1a. log sync start with table list
       // 2. Create the import schema, returning both the schemaName and the tables from this promise.
       .then((tables) => createImportSchema().then((schemaName) => ({ tables, schemaName })))
       .then(({ tables, schemaName }) =>
@@ -106,26 +108,33 @@ export function syncJoreToPostgres() {
           successful,
         }))
       )
-      .then(({ successful }) => {
+      .then(({ successful, tables }) => {
         // 4. Log current status. Then, if successful, continue with the derived data sync.
         if (successful) {
           reportInfo('[Status]   JORE sync successful!');
           // Sync derived data that requires the base JORE sync to be completed.
-          return Promise.resolve(true);
+          return Promise.resolve({ successful: true, tables });
         }
 
-        return Promise.resolve(false);
+        return Promise.resolve({ successful: false, tables });
       })
-      .then((successful) => {
+      .then(({ successful, tables }) => {
         // 5. Log the success or failure of the sync.
         if (!successful) {
           let seconds = logTime('[Error]   Sync failed', syncTime);
-          return reportError(`[Error]   JORE sync failed in ${seconds} s`);
+
+          return logSyncError('Sync failed.').then(() =>
+            reportError(`[Error]   JORE sync failed in ${seconds} s`)
+          );
         }
 
         let seconds = logTime('[Status]   Sync complete', syncTime);
-        reportInfo(`[Status]   JORE synced in ${seconds} s`);
-        return activateFreshSchema();
+        let statusMessage = `JORE synced in ${seconds} s`;
+        reportInfo(`[Status]   ${statusMessage}`);
+
+        return logSyncEnd(`${statusMessage}. Tables: ${tables.join(', ')}`).then(() =>
+          activateFreshSchema()
+        );
       })
       .finally(() => endSync('main'))
   );
