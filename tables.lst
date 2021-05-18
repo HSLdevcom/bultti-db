@@ -19,6 +19,6 @@ jr_reitinlinkki
 jr_reitinsuunta
 jr_aikataulu
 ak_kaavio
-#ak_kaavion_lahto
-#ak_kaavion_suoritteet
-#jr_valipisteaika
+ak_kaavion_lahto
+ak_kaavion_suoritteet
+jr_valipisteaika

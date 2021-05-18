@@ -97,7 +97,7 @@ export function syncJoreToPostgres() {
 
   return (
     getTables() // 1. Get the tables to sync
-      .then((tables) => logSyncStart(tables.join(', '))) // 1a. log sync start with table list
+      .then((tables) => logSyncStart(tables.join(', ')).then(() => tables)) // 1a. log sync start with table list
       // 2. Create the import schema, returning both the schemaName and the tables from this promise.
       .then((tables) => createImportSchema().then((schemaName) => ({ tables, schemaName })))
       .then(({ tables, schemaName }) =>
@@ -136,6 +136,7 @@ export function syncJoreToPostgres() {
           activateFreshSchema()
         );
       })
+      .catch((err) => logSyncError(`Sync failed. Message: ${err.message || 'No message'}`))
       .finally(() => endSync('main'))
   );
 }
