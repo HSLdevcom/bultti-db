@@ -36,13 +36,7 @@ export const server = () => {
 
   app.post('/run', (req, res) => {
     console.log('Manually running import');
-    syncJoreToPostgres(true);
-    res.redirect(PATH_PREFIX);
-  });
-
-  app.post('/run-without-departures', (req, res) => {
-    console.log('Manually running import without departures');
-    syncJoreToPostgres(false);
+    syncJoreToPostgres();
     res.redirect(PATH_PREFIX);
   });
 

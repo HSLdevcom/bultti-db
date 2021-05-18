@@ -4,6 +4,7 @@ import segfaultHandler from 'segfault-handler';
 import { scheduleSync, startScheduledSync } from './joreSync/schedule';
 import { syncJoreToPostgres } from './joreSync/syncJoreToPostgres';
 import prexit from 'prexit';
+import { ensureImportStatusTable } from './utils/ensureImportStatusTable';
 
 segfaultHandler.registerHandler('segfault.log');
 
@@ -11,6 +12,8 @@ segfaultHandler.registerHandler('segfault.log');
   console.log('Bultti DB starting...');
 
   server();
+
+  await ensureImportStatusTable();
   await reportInfo('Server started.');
 
   scheduleSync(() => syncJoreToPostgres());
