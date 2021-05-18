@@ -7,7 +7,7 @@ create table _jore_import.ak_bultti_summa
         primary key (kohde, kuukausi)
 );
 
-alter table _jore_import.ak_bultti_summa owner to postgres;
+alter table _jore_import.ak_bultti_summa owner to CURRENT_USER;
 
 create index ak_bultti_summa_kohde_index
 	on _jore_import.ak_bultti_summa (kohde);
