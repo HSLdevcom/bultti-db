@@ -1,6 +1,6 @@
 import Knex from 'knex';
 import KnexPostgis from 'knex-postgis';
-import { JORE_PG_CONNECTION, DEBUG, WRITE_SCHEMA_NAME, READ_SCHEMA_NAME } from '../../constants';
+import { DEBUG, JORE_PG_CONNECTION, MAX_DB_CONNECTIONS } from '../../constants';
 import prexit from 'prexit';
 
 let st = null;
@@ -22,7 +22,7 @@ export function getKnex() {
       log: (message, logLevel) =>
         DEBUG ? console.log(`Pool ${logLevel}: ${message}`) : undefined,
       min: 0,
-      max: 200,
+      max: parseInt(MAX_DB_CONNECTIONS, 10),
       acquireTimeoutMillis: 1000000,
       idleTimeoutMillis: 1000000,
     },

@@ -47,6 +47,7 @@ export const MSSQL_CONNECTION = {
   port: secretsEnv.MSSQLPORT ? parseInt(secretsEnv.MSSQLPORT, 10) : 1433,
 };
 
+export const MAX_DB_CONNECTIONS = secretsEnv.MAX_DB_CONNECTIONS || 10;
 export const DEBUG = secretsEnv.DEBUG || 'false';
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || 'password';
