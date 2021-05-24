@@ -1,6 +1,6 @@
 // Define WHERE clauses for some large tables that would otherwise take forever.
 // The minDate will be appended after the operator.
-import { format, subYears, startOfMonth } from 'date-fns';
+import { format, subYears, subMonths, startOfMonth } from 'date-fns';
 
 let ajoneuvoCols = `
 id,
@@ -104,7 +104,7 @@ AND kohtunnus IN (
 // The next queries are full queries that will be executed.
 
 let valipisteQuery = () => {
-  let minDate = format(subYears(startOfMonth(new Date()), 1), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -121,7 +121,7 @@ WHERE jr_valipisteaika.lavoimast >= '${minDate}'
 };
 
 let kaavioQuery = () => {
-  let minDate = format(subYears(startOfMonth(new Date()), 1), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -133,7 +133,7 @@ WHERE ak_kaavio.kaavoimast >= '${minDate}'
 };
 
 let kaavionLahtoQuery = () => {
-  let minDate = format(subYears(startOfMonth(new Date()), 1), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -144,7 +144,7 @@ WHERE ak_kaavion_lahto.kaaid IN (
 };
 
 let kaavionSuoritteetQuery = () => {
-  let minDate = format(subYears(startOfMonth(new Date()), 1), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
