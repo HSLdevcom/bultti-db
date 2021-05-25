@@ -104,7 +104,7 @@ AND kohtunnus IN (
 // The next queries are full queries that will be executed.
 
 let valipisteQuery = () => {
-  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 8), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -121,7 +121,7 @@ WHERE jr_valipisteaika.lavoimast >= '${minDate}'
 };
 
 let kaavioQuery = () => {
-  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 12), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -133,7 +133,7 @@ WHERE ak_kaavio.kaavoimast >= '${minDate}'
 };
 
 let kaavionLahtoQuery = () => {
-  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 12), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
@@ -144,7 +144,7 @@ WHERE ak_kaavion_lahto.kaaid IN (
 };
 
 let kaavionSuoritteetQuery = () => {
-  let minDate = format(subMonths(startOfMonth(new Date()), 6), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 10), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *
