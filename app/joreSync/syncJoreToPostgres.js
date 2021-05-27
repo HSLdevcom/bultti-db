@@ -12,6 +12,7 @@ import { processStream } from '../utils/processStream';
 import { startSync, endSync } from '../state';
 import { reportInfo, reportError } from './monitor';
 import { logSyncStart, logSyncEnd, logSyncError } from '../utils/syncStatus';
+import { setInterval } from 'timers';
 
 const knex = getKnex();
 
@@ -47,6 +48,8 @@ export async function syncTable(tableName, schemaName) {
   console.log(`[Status]   Importing ${tableName}`);
 
   let { stream, closePool } = await fetchTableStream(tableName);
+  console.log(`[Status]   Stream for table ${tableName} fetched.`);
+
   let processRow = await createInsertForTable(tableName, schemaName);
 
   return processStream(stream, processRow)
