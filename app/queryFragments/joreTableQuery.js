@@ -109,8 +109,7 @@ let valipisteQuery = () => {
   return `
 SELECT *
 FROM dbo.jr_valipisteaika
-WHERE jr_valipisteaika.lavoimast >= '${minDate}'
-  AND jr_valipisteaika.reitunnus IN (
+WHERE jr_valipisteaika.reitunnus IN (
     SELECT ak_kaavion_lahto.reitunnus
     FROM dbo.ak_kaavion_lahto
     WHERE ak_kaavion_lahto.kaaid IN (
@@ -144,7 +143,7 @@ WHERE ak_kaavion_lahto.kaaid IN (
 };
 
 let kaavionSuoritteetQuery = () => {
-  let minDate = format(subMonths(startOfMonth(new Date()), 10), 'yyyy-MM-dd');
+  let minDate = format(subMonths(startOfMonth(new Date()), 12), 'yyyy-MM-dd');
   // language=TSQL
   return `
 SELECT *

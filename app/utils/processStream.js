@@ -1,7 +1,7 @@
 import { BATCH_SIZE } from '../../constants';
 import PQueue from 'p-queue';
 
-const CONCURRENCY = 100;
+const CONCURRENCY = 20;
 
 export async function processStream(requestStream, chunkProcessor, batchSize = BATCH_SIZE) {
   return new Promise((resolve, reject) => {
@@ -35,7 +35,7 @@ export async function processStream(requestStream, chunkProcessor, batchSize = B
         let whenQueueIsReady = Promise.resolve();
 
         // Wait if the queue is too full
-        if (queue.size >= CONCURRENCY * 2) {
+        if (queue.size >= CONCURRENCY) {
           whenQueueIsReady = queue.onEmpty();
         }
 

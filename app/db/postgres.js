@@ -1,9 +1,7 @@
 import Knex from 'knex';
-import KnexPostgis from 'knex-postgis';
 import { DEBUG, JORE_PG_CONNECTION, MAX_DB_CONNECTIONS } from '../../constants';
 import prexit from 'prexit';
 
-let st = null;
 let postgres = null;
 
 export function getKnex() {
@@ -27,8 +25,6 @@ export function getKnex() {
       idleTimeoutMillis: 1000000,
     },
   });
-
-  st = KnexPostgis(postgres);
 
   return postgres;
 }

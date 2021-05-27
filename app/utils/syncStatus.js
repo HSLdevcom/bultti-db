@@ -19,5 +19,6 @@ export async function logSyncEnd(message) {
 }
 
 export async function logSyncError(message) {
+  console.log(message);
   await writeLog('error', message);
 }

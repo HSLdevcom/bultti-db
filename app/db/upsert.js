@@ -27,8 +27,8 @@ export async function upsert(schema, tableName, data, primaryKeys = []) {
   const keysLength = itemKeys.length;
   let placeholderRow = `(${itemKeys.map(() => '?').join(',')})`;
 
-  // 30k bindings is a conservative estimate of what the node-pg library can handle per query.
-  let itemsPerQuery = Math.ceil(30000 / Math.max(1, keysLength));
+  // 10k bindings is a conservative estimate of what the node-pg library can handle per query.
+  let itemsPerQuery = Math.ceil(10000 / Math.max(1, keysLength));
   // Split the items up into chunks
   let queryChunks = chunk(items, itemsPerQuery);
 
