@@ -371,7 +371,7 @@ create table _jore_import.jr_reitinlinkki
 (
     reitunnus varchar not null,
     suusuunta smallint not null,
-    suuvoimast timestamp with time zone not null,
+    suuvoimast date not null,
     reljarjnro numeric not null,
     relid numeric not null,
     relmatkaik numeric,
@@ -777,8 +777,8 @@ create index jr_valipisteaika_vastunnus_index
 create table _jore_import.jr_aikataulu
 (
     reitunnus varchar not null,
-    lavoimast timestamp with time zone not null,
-    laviimvoi timestamp with time zone not null,
+    lavoimast date not null,
+    laviimvoi date not null,
     lakuka varchar(20),
     laviimpvm timestamp with time zone,
     constraint jr_aikataulu_pk
